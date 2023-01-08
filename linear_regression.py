@@ -44,12 +44,22 @@ ema, sma = moving_average(df_close, length=length)
 lower_bb_sma, upper_bb_sma = bbands_calculation(df_close, sma, length=length)
 lower_bb_ema, upper_bb_ema = bbands_calculation(df_close, ema, length=length)
 list_of_dataframes.extend([ema, sma, lower_bb_sma, upper_bb_sma, lower_bb_ema, upper_bb_ema])
+lower_bb_sma = pd.DataFrame(lower_bb_sma, columns=['lower_bb_sma'])
+upper_bb_sma = pd.DataFrame(upper_bb_sma, columns=['upper_bb_sma'])
 
+lower_bb_ema = pd.DataFrame(lower_bb_ema, columns=['lower_bb_ema'])
+upper_bb_ema = pd.DataFrame(upper_bb_ema, columns=['upper_bb_ema'])
+list_of_dfs = [df_close['SMA_{}'.format(length)][length-1:],
+               df_close['EMA_{}'.format(length)][length-1:],
+               lower_bb_sma,
+               upper_bb_sma,
+               lower_bb_ema,
+               upper_bb_ema,
+               df[['High']].iloc[2:][length-1:],
+               df['Low'].iloc[2:][length-1:]]
 normalized_df = []
-for dataf in list_of_dataframes:
-    division = dataf.astype(float) / dataf.iloc[0].astype(float)
-
-    normalized_df.append(division)
+for dataf in list_of_dfs:
+    normalized_df.append(dataf.astype(float) / dataf.astype(float).iloc[0])
 
 # generate_plot(normalized_df)
 
@@ -57,7 +67,10 @@ for dataf in list_of_dataframes:
 # In other words, X_train and X_test is tech indicators
 # Y_train and Y_test is close price
 # axis=1 means horizontally concat
-X_train, X_test, Y_train, Y_test, = train_test_split(pd.concat((df_close['SMA_10'][length-1:], df_close['EMA_10'][length-1:]), axis=1), df_close[['Close']][length-1:], shuffle=False, test_size=0.2)
+X = pd.concat(normalized_df, axis=1)
+
+Y = df_close[['Close']][length-1:]
+X_train, X_test, Y_train, Y_test, = train_test_split(X, Y, shuffle=False, test_size=0.20)
 
 model = LinearRegression()
 model.fit(X_train, Y_train)
@@ -85,4 +98,4 @@ ax.set_xlabel('Date')
 ax.set_ylabel('{} Price'.format(name))
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("linear_regression_plot.png", dpi=500)
+plt.savefig("{}_linear_regression_plot.png".format(length), dpi=500)

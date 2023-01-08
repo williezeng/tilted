@@ -7,98 +7,128 @@ from sklearn.metrics import accuracy_score
 import pandas as pd
 import pandas_ta
 from talib import BBANDS
+import math
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+from sklearn.model_selection import cross_val_score, KFold
+from sklearn import preprocessing
+import tech_indicators
+import argparse
 
 
-name = os.path.join(constants.YAHOO_DATA_DIR, 'real_eth.csv')
-
-def moving_average(data_frame, length=10):
-    ema = data_frame.ta.ema(length=length, append=True).dropna()
-    sma = data_frame.ta.sma(length=length, append=True).dropna()
-    return ema, sma
-
-def bbands_calculation(data_frame, moving_average, length=10):
-    # imported pandasta bbands calculations are broken, lingering na's in their sma implementation
-    # input should be some sort of moving average, df
-    standard_deviation = data_frame.ta.stdev(length=length).dropna()
-    bbstd = 2
-    deviations = bbstd * standard_deviation
-    lower_bb = moving_average - deviations
-    upper_bb = moving_average + deviations
-    return lower_bb, upper_bb
-
-def generate_plot(dataframes):
-    df_temp = pd.concat(dataframes, keys=['close', 'ema', 'sma', 'lowerbb_sma', 'upperbb_sma', 'lowerbb_ema', 'upperbb_ema'], axis=1)
-    ax = df_temp.plot(title='Daily Portfolio Value and SPY', fontsize=12)
-    ax.set_xlabel('Date')
-    ax.set_ylabel('Normalized Value')
-    plt.savefig("plot.png", dpi=1000)
-
-df = pd.read_csv(name, index_col=[0], header=[0], skipinitialspace=True)
-length = 10
-df_close = df[['Close']].iloc[2:]
-list_of_dataframes = [df_close[length-1:], ]
-ema, sma = moving_average(df_close, length=length)
-lower_bb_sma, upper_bb_sma = bbands_calculation(df_close, sma, length=length)
-lower_bb_ema, upper_bb_ema = bbands_calculation(df_close, ema, length=length)
-list_of_dataframes.extend([ema, sma, lower_bb_sma, upper_bb_sma, lower_bb_ema, upper_bb_ema])
-
-normalized_df = []
-for dataf in list_of_dataframes:
-    division = dataf.astype(float) / dataf.iloc[0].astype(float)
-
-    normalized_df.append(division)
-
-# generate_plot(normalized_df)
-
-
-# In other words, X_train and X_test is tech indicators
-# Y_train and Y_test is close price
-# axis=1 means horizontally concat
-X_train, X_test, Y_train, Y_test, = train_test_split(pd.concat((df_close['SMA_10'][length-1:], df_close['EMA_10'][length-1:]), axis=1), df_close[['Close']][length-1:], shuffle=False, test_size=0.2)
 
 # Instantiate KNN learning model(k=15)
-# knn = KNeighborsClassifier(n_neighbors=3)
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
 # Defining the hyper parameter space as a dictionary
-parameter_space = {'n_neighbors': hp.quniform('n_neighbors', 1, 3, 5, 7, 9, 11),
-                   'weights': hp.quniform('weights', ['uniform', 'distance']),
-                   'algorithm': hp.choice('algorithm', ['brute']),
-                   'p': hp.choice('p', ['auto', 'ball_tree', 'kd_tree', 'brute']),
-                   'metric': hp.choice('p', ['minkowski', 'chebyshev']),
-                   }
-'leaf_size': hp.choice('leaf_size', ['5', '10', '15', '20']),
-'algorithm': hp.choice('algorithm', ['auto', 'ball_tree', 'kd_tree', 'brute']),
+def create_parameter_space(lowest_knn=5):
+    parameter_space = {'n_neighbors': hp.choice('n_neighbors', range(lowest_knn, 70)),
+                       'weights': hp.choice('weights', ['distance']),
+                       'algorithm': hp.choice('algorithm', ['brute', 'ball_tree', 'kd_tree']),
+                       'leaf_size': hp.choice('leaf_size', range(1, 100)),
+                       'p': hp.choice('p', [1, 2]),
+                       'metric': hp.choice('metric', ['minkowski', 'chebyshev']),
+                       }
+    return parameter_space
 
-knn.fit(X_train, Y_train)
-y_pred = knn.predict(X_test)
 
-# # Accuracy Score
-# accuracy_train = accuracy_score(Y_train, knn.predict(X_train))
-# accuracy_test = accuracy_score(Y_test, y_pred)
+best = math.inf
+
+
+def f(params):
+    global best
+    acc = accuracy_model(params)
+    if acc < best:
+        best = acc
+    return {'loss': acc, 'status': STATUS_OK}
+
+def accuracy_model(params):
+    knn = KNeighborsClassifier(**params)
+    knn.fit(X_train, Y_train['Close'])
+    y_pred = knn.predict(X_test)
+    return mean_squared_error(Y_test['Close'], y_pred, squared=False)
+
+# Finding out which set of hyperparameters give highest accuracy
+def find_best_parameters(parameter_space, lowest_knn_neighbor=0):
+    trials = Trials()
+    best_parameters = fmin(fn=f,
+                       space=parameter_space,
+                       algo=tpe.suggest,  # the logic which chooses next parameter to try
+                       max_evals=100,
+                       trials=trials
+                       )
+    algo_map = {0: 'brute',
+                1: 'ball_tree',
+                2: 'kd_tree'}
+    weight_map = {0: 'distance'}
+    metric_map = {0: 'minkowski',
+                  1: 'chebyshev'}
+    for k, v in best_parameters.items():
+        if k == 'algorithm':
+            best_parameters[k] = algo_map[v]
+        elif k == 'weights':
+            best_parameters[k] = weight_map[v]
+        elif k == 'metric':
+            best_parameters[k] = metric_map[v]
+        elif k == 'p':
+            best_parameters[k] = v+1
+        elif k == 'leaf_size' and v == 0:
+            best_parameters[k] = None
+        elif k == 'n_neighbors':
+            best_parameters[k] = v+lowest_knn_neighbor
+    print('best: ', best, 'with best params :', best_parameters)
+    return best_parameters
+
+
+def train_and_predict(xtrain, xtest, ytrain, ytest, parameters):
+    knn = KNeighborsClassifier(**parameters)
+    knn.fit(xtrain, ytrain['Close'])
+    y_pred = knn.predict(xtest)
+    rmse = mean_squared_error(ytest['Close'], y_pred, squared=False)
+    print("knn rmse: ", rmse)
+    return y_pred, rmse
 #
-# print ('Train_data Accuracy: %.2f' %accuracy_train)
-# print ('Test_data Accuracy: %.2f' %accuracy_test)
+def generate_plots(y_predicted, Y_test, rmse, name, length_of_moving_averages=10):
+    df2 = pd.DataFrame(data=y_predicted, index=Y_test.index, columns=['predicted']).astype('float')
+    df_temp = pd.concat((pd.DataFrame(data=y_predicted, index=Y_test.index), Y_test['Close']), keys=['predicted', 'close'], axis=1)
+    # print(df_temp.head)
+    df3 = Y_test[['Close']].astype('float').rename(columns={'Close':'actual'})
+    ax = df2.plot()
+    df3.plot(ax=ax, title='pred values vs real values', fontsize=10)
 
-print("Mean Absolute Error: $", mean_absolute_error(Y_test, y_pred))
-print("Root Mean Square Error: $", mean_squared_error(Y_test, y_pred, squared=False))
-print("Coefficient of Determination:", r2_score(Y_test, y_pred))
-# regression_confidence = knn.score(X_test, Y_test)
-# print("linear regression confidence: ", regression_confidence)
+    ax.set_xlabel('Date')
+    ax.set_ylabel('{} Price'.format(name))
+    plt.text(0.5, 0.5, 'rmse: '+str(rmse), ha='center', va='center', fontsize='small')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plot_name = "{}_knn_plot.png".format(length_of_moving_averages)
+    plt.savefig(plot_name, dpi=500)
+    print(plot_name)
 
-df2 = pd.DataFrame(data=y_pred, index=Y_test.index, columns=['predicted']).astype('float')
-# df_temp = pd.concat((pd.DataFrame(data=y_pred, index=Y_test.index), Y_test['Close']), keys=['predicted', 'close'], axis=1)
-# print(df_temp.head)
-df3 = Y_test[['Close']].astype('float').rename(columns={'Close':'actual'})
-ax = df2.plot()
-df3.plot(ax=ax, title='pred values vs real values', fontsize=10)
+def build_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--lowest_knn_neighbor', help='we need to separate search and knn', type=int)
+    parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
+    parser.add_argument('--name', help='the name of the file', type=str)
+    return parser.parse_args()
 
-name = 'Ethereum'
-ax.set_xlabel('Date')
-ax.set_ylabel('{} Price'.format(name))
-plt.xticks(rotation=45)
-plt.tight_layout()
-plt.savefig("knn_plot.png", dpi=500)
+if __name__ == "__main__":
+    args = build_args()
+    name = os.path.join(constants.YAHOO_DATA_DIR, args.name)
+    data_frame = tech_indicators.read_df_from_file(name)
+    indicator_dfs, df_close = tech_indicators.get_indicators(data_frame, length=args.length)
+    normalized_indicators = tech_indicators.normalize_indicators(indicator_dfs)
+    # In other words, X_train and X_test is tech indicators
+    # Y_train and Y_test is close price
+    # axis=1 means horizontally concat
+    X = pd.concat(normalized_indicators, axis=1)
+
+    Y = df_close[['Close']][args.length-1:]
+
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, shuffle=False, test_size=0.20)
+    parameter_space = create_parameter_space(lowest_knn=args.lowest_knn_neighbor)
+    best_parameters = find_best_parameters(parameter_space, lowest_knn_neighbor=args.lowest_knn_neighbor)
+    y_pred, rmse = train_and_predict(X_train, X_test, Y_train, Y_test, best_parameters)
+    ticker_name = 'Ethereum'
+    generate_plots(y_pred, Y_test, rmse, ticker_name, length_of_moving_averages=args.length)
