@@ -12,30 +12,69 @@ from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import tech_indicators
 import argparse
 import math
+from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
 
-# def create_parameter_space(lowest_knn=5):
-#     parameter_space = {'penalty': hp.choice('n_neighbors', range(lowest_knn, 70)),
-#                        'weights': hp.choice('weights', ['distance']),
-#                        'algorithm': hp.choice('algorithm', ['brute', 'ball_tree', 'kd_tree']),
-#                        'leaf_size': hp.choice('leaf_size', range(1, 100)),
-#                        'p': hp.choice('p', [1, 2]),
-#                        'metric': hp.choice('metric', ['minkowski', 'chebyshev']),
-#                        }
-#     return parameter_space
+tol = [0.00001, 0.0001, 0.001, 0.01, 0.1]
+# , 'l1', 'elasticnet'
+# penalty = [None, 'l2']
+c_values = [1, 2, 3, 4, 5, 6, 7]
+solver = ['newton-cholesky']
 #
-#
-# best = math.inf
-#
-#
-# def f(params):
-#     global best
-#     acc = accuracy_model(params)
-#     if acc < best:
-#         best = acc
-#     return {'loss': acc, 'status': STATUS_OK}
+#     ‘newton-cg’ - [‘l2’, None]
+#     ‘newton-cholesky’ - [‘l2’, None]
+#     ‘lbfgs’ - [‘l2’, None]
+#     ‘liblinear’ - [‘l1’, ‘l2’]
+#     ‘sag’ - [‘l2’, None]
+#     ‘saga’ - [‘elasticnet’, ‘l1’, ‘l2’, None]
+def create_parameter_space():
+    # , 'l1', 'elasticnet'
+    parameter_space = {'solver': hp.choice('solver', solver),
+                       'tol': hp.choice('tol', tol),
+                       'C': hp.choice('C', c_values),
+                       }
+    return parameter_space
 
-def train_and_predict(xtrain, xtest, ytrain, ytest):
-    model = LogisticRegression()
+best = math.inf
+# Finding out which set of hyperparameters give highest accuracy
+def find_best_parameters(parameter_space):
+    trials = Trials()
+    best_parameters = fmin(fn=f,
+                       space=parameter_space,
+                       algo=tpe.suggest,  # the logic which chooses next parameter to try
+                       max_evals=100,
+                       trials=trials
+                       )
+    for k, v in best_parameters.items():
+        if k == 'tol':
+            best_parameters[k] = tol[v]
+        elif k == 'C':
+            best_parameters[k] = c_values[v]
+        elif k == 'solver':
+            best_parameters[k] = solver[v]
+        # elif k == 'penalty':
+        #     best_parameters[k] = penalty[v]
+
+    # best_params['penalty'] = 'l2'
+    print('best: ', best, 'with best params :', best_parameters)
+    return best_parameters
+
+
+def accuracy_model(params):
+    knn = LogisticRegression(**params)
+    knn.fit(X_train, Y_train['Close'])
+    y_pred = knn.predict(X_test)
+    return mean_squared_error(Y_test['Close'], y_pred, squared=False)
+
+def f(params):
+    global best
+    acc = accuracy_model(params)
+    if acc < best:
+        best = acc
+    return {'loss': acc, 'status': STATUS_OK}
+
+def train_and_predict(xtrain, xtest, ytrain, ytest, params=None):
+
+    model = LogisticRegression(C=1, solver='newton-cg', tol=1e-8)
 
     model.fit(xtrain, ytrain['Close'])
     y_pred = model.predict(xtest)
@@ -65,9 +104,8 @@ def generate_plots(y_pred, Y_test, rmse, name, length_of_moving_averages=10):
 
 def build_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lowest_knn_neighbor', help='we need to separate search and knn', type=int)
     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
-    parser.add_argument('--name', help='the name of the file', type=str)
+    parser.add_argument('--name', help='the name of the file', type=str, required=True)
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -82,6 +120,8 @@ if __name__ == "__main__":
     X = pd.concat(normalized_indicators, axis=1)
     Y = df_close[['Close']][args.length-1:]
     X_train, X_test, Y_train, Y_test, = train_test_split(X, Y, shuffle=False, test_size=0.20)
+    parameter_space = create_parameter_space()
+    # best_params = find_best_parameters(parameter_space)
     y_pred, rmse = train_and_predict(X_train, X_test, Y_train, Y_test)
     ticker_name = 'Ethereum'
     generate_plots(y_pred, Y_test, rmse, ticker_name, length_of_moving_averages=args.length)
