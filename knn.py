@@ -125,10 +125,10 @@ if __name__ == "__main__":
     X = pd.concat(normalized_indicators, axis=1)
 
     Y = df_close[['Close']][args.length-1:]
-
+    lowest_knn_neighbor = args.lowest_knn_neighbor if args.lowest_knn_neighbor else 5
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, shuffle=False, test_size=0.20)
-    parameter_space = create_parameter_space(lowest_knn=args.lowest_knn_neighbor)
-    best_parameters = find_best_parameters(parameter_space, lowest_knn_neighbor=args.lowest_knn_neighbor)
+    parameter_space = create_parameter_space(lowest_knn=lowest_knn_neighbor)
+    best_parameters = find_best_parameters(parameter_space, lowest_knn_neighbor=lowest_knn_neighbor)
     y_pred, rmse = train_and_predict(X_train, X_test, Y_train, Y_test, best_parameters)
     ticker_name = 'Ethereum'
     generate_plots(y_pred, Y_test, rmse, ticker_name, length_of_moving_averages=args.length)
