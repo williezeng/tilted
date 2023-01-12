@@ -7,7 +7,8 @@ from dateutil.relativedelta import relativedelta
 from pandas_datareader import data as pdr
 import pandas
 import yfinance as yf
-
+import argparse
+import constants
 
 yf.pdr_override() # <== that's all it takes :-)
 
@@ -28,8 +29,8 @@ yf.pdr_override() # <== that's all it takes :-)
 # data = yf.download("ETH-USD", start="2017-01-01", end="2017-04-30")
 
 
-def fetch_data(names, start, end):
-    assert isinstance(names, list), '%s must be a list'.format(names)
+def fetch_data(name, start, end):
+    assert isinstance(name, str), '%s must be a str'.format(names)
     assert isinstance(start, str), '%s must be a str'.format(start)
     assert isinstance(end, str), '%s must be a str'.format(end)
 
@@ -40,7 +41,7 @@ def fetch_data(names, start, end):
             raise ValueError("Incorrect data format, should be YYYY-MM-DD")
     validate(start)
     validate(end)
-    dataframe = pdr.get_data_yahoo(' '.join(names), start=start, end=end)
+    dataframe = pdr.get_data_yahoo(name, start=start, end=end)
     return dataframe
 
 
@@ -58,12 +59,17 @@ def read_file(name):
     df = pandas.read_csv(name, index_col=[0], header=[0, 1], skipinitialspace=True)
     return df
 
+def build_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--start', help='the start date of the stock', type=str, default="2017-01-01")
+    parser.add_argument('--end', help='the end date of the stock', type=str, default="2022-01-01")
+    parser.add_argument('--name', help='the name of the stock', type=str, required=True)
+    return parser.parse_args()
 
 if __name__ == "__main__":
-    #build arg parse
-    # arg parse
-    # call fetch_data
+    args = build_args()
+    print('fetching ' + args.name)
+    df = fetch_data(args.name, args.start, args.end)
+    df.to_csv('{}.csv'.format(args.name))
 
-    # write_individual_df_to_file('%s_df'.format(filename), dataframe, header=constants.ETHEREUM_HEADER)
-    df = read_file('real_eth.csv')
 
