@@ -2,7 +2,7 @@ import os
 from utils import external_ticks, constants
 from sklearn.model_selection import train_test_split
 # Machine learning libraries
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import accuracy_score
 import pandas as pd
 import pandas_ta
@@ -22,11 +22,15 @@ import argparse
 # Instantiate KNN learning model(k=15)
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
 # Defining the hyper parameter space as a dictionary
-def create_parameter_space(lowest_knn=5):
-    parameter_space = {'n_neighbors': hp.choice('n_neighbors', range(lowest_knn, 70)),
+
+n_neighbor_list = list(range(5, 100))
+leaf_size_list = list(range(1, 100))
+
+def create_parameter_space():
+    parameter_space = {'n_neighbors': hp.choice('n_neighbors', n_neighbor_list),
                        'weights': hp.choice('weights', ['distance']),
                        'algorithm': hp.choice('algorithm', ['brute', 'ball_tree', 'kd_tree']),
-                       'leaf_size': hp.choice('leaf_size', range(1, 100)),
+                       'leaf_size': hp.choice('leaf_size', leaf_size_list),
                        'p': hp.choice('p', [1, 2]),
                        'metric': hp.choice('metric', ['minkowski', 'chebyshev']),
                        }
@@ -44,13 +48,13 @@ def f(params):
     return {'loss': acc, 'status': STATUS_OK}
 
 def accuracy_model(params):
-    knn = KNeighborsClassifier(**params)
+    knn = KNeighborsRegressor(**params)
     knn.fit(X_train, Y_train['Close'])
     y_pred = knn.predict(X_test)
     return mean_squared_error(Y_test['Close'], y_pred, squared=False)
 
 # Finding out which set of hyperparameters give highest accuracy
-def find_best_parameters(parameter_space, lowest_knn_neighbor=0):
+def find_best_parameters(parameter_space):
     trials = Trials()
     best_parameters = fmin(fn=f,
                        space=parameter_space,
@@ -73,16 +77,16 @@ def find_best_parameters(parameter_space, lowest_knn_neighbor=0):
             best_parameters[k] = metric_map[v]
         elif k == 'p':
             best_parameters[k] = v+1
-        elif k == 'leaf_size' and v == 0:
-            best_parameters[k] = None
+        elif k == 'leaf_size':
+            best_parameters[k] = leaf_size_list[v]
         elif k == 'n_neighbors':
-            best_parameters[k] = v+lowest_knn_neighbor
+            best_parameters[k] = n_neighbor_list[v]
     print('best: ', best, 'with best params :', best_parameters)
     return best_parameters
 
 
 def train_and_predict(xtrain, xtest, ytrain, ytest, parameters):
-    knn = KNeighborsClassifier(**parameters)
+    knn = KNeighborsRegressor(**parameters)
     knn.fit(xtrain, ytrain['Close'])
     y_pred = knn.predict(xtest)
     rmse = mean_squared_error(ytest['Close'], y_pred, squared=False)
@@ -108,7 +112,6 @@ def generate_plots(y_predicted, Y_test, rmse, name, length_of_moving_averages=10
 
 def build_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lowest_knn_neighbor', help='we need to separate search and knn', type=int)
     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
     parser.add_argument('--name', help='the name of the file', type=str)
     return parser.parse_args()
@@ -125,10 +128,10 @@ if __name__ == "__main__":
     X = pd.concat(normalized_indicators, axis=1)
 
     Y = df_close[['Close']][args.length-1:]
-    lowest_knn_neighbor = args.lowest_knn_neighbor if args.lowest_knn_neighbor else 5
+    Y = Y.astype(float)
     X_train, X_test, Y_train, Y_test = train_test_split(X, Y, shuffle=False, test_size=0.20)
-    parameter_space = create_parameter_space(lowest_knn=lowest_knn_neighbor)
-    best_parameters = find_best_parameters(parameter_space, lowest_knn_neighbor=lowest_knn_neighbor)
+    parameter_space = create_parameter_space()
+    best_parameters = find_best_parameters(parameter_space)
     y_pred, rmse = train_and_predict(X_train, X_test, Y_train, Y_test, best_parameters)
     ticker_name = 'Ethereum'
     generate_plots(y_pred, Y_test, rmse, ticker_name, length_of_moving_averages=args.length)
