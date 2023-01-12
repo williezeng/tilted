@@ -1,7 +1,7 @@
 import os
 from utils import external_ticks, constants
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
 import pandas as pd
 import pandas_ta
 from talib import BBANDS
@@ -13,40 +13,60 @@ import tech_indicators
 import argparse
 import math
 
-# def create_parameter_space(lowest_knn=5):
-#     parameter_space = {'penalty': hp.choice('n_neighbors', range(lowest_knn, 70)),
-#                        'weights': hp.choice('weights', ['distance']),
-#                        'algorithm': hp.choice('algorithm', ['brute', 'ball_tree', 'kd_tree']),
-#                        'leaf_size': hp.choice('leaf_size', range(1, 100)),
-#                        'p': hp.choice('p', [1, 2]),
-#                        'metric': hp.choice('metric', ['minkowski', 'chebyshev']),
-#                        }
-#     return parameter_space
-#
-#
-# best = math.inf
-#
-#
-# def f(params):
-#     global best
-#     acc = accuracy_model(params)
-#     if acc < best:
-#         best = acc
-#     return {'loss': acc, 'status': STATUS_OK}
 
-def train_and_predict(xtrain, xtest, ytrain, ytest):
-    model = LinearRegression()
+from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
+leaf_samples = list(range(5, 500, 10))
+
+def create_parameter_space():
+    parameter_space = {'min_samples_leaf': hp.choice('min_samples_leaf', leaf_samples)}
+    return parameter_space
+
+best = math.inf
+
+def accuracy_model(params):
+    dtreg = DecisionTreeRegressor(**params)
+    dtreg.fit(X_train, Y_train['Close'])
+    y_pred = dtreg.predict(X_test)
+    return mean_squared_error(Y_test['Close'], y_pred, squared=False)
+
+def f(params):
+    global best
+    acc = accuracy_model(params)
+    if acc < best:
+        best = acc
+    return {'loss': acc, 'status': STATUS_OK}
+
+def find_best_parameters(parameter_space):
+    trials = Trials()
+    best_parameters = fmin(fn=f,
+                       space=parameter_space,
+                       algo=tpe.suggest,  # the logic which chooses next parameter to try
+                       max_evals=100,
+                       trials=trials
+                       )
+
+    for k, v in best_parameters.items():
+        if k == 'min_samples_leaf':
+            best_parameters[k] = leaf_samples[v]
+
+    print('best: ', best, 'with best params :', best_parameters)
+    return best_parameters
+
+def train_and_predict(xtrain, xtest, ytrain, ytest, bestparams=None):
+    if isinstance(bestparams, dict):
+        model = DecisionTreeRegressor(**bestparams)
+    else:
+        model = DecisionTreeRegressor()
     model.fit(xtrain, ytrain)
     y_pred = model.predict(xtest)  # predicted
     # Printout relevant metrics
     rmse = mean_squared_error(ytest, y_pred, squared=False)
-    print("Model Coefficients:", model.coef_)
     print("Mean Absolute Error: $", mean_absolute_error(ytest, y_pred))
     print("Root Mean Square Error: $", rmse)
 
     print("Coefficient of Determination:", r2_score(ytest, y_pred))
     regression_confidence = model.score(xtest, ytest)
-    print("linear regression confidence: ", regression_confidence)
+    print("dt regression confidence: ", regression_confidence)
     return y_pred, rmse
 
 def generate_plots(y_pred, Y_test, rmse, name, length_of_moving_averages=10):
@@ -60,13 +80,13 @@ def generate_plots(y_pred, Y_test, rmse, name, length_of_moving_averages=10):
     plt.text(0.5, 0.5, 'rmse: '+str(rmse), ha='center', va='center', fontsize='small')
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig("{}_linear_regression_plot.png".format(length_of_moving_averages), dpi=500)
+    plt.savefig("{}_decision_tree_plot.png".format(length_of_moving_averages), dpi=500)
 
 def build_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--lowest_knn_neighbor', help='we need to separate search and knn', type=int)
+    # parser.add_argument('--lowest_knn_neighbor', help='we need to separate search and knn', type=int)
     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
-    parser.add_argument('--name', help='the name of the file', type=str)
+    parser.add_argument('--name', help='the name of the file', type=str, required=True)
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -81,6 +101,10 @@ if __name__ == "__main__":
     X = pd.concat(normalized_indicators, axis=1)
     Y = df_close[['Close']][args.length-1:]
     X_train, X_test, Y_train, Y_test, = train_test_split(X, Y, shuffle=False, test_size=0.20)
-    y_pred, rmse = train_and_predict(X_train, X_test, Y_train, Y_test)
+
+    parameter_space = create_parameter_space()
+    best_parameters = find_best_parameters(parameter_space)
+    y_pred, rmse = train_and_predict(X_train, X_test, Y_train, Y_test, best_parameters)
+
     ticker_name = 'Ethereum'
     generate_plots(y_pred, Y_test, rmse, ticker_name, length_of_moving_averages=args.length)
