@@ -1,5 +1,7 @@
 import os
-from utils import external_ticks, constants
+import numpy as np
+from utils import constants
+from datetime import datetime
 from sklearn.model_selection import train_test_split
 # Machine learning libraries
 from sklearn.neighbors import KNeighborsClassifier
@@ -31,33 +33,117 @@ def bbands_calculation(data_frame, moving_average, length=10):
     upper_bb = moving_average + deviations
     return lower_bb, upper_bb
 
+def bbands_classification(close_prices_data_frame, lower_bb, upper_bb):
+    buy_price = []
+    sell_price = []
+    bb_signal = []
+    signal = 0
+    closed_prices = close_prices_data_frame['Close']
+    close_prices_data_frame = close_prices_data_frame.iloc[1:]  # base buy/sell off previous prices -1 len
+    for i in range(1, len(closed_prices)):
+        # BUY if dips lower than lower BB
+        if closed_prices[i - 1] > lower_bb[i - 1] and closed_prices[i] < lower_bb[i]:
+            if signal != 1:     # don't buy until sell
+                buy_price.append(closed_prices[i])
+                sell_price.append(np.nan)
+                signal = 1
+                bb_signal.append(signal)
+            else:
+                buy_price.append(np.nan)
+                sell_price.append(np.nan)
+                bb_signal.append(0)
+        # SELL if rises above higher BB
+        elif closed_prices[i - 1] < upper_bb[i - 1] and closed_prices[i] > upper_bb[i]:
+            if signal != -1:        # don't sell until buy
+                buy_price.append(np.nan)
+                sell_price.append(closed_prices[i])
+                signal = -1
+                bb_signal.append(signal)
+            else:
+                buy_price.append(np.nan)
+                sell_price.append(np.nan)
+                bb_signal.append(0)
+        else:
+            buy_price.append(np.nan)
+            sell_price.append(np.nan)
+            bb_signal.append(0)
+
+    close_prices_data_frame['bb_signal'] = bb_signal
+    return close_prices_data_frame
+
 def read_df_from_file(name):
-    name = os.path.join(constants.YAHOO_DATA_DIR, 'real_eth.csv')
+    name = os.path.join(constants.YAHOO_DATA_DIR, name)
     df = pd.read_csv(name, index_col=[0], header=[0], skipinitialspace=True)
     return df
 
-def get_indicators(df, length=10):
-    df_close = df[['Close']].iloc[2:]
+def index_len_resolver(df1, df2):
+    df1_start = datetime.strptime(df1.index[0], '%Y-%m-%d')
+    df2_start = datetime.strptime(df2.index[0], '%Y-%m-%d')
+    diff = (df2_start - df1_start).days
+    if diff > 0:
+        df1 = df1[diff:]
+    elif diff < 0:
+        df2 = df2[diff:]
+
+    df1_end = datetime.strptime(df1.index[-1], '%Y-%m-%d')
+    df2_end = datetime.strptime(df2.index[-1], '%Y-%m-%d')
+    diff = (df2_end - df1_end).days
+
+    if diff > 0:
+        df2 = df2[:-diff]
+    elif diff < 0:
+        df1 = df1[:diff]
+    return df1, df2
+
+def get_indicators(df, options=None, length=10):
+    df_close = df[['Close']]
+    df_close['High'] = df[['High']]
+    df_close['Volume'] = df[['Volume']]
+    list_of_dfs = []
     ema, sma = moving_average(df_close, length=length)
     lower_bb_sma, upper_bb_sma = bbands_calculation(df_close, sma, length=length)
     lower_bb_ema, upper_bb_ema = bbands_calculation(df_close, ema, length=length)
-    lower_bb_sma = pd.DataFrame(lower_bb_sma, columns=['lower_bb_sma'])
-    upper_bb_sma = pd.DataFrame(upper_bb_sma, columns=['upper_bb_sma'])
-    lower_bb_ema = pd.DataFrame(lower_bb_ema, columns=['lower_bb_ema'])
-    upper_bb_ema = pd.DataFrame(upper_bb_ema, columns=['upper_bb_ema'])
-    list_of_dfs = [df_close['SMA_{}'.format(length)][length-1:],
-                   df_close['EMA_{}'.format(length)][length-1:],
-                   lower_bb_sma,
-                   upper_bb_sma,
-                   lower_bb_ema,
-                   upper_bb_ema,
-                   df[['High']].iloc[2:][length-1:],
-                   df['Low'].iloc[2:][length-1:]]
-    return list_of_dfs, df_close
+    # averages are calculated given n previous days of information, drop the NAs
+    df_close = df_close.dropna()
+    bb = pd.DataFrame({'lower_bb_sma': lower_bb_sma, 'upper_bb_sma': upper_bb_sma, 'lower_bb_ema':lower_bb_ema, 'upper_bb_ema': upper_bb_ema})
+    compiled_df = bbands_classification(df_close[['Close']][length-1:].astype(float), bb['lower_bb_ema'], bb['upper_bb_ema'])
+    y_label_df = create_ylabels(df_close[['Close']].astype(float))
+    df_close, y_label_df = index_len_resolver(df_close, y_label_df)
 
-def normalize_indicators(list_of_dfs):
+    OPTION_MAP={'sma': df_close['SMA_{}'.format(length)],
+                'ema': df_close['EMA_{}'.format(length)],
+                'bb': bb,
+                'high': df_close['High'],
+                'volume': df_close['Volume'],
+                'close': df_close['Close']
+    }
+    for option in options:
+        if option in OPTION_MAP:
+            list_of_dfs.append(OPTION_MAP[option])
+    X = pd.concat(list_of_dfs, axis=1)
+    X = X.dropna()
+    return X, y_label_df
+
+def normalize_indicators(dfs):
     normalized_df = []
-    for dataf in list_of_dfs:
-        normalized_df.append(dataf.astype(float) / dataf.astype(float).iloc[0])
-    return normalized_df
+    for dataf in dfs:
+        normalized_df.append(dfs[dataf].astype(float) / dfs[dataf].astype(float).iloc[0])
+    return pd.concat(normalized_df, axis=1)
 
+
+def create_ylabels(df, lookahead_days=5):
+    # Returns buy/sell/hold signals
+    # Shortens the data because our logic is based on the lookahead/future price
+    trainY = []
+    closed_price_series = df['Close']
+    for i in range(closed_price_series.shape[0] - lookahead_days):
+        ratio = (closed_price_series[i + lookahead_days] - closed_price_series[i]) / closed_price_series[i]
+        if ratio > (0.02 + 0.02):        # positive ratio that's higher than trade impact + commission
+            trainY.append(1)
+        elif ratio < (-0.02 - 0.02):
+            trainY.append(-1)              # sell
+        else:                           # nothing
+            trainY.append(0)
+    df = df[:-lookahead_days]
+    df['bsh_signal'] = trainY
+    return df[['bsh_signal']]

@@ -51,6 +51,8 @@ def train_and_predict(xtrain, xtest, ytrain, ytest):
 
 def generate_plots(y_pred, Y_test, rmse, name, length_of_moving_averages=10):
     df2 = pd.DataFrame(data=y_pred, index=Y_test.index, columns=['predicted']).astype('float')
+    import pdb
+    pdb.set_trace()
     df3 = Y_test[['Close']].astype('float').rename(columns={'Close':'actual'})
     ax = df2.plot()
     df3.plot(ax=ax, title='pred values vs real values', fontsize=10)
@@ -60,27 +62,25 @@ def generate_plots(y_pred, Y_test, rmse, name, length_of_moving_averages=10):
     plt.text(0.5, 0.5, 'rmse: '+str(rmse), ha='center', va='center', fontsize='small')
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig("{}_linear_regression_plot.png".format(length_of_moving_averages), dpi=500)
+    plt.savefig("{}{}_decision_tree_plot.png".format(name, length_of_moving_averages), dpi=500)
 
 def build_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--lowest_knn_neighbor', help='we need to separate search and knn', type=int)
     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
-    parser.add_argument('--name', help='the name of the file', type=str)
-    return parser.parse_args()
+    parser.add_argument('--name', help='the name of the file', type=str, required=True)
+    parser.add_argument('--indicators', help='the technical indicators', type=str, required=True)
+    return vars(parser.parse_args())
 
 if __name__ == "__main__":
-    args = build_args()
-    name = os.path.join(constants.YAHOO_DATA_DIR, args.name)
-    data_frame = tech_indicators.read_df_from_file(name)
-    indicator_dfs, df_close = tech_indicators.get_indicators(data_frame, length=args.length)
-    normalized_indicators = tech_indicators.normalize_indicators(indicator_dfs)
-    # In other words, X_train and X_test is tech indicators
-    # Y_train and Y_test is close price
-    # axis=1 means horizontally concat
-    X = pd.concat(normalized_indicators, axis=1)
-    Y = df_close[['Close']][args.length-1:]
-    X_train, X_test, Y_train, Y_test, = train_test_split(X, Y, shuffle=False, test_size=0.20)
+    user_args = build_args()
+    data_frame = tech_indicators.read_df_from_file(user_args['name'])
+    user_args["indicators"] = [s.strip() for s in user_args["indicators"].split(",")]
+    indicator_df, buy_sell_hold_df = tech_indicators.get_indicators(data_frame, options=user_args["indicators"], length=user_args['length'])
+    normalized_indicators_df = tech_indicators.normalize_indicators(indicator_df)
+
+    X_train, X_test, Y_train, Y_test, = train_test_split(normalized_indicators_df, buy_sell_hold_df, shuffle=False, test_size=0.20)
     y_pred, rmse = train_and_predict(X_train, X_test, Y_train, Y_test)
-    ticker_name = 'Ethereum'
-    generate_plots(y_pred, Y_test, rmse, ticker_name, length_of_moving_averages=args.length)
+    import pdb
+    pdb.set_trace()
+    generate_plots(y_pred, Y_test, rmse, user_args['name'], length_of_moving_averages=user_args['length'])

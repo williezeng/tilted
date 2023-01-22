@@ -8,7 +8,6 @@ from pandas_datareader import data as pdr
 import pandas
 import yfinance as yf
 import argparse
-import constants
 
 yf.pdr_override() # <== that's all it takes :-)
 

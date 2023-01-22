@@ -1,5 +1,5 @@
 import os
-from utils import external_ticks, constants
+from utils import constants
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
@@ -96,7 +96,7 @@ def generate_plots(y_pred, Y_test, rmse, name, length_of_moving_averages=10):
     plt.text(0.5, 0.5, 'rmse: '+str(rmse), ha='center', va='center', fontsize='small')
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig("{}_random_forest_plot.png".format(length_of_moving_averages), dpi=500)
+    plt.savefig("{}{}_random_forest_plot.png".format(name, length_of_moving_averages), dpi=500)
 
 def build_args():
     parser = argparse.ArgumentParser()
@@ -107,8 +107,7 @@ def build_args():
 
 if __name__ == "__main__":
     args = build_args()
-    name = os.path.join(constants.YAHOO_DATA_DIR, args.name)
-    data_frame = tech_indicators.read_df_from_file(name)
+    data_frame = tech_indicators.read_df_from_file(args.name)
     indicator_dfs, df_close = tech_indicators.get_indicators(data_frame, length=args.length)
     normalized_indicators = tech_indicators.normalize_indicators(indicator_dfs)
     # In other words, X_train and X_test is tech indicators
@@ -121,5 +120,4 @@ if __name__ == "__main__":
     best_parameters = find_best_parameters(parameter_space)
     y_pred, rmse = train_and_predict(X_train, X_test, Y_train, Y_test, best_parameters)
 
-    ticker_name = 'Ethereum'
-    generate_plots(y_pred, Y_test, rmse, ticker_name, length_of_moving_averages=args.length)
+    generate_plots(y_pred, Y_test, rmse, args.name, length_of_moving_averages=args.length)
