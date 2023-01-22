@@ -1,5 +1,5 @@
 import os
-from utils import external_ticks, constants
+from utils import constants
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import DecisionTreeRegressor
 import pandas as pd
@@ -80,31 +80,35 @@ def generate_plots(y_pred, Y_test, rmse, name, length_of_moving_averages=10):
     plt.text(0.5, 0.5, 'rmse: '+str(rmse), ha='center', va='center', fontsize='small')
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig("{}_decision_tree_plot.png".format(length_of_moving_averages), dpi=500)
+    plt.savefig("{}{}_decision_tree_plot.png".format(name, length_of_moving_averages), dpi=500)
 
 def build_args():
     parser = argparse.ArgumentParser()
     # parser.add_argument('--lowest_knn_neighbor', help='we need to separate search and knn', type=int)
     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
     parser.add_argument('--name', help='the name of the file', type=str, required=True)
+    parser.add_argument('--hyper_search', help='search for hyperparameters', type=bool, default=False)
+
     return parser.parse_args()
 
 if __name__ == "__main__":
     args = build_args()
-    name = os.path.join(constants.YAHOO_DATA_DIR, args.name)
-    data_frame = tech_indicators.read_df_from_file(name)
+    data_frame = tech_indicators.read_df_from_file(args.name)
     indicator_dfs, df_close = tech_indicators.get_indicators(data_frame, length=args.length)
     normalized_indicators = tech_indicators.normalize_indicators(indicator_dfs)
     # In other words, X_train and X_test is tech indicators
     # Y_train and Y_test is close price
     # axis=1 means horizontally concat
-    X = pd.concat(normalized_indicators, axis=1)
-    Y = df_close[['Close']][args.length-1:]
+    X = pd.concat(indicator_dfs, axis=1)
+    Y = df_close['Close'][args.length-1:]
     X_train, X_test, Y_train, Y_test, = train_test_split(X, Y, shuffle=False, test_size=0.20)
-
-    parameter_space = create_parameter_space()
-    best_parameters = find_best_parameters(parameter_space)
+    if args.hyper_search:
+        parameter_space = create_parameter_space()
+        best_parameters = find_best_parameters(parameter_space)
+    best_parameters = None
+    import pdb
+    pdb.set_trace()
     y_pred, rmse = train_and_predict(X_train, X_test, Y_train, Y_test, best_parameters)
 
-    ticker_name = 'Ethereum'
-    generate_plots(y_pred, Y_test, rmse, ticker_name, length_of_moving_averages=args.length)
+
+    generate_plots(y_pred, Y_test, rmse, args.name, length_of_moving_averages=args.length)
