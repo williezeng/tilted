@@ -42,22 +42,26 @@ class BaseModel(object):
         self.indicators = options.get('indicators')
         self.data_name = options.get('data_name')
 
+        self.ypred = None
         self.model = None
         self.model_name = None
         self.rmse = None
+        self.xtrain, self.xtest, self.ytrain, self.ytest = self.setup_data()
 
     def setup_data(self):
         indicator_df, buy_sell_hold_df = tech_indicators.get_indicators(self.data_frame_from_file, options=self.indicators, length=self.length_of_moving_averages)
         normalized_indicators_df = tech_indicators.normalize_indicators(indicator_df)
-        xtrain, xtest, ytrain, ytest = train_test_split(normalized_indicators_df, buy_sell_hold_df, shuffle=False, test_size=0.20)
-        return xtrain, xtest, ytrain, ytest
+        return train_test_split(normalized_indicators_df, buy_sell_hold_df, shuffle=False, test_size=0.20)
 
-    def train_and_predict(self, xtrain, xtest, ytrain, ytest):
-        model = self.model()
-        model.fit(xtrain, ytrain)
-        self.ypred = model.predict(xtest)  # predicted
-        rmse = mean_squared_error(ytest, ypred, squared=False)
-        print("Mean Absolute Error: $", rmse)
+    def train_and_predict(self, params=None):
+        if params:
+            model = self.model(**params)
+        else:
+            model = self.model()
+        model.fit(self.xtrain, self.ytrain)
+        self.ypred = model.predict(self.xtest)  # predicted
+        self.rmse = mean_squared_error(self.ytest, self.ypred, squared=False)
+        print("Mean Absolute Error: $", self.rmse)
 
     def generate_plots(self):
         df2 = pd.DataFrame(data=self.ypred, index=self.ytest.index, columns=['predicted']).astype('float')
