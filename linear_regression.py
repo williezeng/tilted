@@ -3,8 +3,7 @@ from utils import external_ticks, constants
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LinearRegression
 import pandas as pd
-import pandas_ta
-from talib import BBANDS
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt

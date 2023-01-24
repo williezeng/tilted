@@ -72,7 +72,6 @@ def bbands_classification(close_prices_data_frame, lower_bb, upper_bb):
     return close_prices_data_frame
 
 def read_df_from_file(name):
-    name = os.path.join(constants.YAHOO_DATA_DIR, name)
     df = pd.read_csv(name, index_col=[0], header=[0], skipinitialspace=True)
     return df
 
@@ -105,9 +104,10 @@ def get_indicators(df, options=None, length=10):
     lower_bb_ema, upper_bb_ema = bbands_calculation(df_close, ema, length=length)
     # averages are calculated given n previous days of information, drop the NAs
     df_close = df_close.dropna()
-    bb = pd.DataFrame({'lower_bb_sma': lower_bb_sma, 'upper_bb_sma': upper_bb_sma, 'lower_bb_ema':lower_bb_ema, 'upper_bb_ema': upper_bb_ema})
+    bb = pd.DataFrame({'lower_bb_sma': lower_bb_sma, 'upper_bb_sma': upper_bb_sma, 'lower_bb_ema': lower_bb_ema, 'upper_bb_ema': upper_bb_ema})
     compiled_df = bbands_classification(df_close[['Close']][length-1:].astype(float), bb['lower_bb_ema'], bb['upper_bb_ema'])
     y_label_df = create_ylabels(df_close[['Close']].astype(float))
+
     df_close, y_label_df = index_len_resolver(df_close, y_label_df)
 
     OPTION_MAP={'sma': df_close['SMA_{}'.format(length)],
@@ -122,7 +122,9 @@ def get_indicators(df, options=None, length=10):
             list_of_dfs.append(OPTION_MAP[option])
     X = pd.concat(list_of_dfs, axis=1)
     X = X.dropna()
-    return X, y_label_df
+
+    return index_len_resolver(X, y_label_df)
+    # return X, y_label_df
 
 def normalize_indicators(dfs):
     normalized_df = []
