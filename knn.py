@@ -31,7 +31,6 @@ algo_map = {0: 'brute',
 weight_map = {0: 'distance'}
 metric_map = {0: 'minkowski',
               1: 'chebyshev'}
-best = math.inf
 
 
 class KNN(BaseModel):
@@ -39,11 +38,7 @@ class KNN(BaseModel):
         super().__init__(options, data_frame)
         self.model = KNeighborsClassifier
         self.model_name = 'knn'
-        self.optimize_params = options.get('optimize_params')
-        if self.optimize_params:
-            self.params = self.find_best_parameters(self.create_parameter_space())
-        else:
-            self.params = None
+        self.optimize_parameters(options)
 
     def create_parameter_space(self):
         parameter_space = {'n_neighbors': hp.choice('n_neighbors', n_neighbor_list),
@@ -55,18 +50,6 @@ class KNN(BaseModel):
                            }
         return parameter_space
 
-    def f(self, params):
-        global best
-        acc = self.accuracy_model(params)
-        if acc < best:
-            best = acc
-        return {'loss': acc, 'status': STATUS_OK}
-
-    def accuracy_model(self, params):
-        knn = KNeighborsClassifier(**params)
-        knn.fit(self.xtrain, self.ytrain['bsh_signal'])
-        y_pred = knn.predict(self.xtest)
-        return mean_squared_error(self.ytest['bsh_signal'], y_pred, squared=False)
 
     # Finding out which set of hyperparameters give highest accuracy
     def find_best_parameters(self, parameter_space):
@@ -91,7 +74,7 @@ class KNN(BaseModel):
                 best_parameters[k] = leaf_size_list[v]
             elif k == 'n_neighbors':
                 best_parameters[k] = n_neighbor_list[v]
-        print('best: ', best, 'with best params :', best_parameters)
+        print('best params :', best_parameters)
         return best_parameters
 
     #
