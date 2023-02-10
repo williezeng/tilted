@@ -1,10 +1,5 @@
-import os
-from utils import external_ticks, constants
 from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.linear_model import LinearRegression
 import pandas as pd
-import pandas_ta
-from talib import BBANDS
 import matplotlib
 
 matplotlib.use("Agg")
@@ -13,7 +8,6 @@ from sklearn.metrics import mean_squared_error, accuracy_score
 import tech_indicators
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
 
-import argparse
 import math
 from abc import ABC, abstractmethod
 
@@ -45,9 +39,9 @@ class BaseModel(object):
 
     def accuracy_model(self, params):
         model_instance = self.model(**params)
-        model_instance.fit(self.xtrain, self.ytrain['bsh_signal'])
+        model_instance.fit(self.xtrain, self.ytrain['bs_signal'])
         y_pred = model_instance.predict(self.xtest)
-        return mean_squared_error(self.ytest['bsh_signal'], y_pred, squared=False)
+        return mean_squared_error(self.ytest['bs_signal'], y_pred, squared=False)
 
     def f(self, params):
         global best
@@ -84,28 +78,12 @@ class BaseModel(object):
 
     def generate_plots(self):
         df2 = pd.DataFrame(data=self.ypred, index=self.ytest.index, columns=['predicted']).astype('float')
-        df3 = self.ytest[['bsh_signal']].astype('float').rename(columns={'Close': 'actual'})
+        df3 = self.ytest[['bs_signal']].astype('float').rename(columns={'Close': 'actual'})
         ax = df2.plot()
-        df3.plot(ax=ax, title='bsh_signal pred values vs real values', fontsize=10)
+        df3.plot(ax=ax, title='bs_signal pred values vs real values', fontsize=10)
         ax.set_xlabel('Date')
         ax.set_ylabel('{} bsh values'.format(self.data_name))
         plt.text(0.5, 0.5, 'rmse: ' + str(self.rmse), ha='center', va='center', fontsize='small')
         plt.xticks(rotation=45)
         plt.tight_layout()
         plt.savefig("{}{}_{}_plot.png".format(self.data_name, self.length_of_moving_averages, self.model_name), dpi=500)
-
-# def build_args():
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
-#     parser.add_argument('--name', help='the name of the file', type=str, required=True)
-#     parser.add_argument('--indicators', help='the technical indicators', type=str, required=True)
-#     return vars(parser.parse_args())
-#
-# if __name__ == "__main__":
-#     user_args = build_args()
-
-#
-
-#     import pdb
-#     pdb.set_trace()
-#     generate_plots(y_pred, Y_test, rmse, user_args['name'], length_of_moving_averages=user_args['length'])

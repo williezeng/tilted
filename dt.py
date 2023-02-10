@@ -1,16 +1,9 @@
-import os
-from utils import constants
-from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 import pandas as pd
-import pandas_ta
-from talib import BBANDS
+
 import matplotlib
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-import tech_indicators
-import argparse
+
 import math
 from models import BaseModel
 
