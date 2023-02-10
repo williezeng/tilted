@@ -2,6 +2,7 @@ import os
 import argparse
 from utils import constants
 import tech_indicators
+import analyzer
 from knn import KNN
 from dt import DecisionTree
 from logistic_regression import TiltedLogisticRegression
@@ -27,6 +28,7 @@ if __name__ == "__main__":
         model_instance = NAME_TO_MODEL[args['model_name']](args, data_frame_from_file)
         model_instance.train_and_predict()
         model_instance.generate_plots()
+        analyzer.check_buy_sell_signals(model_instance)
     else:
         print('must enter a valid model from {}'.format(NAME_TO_MODEL.keys()))
     # data_frame = tech_indicators.read_df_from_file(name)

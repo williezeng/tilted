@@ -8,11 +8,6 @@ from talib import BBANDS
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
-import tech_indicators
-import argparse
-import math
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
 from models import BaseModel
 

@@ -140,12 +140,12 @@ def create_ylabels(df, lookahead_days=5):
     closed_price_series = df['Close']
     for i in range(closed_price_series.shape[0] - lookahead_days):
         ratio = (closed_price_series[i + lookahead_days] - closed_price_series[i]) / closed_price_series[i]
-        if ratio > (0.02 + 0.02):        # positive ratio that's higher than trade impact + commission
+        if ratio > (0.02):        # positive ratio that's higher than trade impact + commission
             trainY.append(1)
-        elif ratio < (-0.02 - 0.02):
+        elif ratio < (-0.02):
             trainY.append(-1)              # sell
-        else:                           # nothing
+        else:
             trainY.append(0)
     df = df[:-lookahead_days]
-    df['bsh_signal'] = trainY
-    return df[['bsh_signal']]
+    df['bs_signal'] = trainY
+    return df[['bs_signal']]
