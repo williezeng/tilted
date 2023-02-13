@@ -149,3 +149,25 @@ def create_ylabels(df, lookahead_days=5):
     df = df[:-lookahead_days]
     df['bs_signal'] = trainY
     return df[['bs_signal']]
+
+def add_share_quantity(bs_df):
+
+    holdings = 0
+    for index, row in bs_df.iterrows():
+        real_index = bs_df.index.get_loc(index)
+        if testY[real_index] > 0 and holdings < 1000:
+            if holdings == 0:
+                entire_book_order.values[real_index, :] = 1000
+                holdings += 1000
+            else:
+                entire_book_order.values[real_index, :] = 2000
+                holdings += 2000
+        # sell
+        elif testY[real_index] < 0 and holdings > -1000:
+            if holdings == 0:
+                entire_book_order.values[real_index, :] = -1000
+                holdings = holdings - 1000
+            else:
+                entire_book_order.values[real_index, :] = -2000
+                holdings = holdings - 2000
+
