@@ -67,9 +67,8 @@ class BaseModel(object):
         else:
             model = self.model()
         model.fit(self.xtrain, self.ytrain)
-        self.ypred = model.predict(self.xtest)  # predicted
+        self.ypred = pd.DataFrame(model.predict(self.xtest), index=self.ytest.index, columns=['bs_signal'])  # predicted
         self.rmse = mean_squared_error(self.ytest, self.ypred, squared=False)
-        # test_score = model.score(self.xtest, self.ytest)
         train_score = model.score(self.xtrain, self.ytrain)
         test_score = accuracy_score(self.ypred, self.ytest)
         print("Mean Absolute Error: $", self.rmse)
