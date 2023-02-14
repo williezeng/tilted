@@ -165,7 +165,7 @@ def create_ylabels(df, lookahead_days=5):
     return df[['bs_signal']]
 
 
-def add_share_quantity(bs_df, amount_of_shares):
+def add_long_short_shares(bs_df, amount_of_shares):
     # TODO: Write tests
     # we want to buy whatever we can with our starting value
     # we do this by calculating the most shares we can buy at the first buy signal
@@ -193,5 +193,27 @@ def add_share_quantity(bs_df, amount_of_shares):
     entire_book_order['bs_signal'] = bs_df
     checker = [(entire_book_order['share_amount'][x], entire_book_order.index[x]) for x in range(len(entire_book_order))
                if not np.isnan(entire_book_order['share_amount'][x])]
-    print(checker)
+    # print(checker)
+    return entire_book_order
+
+def add_buy_sell_shares(bs_df, amount_of_shares):
+    holdings = 0
+    entire_book_order = pd.DataFrame(index=bs_df.index, columns=['share_amount'])
+    for index in range(len(bs_df)):
+        if bs_df[index] == BUY and holdings < amount_of_shares:
+            if holdings == 0:
+                entire_book_order['share_amount'][index] = amount_of_shares
+                holdings += amount_of_shares
+            elif holdings == amount_of_shares:
+                continue
+        # sell
+        elif bs_df[index] == SELL and holdings > -amount_of_shares:
+            if holdings == 0:
+                continue
+            elif holdings == amount_of_shares:
+                entire_book_order['share_amount'][index] = amount_of_shares
+                holdings = holdings - amount_of_shares
+    entire_book_order['bs_signal'] = bs_df
+    checker = [(entire_book_order['share_amount'][x], entire_book_order.index[x]) for x in range(len(entire_book_order))
+               if not np.isnan(entire_book_order['share_amount'][x])]
     return entire_book_order
