@@ -26,41 +26,101 @@ def check_buy_sell_signals(ypred, ytest):
     print('you made {} correct buys. you made {} correct sells'.format(correct_buys, correct_sells))
     print('correct buy percentage {} and correct sell percentage {}'.format(percentage_buys, percentage_sells))
 
-def compute_portvals(order_book, close_data, start_val=100000, commission=9.95, impact=0.005):
-    # this is the function the autograder will call to test your code
-
-    # NOTE: orders_file may be a string, or it may be a file object. Your
-
-    # code should work correctly with either input
-
-
-    start_date = order_book.index[0]
-    end_date = order_book.index[-1]
+def compute_portvals(order_book, close_data, start_val, commission=9.95, impact=0.005):
+    order_book_copy = order_book.copy()
+    start_date = order_book_copy.index[0]
+    end_date = order_book_copy.index[-1]
     # start_index = list(close_data.index).index(start_date)
     # end_index = list(close_data.index).index(end_date)
     # close_data = close_data[start_index:end_index]
     # book_order['close'] = close_data
-    filled_orders = pd.DataFrame(index=order_book.index, columns=['holding', 'total_liquid_cash'])
+    filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['holding', 'total_liquid_cash'])
     filled_orders['total_liquid_cash'][0] = start_val
     shares_holder = 0
 
-    for index in order_book.index:
-        if order_book.loc[index, 'bs_signal'] == BUY and not np.isnan(order_book.loc[index, 'share_amount']):
-            shares_holder += order_book.loc[index, 'share_amount']
+    for index in order_book_copy.index:
+        if order_book_copy.loc[index, 'bs_signal'] == BUY and not np.isnan(order_book_copy.loc[index, 'share_amount']):
+            shares_holder += order_book_copy.loc[index, 'share_amount']
             filled_orders['holding'][index] = shares_holder
-            cost = float((close_data.loc[index, 'Close'] * abs(order_book.loc[index, 'share_amount']) * (1.000 + impact)) + commission)
+            cost = float((close_data.loc[index, 'Close'] * abs(order_book_copy.loc[index, 'share_amount']) * (1.000 + impact)) + commission)
             filled_orders['total_liquid_cash'][index] = -cost
-        elif order_book.loc[index, 'bs_signal'] == SELL and not np.isnan(order_book.loc[index, 'share_amount']):       # SELL
-            shares_holder -= order_book.loc[index, 'share_amount']
+        elif order_book_copy.loc[index, 'bs_signal'] == SELL and not np.isnan(order_book_copy.loc[index, 'share_amount']):       # SELL
+            shares_holder -= order_book_copy.loc[index, 'share_amount']
             filled_orders['holding'][index] = shares_holder
-            cost = float((close_data.loc[index, 'Close'] * abs(order_book.loc[index, 'share_amount']) * (1.000 - impact)) - commission)
+            cost = float((close_data.loc[index, 'Close'] * abs(order_book_copy.loc[index, 'share_amount']) * (1.000 - impact)) - commission)
             filled_orders['total_liquid_cash'][index] = cost
-    order_book['total_liquid_cash'] = filled_orders['total_liquid_cash']
-    order_book['holding'] = filled_orders['holding']
-    order_book['close'] = close_data['Close']
-    order_book = order_book.dropna()
-    print(order_book.sum())
-    return order_book
+    order_book_copy['total_liquid_cash'] = filled_orders['total_liquid_cash']
+    order_book_copy['holding'] = filled_orders['holding']
+    order_book_copy['close'] = close_data['Close']
+    order_book_copy = order_book_copy.dropna()
+    print('model net profits {} from {} to {}'.format(order_book_copy.sum()['total_liquid_cash'], start_date, end_date))
+    return order_book_copy
+
+def compute_simple_baseline(bs_orderbook, close_df, share_amount, start_val, commission=9.95, impact=0.005):
+    """ Computes the value of holding the share amnt on the first day
+        INPUT: BUY/SELL orderbook DO NOT use LONG/SHORTS"""
+    order_book_copy = bs_orderbook.copy()
+    order_book_copy = order_book_copy.dropna()
+
+    start_date = bs_orderbook.index[0]
+    end_date = bs_orderbook.index[-1]
+    filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['holding', 'total_liquid_cash'])
+    filled_orders['total_liquid_cash'][0] = start_val
+    shares_holder = 0
+    # Execute buy
+    shares_holder += share_amount
+    filled_orders['holding'][start_date] = shares_holder
+    cost = float((close_df.loc[start_date, 'Close'] * abs(bs_orderbook.loc[start_date, 'share_amount']) * (1.000 + impact)) + commission)
+    filled_orders['total_liquid_cash'][start_date] = -cost
+    # Execute sell
+    shares_holder -= share_amount
+    filled_orders['holding'][end_date] = shares_holder
+    sell_cost = float((close_df.loc[end_date, 'Close'] * abs(bs_orderbook.loc[end_date, 'share_amount']) * (1.000 + impact)) + commission)
+    filled_orders['total_liquid_cash'][end_date] = sell_cost
+
+    filled_orders = filled_orders.dropna()
+    summed = filled_orders.sum()
+    print('If you bought {} shares on {}, you would have {} on {}'.format(filled_orders['holding'][0], start_date, summed['total_liquid_cash'], end_date))
+    return filled_orders
+
+def compute_spy(bs_orderbook, spy_df, share_amount, start_val, commission=9.95, impact=0.005):
+
+    order_book_copy = bs_orderbook.copy()
+    order_book_copy = order_book_copy.dropna()
+
+    start_date = bs_orderbook.index[0]
+    end_date = bs_orderbook.index[-1]
+    filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['holding', 'total_liquid_cash'])
+    filled_orders['total_liquid_cash'][0] = start_val
+    shares_holder = 0
+    # Execute buy
+    shares_holder += share_amount
+    filled_orders['holding'][start_date] = shares_holder
+    import pdb
+    pdb.set_trace()
+    cost = float((spy_df.loc[start_date, 'Close'] * share_amount * (1.000 + impact)) + commission)
+    filled_orders['total_liquid_cash'][start_date] = -cost
+    # Execute sell
+    shares_holder -= share_amount
+    filled_orders['holding'][end_date] = shares_holder
+    sell_cost = float((spy_df.loc[end_date, 'Close'] * share_amount * (1.000 + impact)) + commission)
+    filled_orders['total_liquid_cash'][end_date] = sell_cost
+
+    filled_orders = filled_orders.dropna()
+    summed = filled_orders.sum()
+    import pdb
+    pdb.set_trace()
+    # print('If you bought {} shares on {}, you would have {} on {}'.format(filled_orders['holding'][0], start_date, summed['total_liquid_cash'], end_date))
+    return filled_orders
+
+def compare_strategies(buy_sell_order_book, long_short_order_book, target_close_df, spy_close_df, args):
+    long_short_portfolio_values = compute_portvals(long_short_order_book, target_close_df, args['starting_value'])
+    buy_sell_portfolio_values = compute_portvals(buy_sell_order_book, target_close_df, args['starting_value'])
+    compute_simple_baseline(buy_sell_portfolio_values, target_close_df, args['share_amount'], args['starting_value'])
+    compute_spy(buy_sell_portfolio_values, spy_close_df, args['share_amount'], args['starting_value'])
+
+    graph_order_book(long_short_portfolio_values, target_close_df, args['model_name'], args['file_name'], args["indicators"], args['length'])
+
 
 def graph_order_book(order_book, close_data, model_name, file_name, list_of_indicators, moving_average_length):
     # figure = plt.figure()
@@ -96,7 +156,3 @@ def graph_order_book(order_book, close_data, model_name, file_name, list_of_indi
     figure.set_size_inches(20, 13)
     plt.tight_layout()
     plt.savefig('{}.png'.format(title), dpi=300)
-
-
-def compare_strategies(generated_order_book, baseline):
-    pass
