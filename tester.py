@@ -21,3 +21,8 @@ class TestMarketSimETH(unittest.TestCase):
         self.assertEqual(sum_series['holding'], 100.0)
         self.assertEqual(sum_series['close'], 115489.94024682)
 
+    def test_create_ylabels(self):
+        df_with_ytest = tech_indicators.create_ylabels(self.data_frame_from_file, lookahead_days=5)
+        import pdb
+        pdb.set_trace()
+

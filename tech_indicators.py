@@ -12,7 +12,7 @@ from talib import BBANDS
 import math
 import matplotlib
 
-matplotlib.use("Agg")
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 
@@ -117,8 +117,6 @@ def get_indicators(df, options=None, length=10):
     df_close = df_close.dropna()
     bb = pd.DataFrame({'lower_bb_sma': lower_bb_sma, 'upper_bb_sma': upper_bb_sma, 'lower_bb_ema': lower_bb_ema,
                        'upper_bb_ema': upper_bb_ema})
-    compiled_df = bbands_classification(df_close[['Close']][length - 1:].astype(float), bb['lower_bb_ema'],
-                                        bb['upper_bb_ema'])
     y_label_df = create_ylabels(df_close[['Close']].astype(float))
 
     df_close, y_label_df = index_len_resolver(df_close, y_label_df)
@@ -133,11 +131,10 @@ def get_indicators(df, options=None, length=10):
     for option in options:
         if option in OPTION_MAP:
             list_of_dfs.append(OPTION_MAP[option])
-    X = pd.concat(list_of_dfs, axis=1)
-    X = X.dropna()
+    x = pd.concat(list_of_dfs, axis=1)
+    x = x.dropna()
 
-    return index_len_resolver(X, y_label_df)
-    # return X, y_label_df
+    return index_len_resolver(x, y_label_df)
 
 
 def normalize_indicators(dfs):
@@ -148,6 +145,12 @@ def normalize_indicators(dfs):
 
 
 def create_ylabels(df, lookahead_days=5):
+    """
+    Creates the Y labels (Buy/Sell/Hold) for training
+    :param df:
+    :param lookahead_days:
+    :return: dataframe with Y labels
+    """
     # Returns buy/sell/hold signals
     # Shortens the data because our logic is based on the lookahead/future price
     trainY = []
@@ -167,10 +170,11 @@ def create_ylabels(df, lookahead_days=5):
 
 def add_long_short_shares(bs_df, amount_of_shares):
     # TODO: Write tests
-    # we want to buy whatever we can with our starting value
-    # we do this by calculating the most shares we can buy at the first buy signal
-    # SELL is always selling everything
-    # BUY is always buying as much as possible??????????????
+    """
+    long 200 to fill our shorts and hold 100
+    short 200 to sell our 100 and hold 100 shares that we don't have
+    the shares that we borrow will be filled by the long 200
+    """
     holdings = 0
     amount_to_switch_to_buy_or_sell = 2 * amount_of_shares
     entire_book_order = pd.DataFrame(index=bs_df.index, columns=['share_amount'])
