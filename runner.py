@@ -33,7 +33,6 @@ if __name__ == "__main__":
         model_instance.train_and_predict()
         # model_instance.generate_plots()
         analyzer.check_buy_sell_signals(model_instance.ypred, model_instance.ytest)
-        print('generating longs and shorts and buy sells')
         long_short_order_book = tech_indicators.add_long_short_shares(model_instance.ypred['bs_signal'], args['share_amount'])
         buy_sell_order_book = tech_indicators.add_buy_sell_shares(model_instance.ypred['bs_signal'], args['share_amount'])
         # order_book.to_csv('tester.csv')

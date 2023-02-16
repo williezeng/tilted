@@ -2,7 +2,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 import pandas as pd
 import matplotlib
 
-matplotlib.use("Agg")
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, accuracy_score
 import tech_indicators

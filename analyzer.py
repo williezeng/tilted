@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib
+matplotlib.use('TkAgg')
+
+import matplotlib.dates as mdates
+
 import matplotlib.pyplot as plt
 from tech_indicators import BUY, SELL, HOLD
 
@@ -37,14 +41,13 @@ def compute_portvals(order_book, close_data, start_val, commission=9.95, impact=
     filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['holding', 'total_liquid_cash'])
     filled_orders['total_liquid_cash'][0] = start_val
     shares_holder = 0
-
     for index in order_book_copy.index:
         if order_book_copy.loc[index, 'bs_signal'] == BUY and not np.isnan(order_book_copy.loc[index, 'share_amount']):
             shares_holder += order_book_copy.loc[index, 'share_amount']
             filled_orders['holding'][index] = shares_holder
             cost = float((close_data.loc[index, 'Close'] * abs(order_book_copy.loc[index, 'share_amount']) * (1.000 + impact)) + commission)
             filled_orders['total_liquid_cash'][index] = -cost
-        elif order_book_copy.loc[index, 'bs_signal'] == SELL and not np.isnan(order_book_copy.loc[index, 'share_amount']):       # SELL
+        elif order_book_copy.loc[index, 'bs_signal'] == SELL and not np.isnan(order_book_copy.loc[index, 'share_amount']):
             shares_holder -= order_book_copy.loc[index, 'share_amount']
             filled_orders['holding'][index] = shares_holder
             cost = float((close_data.loc[index, 'Close'] * abs(order_book_copy.loc[index, 'share_amount']) * (1.000 - impact)) - commission)
@@ -57,8 +60,10 @@ def compute_portvals(order_book, close_data, start_val, commission=9.95, impact=
     return order_book_copy
 
 def compute_simple_baseline(bs_orderbook, close_df, share_amount, start_val, commission=9.95, impact=0.005):
-    """ Computes the value of holding the share amnt on the first day
-        INPUT: BUY/SELL orderbook DO NOT use LONG/SHORTS"""
+    """
+    Computes the value of holding the share amnt on the first day
+    INPUT: BUY/SELL orderbook DO NOT use LONG/SHORTS
+    """
     order_book_copy = bs_orderbook.copy()
     order_book_copy = order_book_copy.dropna()
 
@@ -70,12 +75,12 @@ def compute_simple_baseline(bs_orderbook, close_df, share_amount, start_val, com
     # Execute buy
     shares_holder += share_amount
     filled_orders['holding'][start_date] = shares_holder
-    cost = float((close_df.loc[start_date, 'Close'] * abs(bs_orderbook.loc[start_date, 'share_amount']) * (1.000 + impact)) + commission)
+    cost = float((close_df.loc[start_date, 'Close'] * share_amount * (1.000 + impact)) + commission)
     filled_orders['total_liquid_cash'][start_date] = -cost
     # Execute sell
     shares_holder -= share_amount
     filled_orders['holding'][end_date] = shares_holder
-    sell_cost = float((close_df.loc[end_date, 'Close'] * abs(bs_orderbook.loc[end_date, 'share_amount']) * (1.000 + impact)) + commission)
+    sell_cost = float((close_df.loc[end_date, 'Close'] * share_amount * (1.000 + impact)) + commission)
     filled_orders['total_liquid_cash'][end_date] = sell_cost
 
     filled_orders = filled_orders.dropna()
@@ -83,50 +88,65 @@ def compute_simple_baseline(bs_orderbook, close_df, share_amount, start_val, com
     print('If you bought {} shares on {}, you would have {} on {}'.format(filled_orders['holding'][0], start_date, summed['total_liquid_cash'], end_date))
     return filled_orders
 
-def compute_spy(bs_orderbook, spy_df, share_amount, start_val, commission=9.95, impact=0.005):
-
-    order_book_copy = bs_orderbook.copy()
-    order_book_copy = order_book_copy.dropna()
-
-    start_date = bs_orderbook.index[0]
-    end_date = bs_orderbook.index[-1]
-    filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['holding', 'total_liquid_cash'])
+def compute_spy(spy_df, share_amount, start_val, commission=9.95, impact=0.005):
+    spy_df_copy = spy_df.copy()
+    spy_df_copy = spy_df_copy.dropna()
+    start_date = spy_df_copy.index[0]
+    end_date = spy_df_copy.index[-1]
+    filled_orders = pd.DataFrame(index=spy_df_copy.index, columns=['holding', 'total_liquid_cash'])
     filled_orders['total_liquid_cash'][0] = start_val
     shares_holder = 0
     # Execute buy
     shares_holder += share_amount
     filled_orders['holding'][start_date] = shares_holder
-    import pdb
-    pdb.set_trace()
-    cost = float((spy_df.loc[start_date, 'Close'] * share_amount * (1.000 + impact)) + commission)
+    cost = float((spy_df['Close'][0] * share_amount * (1.000 + impact)) + commission)
     filled_orders['total_liquid_cash'][start_date] = -cost
     # Execute sell
     shares_holder -= share_amount
     filled_orders['holding'][end_date] = shares_holder
-    sell_cost = float((spy_df.loc[end_date, 'Close'] * share_amount * (1.000 + impact)) + commission)
+    sell_cost = float((spy_df['Close'][-1] * share_amount * (1.000 + impact)) + commission)
     filled_orders['total_liquid_cash'][end_date] = sell_cost
-
-    filled_orders = filled_orders.dropna()
     summed = filled_orders.sum()
-    import pdb
-    pdb.set_trace()
-    # print('If you bought {} shares on {}, you would have {} on {}'.format(filled_orders['holding'][0], start_date, summed['total_liquid_cash'], end_date))
+    filled_orders = filled_orders.dropna()
+    print('----')
+    print('If you bought {} shares of SPY on {}, you would have {} on {}'.format(filled_orders['holding'][0], start_date, summed['total_liquid_cash'], end_date))
+    percent_increase = (spy_df['Close'][-1] - spy_df['Close'][0])/spy_df['Close'][0] * 100
+    print('SPY increased by {} %'.format(percent_increase))
     return filled_orders
 
-def compare_strategies(buy_sell_order_book, long_short_order_book, target_close_df, spy_close_df, args):
-    long_short_portfolio_values = compute_portvals(long_short_order_book, target_close_df, args['starting_value'])
-    buy_sell_portfolio_values = compute_portvals(buy_sell_order_book, target_close_df, args['starting_value'])
-    compute_simple_baseline(buy_sell_portfolio_values, target_close_df, args['share_amount'], args['starting_value'])
-    compute_spy(buy_sell_portfolio_values, spy_close_df, args['share_amount'], args['starting_value'])
 
+def compare_strategies(buy_sell_order_book, long_short_order_book, target_close_df, spy_close_df, args):
+    print('generating longs and shorts ')
+    long_short_portfolio_values = compute_portvals(long_short_order_book, target_close_df, args['starting_value'])
+    print('generating buy and sell')
+    buy_sell_portfolio_values = compute_portvals(buy_sell_order_book, target_close_df, args['starting_value'])
+    compute_simple_baseline(buy_sell_order_book, target_close_df, args['share_amount'], args['starting_value'])
+    spy_portfolio_values = compute_spy(spy_close_df, args['share_amount'], args['starting_value'], commission=0, impact=0)
+    graph_spy(spy_portfolio_values, spy_close_df)
     graph_order_book(long_short_portfolio_values, target_close_df, args['model_name'], args['file_name'], args["indicators"], args['length'])
+
+def graph_spy(spy_order_book, spy_close):
+    plt.plot(list(spy_close.index), spy_close['Close'], label='price')
+    plt.plot(spy_order_book.index[0], spy_close['Close'][0], '--go', label='buy')
+    plt.plot(spy_order_book.index[1], spy_close['Close'][-1], '--ro', label='sell')
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
+    plt.xticks(rotation=90, fontweight='light',  fontsize='x-small')
+    plt.tight_layout()
+    plt.xlabel('Date')
+    plt.ylabel('Close')
+    plt.legend()
+    plt.title('spy')
+    figure = plt.gcf()
+    figure.set_size_inches(20, 13)
+    plt.tight_layout()
+    plt.savefig('{}.png'.format('spy'), dpi=300)
+    plt.figure().clear()
 
 
 def graph_order_book(order_book, close_data, model_name, file_name, list_of_indicators, moving_average_length):
     # figure = plt.figure()
     # ax = close_data.plot(y='Close', x='Date')
-    import matplotlib.dates as mdates
-    matplotlib.use('TkAgg')
+
     # start_date = order_book.index[0]
     # start_index = list(close_data.index).index(start_date)
     # test_close_data = close_data[start_index:]
@@ -156,3 +176,4 @@ def graph_order_book(order_book, close_data, model_name, file_name, list_of_indi
     figure.set_size_inches(20, 13)
     plt.tight_layout()
     plt.savefig('{}.png'.format(title), dpi=300)
+    plt.figure().clear()

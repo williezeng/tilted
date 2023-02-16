@@ -1,7 +1,7 @@
 from sklearn.tree import DecisionTreeClassifier
 
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use('TkAgg')
 
 import math
 from models import BaseModel

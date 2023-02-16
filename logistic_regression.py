@@ -7,7 +7,7 @@ import pandas_ta
 from talib import BBANDS
 import matplotlib
 
-matplotlib.use("Agg")
+matplotlib.use('TkAgg')
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
 from models import BaseModel
 

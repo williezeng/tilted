@@ -5,7 +5,7 @@ from sklearn.linear_model import LinearRegression
 import pandas as pd
 
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import tech_indicators
