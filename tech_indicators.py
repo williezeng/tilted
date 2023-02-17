@@ -25,8 +25,9 @@ HOLD = 0
 
 
 def moving_average(data_frame, length=10):
-    ema = data_frame.ta.ema(length=length, append=True).dropna()
-    sma = data_frame.ta.sma(length=length, append=True).dropna()
+    dataframe_copy = data_frame.copy()
+    ema = dataframe_copy.ta.ema(length=length, append=True).dropna()
+    sma = dataframe_copy.ta.sma(length=length, append=True).dropna()
     return ema, sma
 
 
@@ -92,7 +93,7 @@ def index_len_resolver(df1, df2):
     if diff > 0:
         df1 = df1[diff:]
     elif diff < 0:
-        df2 = df2[diff:]
+        df2 = df2[-diff:]
 
     df1_end = datetime.strptime(df1.index[-1], '%Y-%m-%d')
     df2_end = datetime.strptime(df2.index[-1], '%Y-%m-%d')
@@ -106,34 +107,29 @@ def index_len_resolver(df1, df2):
 
 
 def get_indicators(df, options=None, length=10):
-    df_close = df[['Close']]
-    df_close['High'] = df[['High']]
-    df_close['Volume'] = df[['Volume']]
     list_of_dfs = []
-    ema, sma = moving_average(df_close, length=length)
-    lower_bb_sma, upper_bb_sma = bbands_calculation(df_close, sma, length=length)
-    lower_bb_ema, upper_bb_ema = bbands_calculation(df_close, ema, length=length)
+    ema, sma = moving_average(df[['Close']], length=length)
+    lower_bb_sma, upper_bb_sma = bbands_calculation(df[['Close']], sma, length=length)
+    lower_bb_ema, upper_bb_ema = bbands_calculation(df[['Close']], ema, length=length)
     # averages are calculated given n previous days of information, drop the NAs
-    df_close = df_close.dropna()
+    df_close = df[['Close']].dropna()
     bb = pd.DataFrame({'lower_bb_sma': lower_bb_sma, 'upper_bb_sma': upper_bb_sma, 'lower_bb_ema': lower_bb_ema,
                        'upper_bb_ema': upper_bb_ema})
+
     y_label_df = create_ylabels(df_close[['Close']].astype(float))
-
-    df_close, y_label_df = index_len_resolver(df_close, y_label_df)
-
-    OPTION_MAP = {'sma': df_close['SMA_{}'.format(length)],
-                  'ema': df_close['EMA_{}'.format(length)],
+    df_close, y_label_df = index_len_resolver(df[['Close']], y_label_df)
+    OPTION_MAP = {'sma': pd.DataFrame({'SMA_{}'.format(length): sma}),
+                  'ema': pd.DataFrame({'EMA_{}'.format(length): ema}),
                   'bb': bb,
-                  'high': df_close['High'],
-                  'volume': df_close['Volume'],
-                  'close': df_close['Close']
+                  'high': df[['High']],
+                  'volume': df[['Volume']],
+                  'close': df_close[['Close']]
                   }
     for option in options:
         if option in OPTION_MAP:
             list_of_dfs.append(OPTION_MAP[option])
     x = pd.concat(list_of_dfs, axis=1)
     x = x.dropna()
-
     return index_len_resolver(x, y_label_df)
 
 
@@ -154,7 +150,8 @@ def create_ylabels(df, lookahead_days=5):
     # Returns buy/sell/hold signals
     # Shortens the data because our logic is based on the lookahead/future price
     trainY = []
-    closed_price_series = df['Close']
+    df_copy = df.copy()
+    closed_price_series = df_copy['Close']
     for i in range(closed_price_series.shape[0] - lookahead_days):
         ratio = (closed_price_series[i + lookahead_days] - closed_price_series[i]) / closed_price_series[i]
         if ratio > (0.02):  # positive ratio that's higher than trade impact + commission
@@ -163,9 +160,9 @@ def create_ylabels(df, lookahead_days=5):
             trainY.append(SELL)  # sell
         else:
             trainY.append(HOLD)
-    df = df[:-lookahead_days]
-    df['bs_signal'] = trainY
-    return df[['bs_signal']]
+    df_copy = df_copy[:-lookahead_days]
+    df_copy['bs_signal'] = trainY
+    return df_copy[['bs_signal']]
 
 
 def add_long_short_shares(bs_df, amount_of_shares):
