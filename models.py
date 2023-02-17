@@ -66,7 +66,8 @@ class BaseModel(object):
             model = self.model(**self.params)
         else:
             model = self.model()
-        model.fit(self.xtrain, self.ytrain)
+
+        model.fit(self.xtrain, self.ytrain['bs_signal'])
         self.ypred = pd.DataFrame(model.predict(self.xtest), index=self.ytest.index, columns=['bs_signal']).sort_index()  # predicted
         self.ytest = self.ytest.sort_index()
         self.rmse = mean_squared_error(self.ytest, self.ypred, squared=False)
