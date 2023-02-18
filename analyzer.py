@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib
-
+from datetime import datetime
 matplotlib.use('TkAgg')
 
 import matplotlib.dates as mdates
@@ -91,6 +91,32 @@ def compute_simple_baseline(close_df, share_amount, start_val, commission=9.95, 
     print('The share increased by {} %'.format(percent_increase))
     return filled_orders
 
+def compute_yearly_gains(order_book):
+    yearly_gains_dict = {}
+    order_book_start = datetime.strptime(order_book.index[0], '%Y-%m-%d')
+    order_book_end = datetime.strptime(order_book.index[-1], '%Y-%m-%d')
+    x = 1
+    date_holder = '{}-{}-{}'.format(order_book_start.year, order_book_start.month, order_book_start.day)
+    next_years_date = '{}-{}-{}'.format(order_book_start.year + x, order_book_start.month, order_book_start.day)
+    while int(next_years_date.split('-')[0]) <= int(order_book_end.year):
+        yearly_gain = ((order_book.loc[date_holder:next_years_date].sum()['total_liquid_cash'] - order_book.loc[:date_holder]['total_liquid_cash'][-1])/abs(order_book.loc[:date_holder]['total_liquid_cash'][-1]) * 100)
+        print('From {} to {} the yearly gain is {}'.format(date_holder, next_years_date, yearly_gain))
+        date_holder = next_years_date
+        yearly_gains_dict[x] = yearly_gain
+        x += 1
+        next_years_date = '{}-{}-{}'.format(order_book_start.year + x, order_book_start.month, order_book_start.day)
+
+    order_book_end_str = '{}-{}-{}'.format(order_book_end.year, order_book_end.month, order_book_end.day)
+    remaining_gains = order_book.loc[date_holder:order_book_end_str].sum()['total_liquid_cash']
+    if remaining_gains > 0.0:
+        yearly_gain = ((order_book.loc[date_holder:order_book_end_str].sum()['total_liquid_cash'] -
+                        order_book.loc[:date_holder]['total_liquid_cash'][-1]) / abs(order_book.loc[:date_holder]['total_liquid_cash'][-1]) * 100)
+        yearly_gains_dict[x] = yearly_gain
+
+    total_percent_gain = ((order_book['total_liquid_cash'].sum() - order_book['total_liquid_cash'][0]) / abs(
+        order_book['total_liquid_cash'][0])) * 100
+    print('THE TOTAL % gain : {}'.format(total_percent_gain))
+    return yearly_gains_dict
 
 def compute_spy(spy_df, share_amount, start_val, commission=9.95, impact=0.005):
     spy_df_copy = spy_df.copy()
@@ -129,10 +155,15 @@ def compare_strategies(buy_sell_order_book, long_short_order_book, target_close_
                      args["indicators"], args['length'])
     print('generating buy and sell')
     buy_sell_portfolio_values = compute_portvals(buy_sell_order_book, target_close_df, args['starting_value'])
-    compute_simple_baseline(target_close_df, args['share_amount'], args['starting_value'])
-    spy_portfolio_values = compute_spy(spy_close_df, args['share_amount'], args['starting_value'], commission=0,
-                                       impact=0)
+    target_hold_portfolio = compute_simple_baseline(target_close_df, int(args['share_amount']), args['starting_value'])
+    spy_hold_portfolio = spy_portfolio_values = compute_spy(spy_close_df, int(args['share_amount']), args['starting_value'], commission=0, impact=0)
     graph_spy(spy_portfolio_values, spy_close_df)
+    import pdb
+    pdb.set_trace()
+    # compute_yearly_gains(long_short_portfolio_values)
+    compute_yearly_gains(buy_sell_portfolio_values)
+    # compute_yearly_gains(target_hold_portfolio)
+    # compute_yearly_gains(spy_hold_portfolio)
 
 
 
