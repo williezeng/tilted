@@ -17,7 +17,7 @@ class TestMarketSimETH(unittest.TestCase):
         sum_series = portfolio.sum()
         self.assertEqual(sum_series['share_amount'], 18900.0)
         self.assertEqual(sum_series['bs_signal'], 1)
-        self.assertEqual(sum_series['total_liquid_cash'], 938395.1612033314)
+        self.assertEqual(sum_series['cash_earned'], 938395.1612033314)
         self.assertEqual(sum_series['holding'], 100.0)
         self.assertEqual(sum_series['close'], 115489.94024682)
         import pdb
@@ -32,13 +32,13 @@ class TestMarketSimETH(unittest.TestCase):
         self.assertEqual(yearly_gains_dict[4], 316.76851649782077)
         self.assertEqual(yearly_gains_dict[5], 154.6028791479902)
 
-        first = portfolio.loc['2017-12-10':'2018-12-10']['total_liquid_cash'].sum()
-        second = portfolio.loc['2018-12-10':'2019-12-10']['total_liquid_cash'].sum()
-        third = portfolio.loc['2019-12-10':'2020-12-10']['total_liquid_cash'].sum()
-        fourth = portfolio.loc['2020-12-10':'2021-12-10']['total_liquid_cash'].sum()
-        fifth = portfolio.loc['2021-12-10':'2022-12-10']['total_liquid_cash'].sum()
+        first = portfolio.loc['2017-12-10':'2018-12-10']['cash_earned'].sum()
+        second = portfolio.loc['2018-12-10':'2019-12-10']['cash_earned'].sum()
+        third = portfolio.loc['2019-12-10':'2020-12-10']['cash_earned'].sum()
+        fourth = portfolio.loc['2020-12-10':'2021-12-10']['cash_earned'].sum()
+        fifth = portfolio.loc['2021-12-10':'2022-12-10']['cash_earned'].sum()
 
-        total_percent_gain = ((portfolio['total_liquid_cash'].sum() - portfolio['total_liquid_cash'][0])/abs(portfolio['total_liquid_cash'][0])) * 100
+        total_percent_gain = ((portfolio['cash_earned'].sum() - portfolio['cash_earned'][0])/abs(portfolio['cash_earned'][0])) * 100
 
         import pdb
         pdb.set_trace()
