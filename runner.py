@@ -26,17 +26,18 @@ if __name__ == "__main__":
     file_name = os.path.join(constants.YAHOO_DATA_DIR, args['file_name'])
     spy_file_name = os.path.join(constants.YAHOO_DATA_DIR, 'spy500.csv')
     args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
-    data_frame_from_file = tech_indicators.read_df_from_file(file_name)
+    data_frame_from_ticker = tech_indicators.read_df_from_file(file_name)
     data_frame_from_spyfile = tech_indicators.read_df_from_file(spy_file_name)
     if args['model_name'] in NAME_TO_MODEL:
-        model_instance = NAME_TO_MODEL[args['model_name']](args, data_frame_from_file)
+        model_instance = NAME_TO_MODEL[args['model_name']](args, data_frame_from_ticker)
         model_instance.train_and_predict()
         # model_instance.generate_plots()
         analyzer.check_buy_sell_signals(model_instance.ypred, model_instance.ytest)
-        long_short_order_book = tech_indicators.add_long_short_shares(model_instance.ypred['bs_signal'], args['share_amount'])
-        buy_sell_order_book = tech_indicators.add_buy_sell_shares(model_instance.ypred['bs_signal'], args['share_amount'])
+        long_short_order_book = tech_indicators.add_long_short_shares(model_instance.ypred['bs_signal'], int(args['share_amount']))
+        buy_sell_order_book = tech_indicators.add_buy_sell_shares(model_instance.ypred['bs_signal'], int(args['share_amount']))
         # order_book.to_csv('tester.csv')
-        analyzer.compare_strategies(buy_sell_order_book, long_short_order_book, data_frame_from_file[['Close']], data_frame_from_spyfile[['Close']], args)
+        # tech_indicators.bbands_classification(data_frame_from_ticker)
+        analyzer.compare_strategies(buy_sell_order_book, long_short_order_book, data_frame_from_ticker[['Close']], data_frame_from_spyfile[['Close']], args)
         # same buy/long/sell/short signals, just quantity is different
         # analyzer.graph_order_book(buy_sell_portfolio_values, data_frame_from_file[['Close']], args['model_name'], args['file_name'], args["indicators"], args['length'])
 

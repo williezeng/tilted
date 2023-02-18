@@ -47,13 +47,13 @@ def bbands_classification(close_prices_data_frame, lower_bb, upper_bb):
     sell_price = []
     bb_signal = []
     signal = 0
-    closed_prices = close_prices_data_frame['Close']
+    close_prices_df_copy = close_prices_data_frame.copy()
     close_prices_data_frame = close_prices_data_frame.iloc[1:]  # base buy/sell off previous prices -1 len
-    for i in range(1, len(closed_prices)):
+    for i in range(1, len(close_prices_df_copy['Close'])):
         # BUY if dips lower than lower BB
-        if closed_prices[i - 1] > lower_bb[i - 1] and closed_prices[i] < lower_bb[i]:
+        if close_prices_df_copy['Close'][i - 1] > lower_bb[i - 1] and close_prices_df_copy['Close'][i] < lower_bb[i]:
             if signal != 1:  # don't buy until sell
-                buy_price.append(closed_prices[i])
+                buy_price.append(close_prices_df_copy['Close'][i])
                 sell_price.append(np.nan)
                 signal = 1
                 bb_signal.append(signal)
@@ -62,10 +62,10 @@ def bbands_classification(close_prices_data_frame, lower_bb, upper_bb):
                 sell_price.append(np.nan)
                 bb_signal.append(0)
         # SELL if rises above higher BB
-        elif closed_prices[i - 1] < upper_bb[i - 1] and closed_prices[i] > upper_bb[i]:
+        elif close_prices_df_copy['Close'][i - 1] < upper_bb[i - 1] and close_prices_df_copy['Close'][i] > upper_bb[i]:
             if signal != -1:  # don't sell until buy
                 buy_price.append(np.nan)
-                sell_price.append(closed_prices[i])
+                sell_price.append(close_prices_df_copy['Close'][i])
                 signal = -1
                 bb_signal.append(signal)
             else:
