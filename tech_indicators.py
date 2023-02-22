@@ -194,27 +194,25 @@ def add_long_short_shares(bs_df, amount_of_shares):
     entire_book_order['bs_signal'] = bs_df
     checker = [(entire_book_order['share_amount'][x], entire_book_order.index[x]) for x in range(len(entire_book_order))
                if not np.isnan(entire_book_order['share_amount'][x])]
-    # print(checker)
+    entire_book_order = entire_book_order.dropna()
     return entire_book_order
 
-def add_buy_sell_shares(bs_df, amount_of_shares):
+def add_buy_sell_shares(bs_df, close_price, starting_value, commission=9.95, impact=0.005):
     holdings = 0
     entire_book_order = pd.DataFrame(index=bs_df.index, columns=['share_amount'])
     for index in range(len(bs_df)):
-        if bs_df[index] == BUY and holdings < amount_of_shares:
-            if holdings == 0:
-                entire_book_order['share_amount'][index] = amount_of_shares
-                holdings += amount_of_shares
-            elif holdings == amount_of_shares:
-                continue
+        cost_per_share = float((close_price.iloc[index, 0] * (1.000 + impact)) + commission)
+        number_of_buyable_shares = starting_value/cost_per_share
+        if bs_df[index] == BUY and holdings == 0:
+            entire_book_order['share_amount'][index] = number_of_buyable_shares
+            holdings += number_of_buyable_shares
         # sell
-        elif bs_df[index] == SELL and holdings > -amount_of_shares:
-            if holdings == 0:
-                continue
-            elif holdings == amount_of_shares:
-                entire_book_order['share_amount'][index] = amount_of_shares
-                holdings = holdings - amount_of_shares
+        elif bs_df[index] == SELL and holdings > 0:
+            entire_book_order['share_amount'][index] = holdings
+            holdings -= holdings
     entire_book_order['bs_signal'] = bs_df
-    checker = [(entire_book_order['share_amount'][x], entire_book_order.index[x]) for x in range(len(entire_book_order))
-               if not np.isnan(entire_book_order['share_amount'][x])]
+    entire_book_order = entire_book_order.dropna()
+
+    checker = [(entire_book_order['share_amount'][x], entire_book_order.index[x]) for x in range(len(entire_book_order))]
+    print(checker)
     return entire_book_order

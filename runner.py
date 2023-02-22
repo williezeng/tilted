@@ -17,8 +17,8 @@ def build_args():
     parser.add_argument('--indicators', help='the technical indicators', type=str, required=True)
     parser.add_argument('--optimize_params', help='find best model parameters', type=bool, required=False, default=False)
     parser.add_argument('--model_name', help='the model you want to run', type=str, required=True)
-    parser.add_argument('--share_amount', help='the amount of share you want to buy/sell', type=str, required=False, default=100)
-    parser.add_argument('--starting_value', help='the starting value', type=str, required=False, default=100000)
+    parser.add_argument('--share_amount', help='the amount of share you want to buy/sell', type=int, required=False, default=100)
+    parser.add_argument('--starting_value', help='the starting value', type=int, required=False, default=100000)
     return vars(parser.parse_args())
 
 if __name__ == "__main__":
@@ -34,12 +34,13 @@ if __name__ == "__main__":
         # model_instance.generate_plots()
         analyzer.check_buy_sell_signals(model_instance.ypred, model_instance.ytest)
         long_short_order_book = tech_indicators.add_long_short_shares(model_instance.ypred['bs_signal'], int(args['share_amount']))
-        buy_sell_order_book = tech_indicators.add_buy_sell_shares(model_instance.ypred['bs_signal'], int(args['share_amount']))
+        buy_sell_order_book = tech_indicators.add_buy_sell_shares(model_instance.ypred['bs_signal'], data_frame_from_ticker[['Close']],
+                                                                  args['starting_value'])
         # order_book.to_csv('tester.csv')
         # tech_indicators.bbands_classification(data_frame_from_ticker)
         analyzer.compare_strategies(buy_sell_order_book, long_short_order_book, data_frame_from_ticker[['Close']], data_frame_from_spyfile[['Close']], args)
         # same buy/long/sell/short signals, just quantity is different
         # analyzer.graph_order_book(buy_sell_portfolio_values, data_frame_from_file[['Close']], args['model_name'], args['file_name'], args["indicators"], args['length'])
-
+        # model_instance.save_best_model()
     else:
         print('must enter a valid model from {}'.format(NAME_TO_MODEL.keys()))
