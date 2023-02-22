@@ -7,12 +7,17 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, accuracy_score
 import tech_indicators
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
-
+import joblib
+import os
 import math
 from abc import ABC, abstractmethod
+from analyzer import check_buy_sell_signals
 
 best = math.inf
 
+BEST_RUN_DIR = os.path.join(os.path.curdir, 'best_run')
+SAVED_MODEL = 'finalized_{name}.sav'
+SAVED_MODEL_PATH = os.path.join(BEST_RUN_DIR, SAVED_MODEL)
 
 class BaseModel(object):
     def __init__(self, options, data_frame):
@@ -24,6 +29,7 @@ class BaseModel(object):
         self.model = None
         self.model_name = None
         self.rmse = None
+        self.test_score = -1
         self.xtrain, self.xtest, self.ytrain, self.ytest = self.setup_data(data_frame)
 
     def optimize_parameters(self, options):
@@ -63,18 +69,18 @@ class BaseModel(object):
 
     def train_and_predict(self):
         if self.params:
-            model = self.model(**self.params)
+            self.model = self.model(**self.params)
         else:
-            model = self.model()
+            self.model = self.model()
 
-        model.fit(self.xtrain, self.ytrain['bs_signal'])
-        self.ypred = pd.DataFrame(model.predict(self.xtest), index=self.ytest.index, columns=['bs_signal']).sort_index()  # predicted
+        self.model.fit(self.xtrain, self.ytrain['bs_signal'])
+        self.ypred = pd.DataFrame(self.model.predict(self.xtest), index=self.ytest.index, columns=['bs_signal']).sort_index()  # predicted
         self.ytest = self.ytest.sort_index()
         self.rmse = mean_squared_error(self.ytest, self.ypred, squared=False)
-        train_score = model.score(self.xtrain, self.ytrain)
-        test_score = accuracy_score(self.ypred, self.ytest)
+        train_score = self.model.score(self.xtrain, self.ytrain)
+        self.test_score = accuracy_score(self.ypred, self.ytest)
         print("Mean Absolute Error: $", self.rmse)
-        print('test acc ', test_score)
+        print('test acc ', self.test_score)
         print('train acc ', train_score)
 
     def generate_plots(self):
@@ -88,3 +94,30 @@ class BaseModel(object):
         plt.xticks(rotation=45)
         plt.tight_layout()
         plt.savefig("{}{}_{}_plot.png".format(self.data_name, self.length_of_moving_averages, self.model_name), dpi=500)
+
+    def save_model(self):
+        joblib.dump(self.model, SAVED_MODEL_PATH.format(name=self.model_name))
+
+    def load_model(self):
+        loaded_model = None
+        if os.path.exists(SAVED_MODEL_PATH.format(name=self.model_name)):
+            loaded_model = joblib.load(SAVED_MODEL_PATH.format(name=self.model_name))
+        return loaded_model
+
+    def save_best_model(self):
+        #TODO: logic is flawed because the fucking dates are always shufflede lmao you are always comparing with different test results
+
+        loaded_model = self.load_model()
+        if loaded_model:
+            loaded_model_y_pred = pd.DataFrame(loaded_model.predict(self.xtest), index=self.ytest.index, columns=['bs_signal']).sort_index()
+            loaded_model_rmse = mean_squared_error(self.ytest, loaded_model_y_pred, squared=False)
+            test_score = accuracy_score(loaded_model_y_pred, self.ytest)
+            if test_score < self.test_score and loaded_model_rmse > self.rmse:
+                print('---')
+                print('Saving current model. It is better than this:')
+                print('test acc ', test_score)
+                check_buy_sell_signals(loaded_model_y_pred, self.ytest)
+                self.save_model()
+        else:
+            self.save_model()
+
