@@ -2,7 +2,7 @@ import unittest
 import os
 from utils import constants
 import pandas as pd
-from analyzer import compute_portvals, graph_order_book, compute_yearly_gains
+from analyzer import compute_portfolio, graph_order_book, compute_yearly_gains
 import tech_indicators
 from datetime import datetime
 
@@ -13,7 +13,7 @@ class TestMarketSimETH(unittest.TestCase):
         self.long_short_order_bk = pd.read_csv('tester1.csv', index_col=[0], header=[0], skipinitialspace=True)
 
     def test_create_long_short_portfolio(self):
-        portfolio = compute_portvals(self.long_short_order_bk, self.data_frame_from_file[['Close']], 0)
+        portfolio = compute_portfolio(self.long_short_order_bk, self.data_frame_from_file[['Close']], 0)
         sum_series = portfolio.sum()
         self.assertEqual(sum_series['share_amount'], 18900.0)
         self.assertEqual(sum_series['bs_signal'], 1)
@@ -24,7 +24,7 @@ class TestMarketSimETH(unittest.TestCase):
         pdb.set_trace()
 
     def test_compute_yearly_gains(self):
-        portfolio = compute_portvals(self.long_short_order_bk, self.data_frame_from_file[['Close']], 0)
+        portfolio = compute_portfolio(self.long_short_order_bk, self.data_frame_from_file[['Close']], 0)
         yearly_gains_dict = compute_yearly_gains(portfolio)
         self.assertEqual(yearly_gains_dict[1], 564.3000105961332)
         self.assertEqual(yearly_gains_dict[2], -100.08058630201029)
