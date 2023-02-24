@@ -36,9 +36,10 @@ def check_buy_sell_signals(ypred, ytest):
 
 def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.005):
     order_book_copy = order_book.copy()
-    filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['holding', 'cash_earned', 'cumulative_gains', 'cumulative_percent'])
+    filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['holding', 'cash_earned', 'bankroll', 'cumulative_percentage'])
     shares_holder = 0
     gains_holder = 0
+    initial_spending = 0
     start_date = order_book_copy.index[0]
     for index in order_book_copy.index:
         if order_book_copy.loc[index, 'bs_signal'] == BUY:
@@ -46,9 +47,14 @@ def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.00
             filled_orders['holding'][index] = shares_holder
             cost = float((closing_price_df.loc[index, 'Close'] * abs(order_book_copy.loc[index, 'share_amount']) * (1.000 + impact)) + commission)
             filled_orders['cash_earned'][index] = -cost
-            gains_holder -= cost
-            filled_orders['cumulative_gains'][index] = gains_holder
-            filled_orders['cumulative_percent'][index] = ((gains_holder - filled_orders['cumulative_gains'][start_date]) / abs(filled_orders['cumulative_gains'][start_date])) * 100
+            if index == start_date:
+                gains_holder = 0
+                filled_orders['bankroll'][index] = gains_holder
+                filled_orders['cumulative_percentage'][index] = 0
+            else:
+                gains_holder -= cost
+                filled_orders['bankroll'][index] = gains_holder
+                filled_orders['cumulative_percentage'][index] = ((filled_orders['bankroll'][index] - abs(filled_orders['cash_earned'][start_date])) / abs(filled_orders['cash_earned'][start_date])) * 100
 
         elif order_book_copy.loc[index, 'bs_signal'] == SELL:
             shares_holder -= order_book_copy.loc[index, 'share_amount']
@@ -56,16 +62,16 @@ def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.00
             cost = float((closing_price_df.loc[index, 'Close'] * abs(order_book_copy.loc[index, 'share_amount']) * (1.000 - impact)) - commission)
             filled_orders['cash_earned'][index] = cost
             gains_holder += cost
-            filled_orders['cumulative_gains'][index] = gains_holder
-            filled_orders['cumulative_percent'][index] = ((gains_holder - filled_orders['cumulative_gains'][start_date])/abs(filled_orders['cumulative_gains'][start_date])) * 100
-    filled_orders['cumulative_percent'][0] = 0.
+            filled_orders['bankroll'][index] = gains_holder
+            filled_orders['cumulative_percentage'][index] = ((filled_orders['bankroll'][index] - abs(filled_orders['cash_earned'][start_date])) / abs(filled_orders['cash_earned'][start_date])) * 100
     order_book_copy['cash_earned'] = filled_orders['cash_earned']
     order_book_copy['holding'] = filled_orders['holding']
-    order_book_copy['cumulative_gains'] = filled_orders['cumulative_gains']
-    order_book_copy['cumulative_percent'] = filled_orders['cumulative_percent']
+    order_book_copy['bankroll'] = filled_orders['bankroll']
+    order_book_copy['cumulative_percentage'] = filled_orders['cumulative_percentage']
     order_book_copy['close'] = closing_price_df['Close']
     order_book_copy = order_book_copy.dropna()
     print('model net profits {} from {} to {}'.format(order_book_copy.sum()['cash_earned'], order_book_copy.index[0], order_book_copy.index[-1]))
+
     return order_book_copy
 
 
@@ -78,7 +84,7 @@ def compute_simple_baseline(close_df, share_amount, commission=9.95, impact=0.00
     close_df_copy = close_df_copy.dropna()
     start_date = close_df_copy.index[0]
     end_date = close_df_copy.index[-1]
-    filled_orders = pd.DataFrame(index=close_df_copy.index, columns=['holding', 'cash_earned', 'cumulative_gains', 'cumulative_percent'])
+    filled_orders = pd.DataFrame(index=close_df_copy.index, columns=['holding', 'cash_earned', 'bankroll', 'cumulative_percent'])
     shares_holder = 0
     gains_holder = 0
 
@@ -88,16 +94,16 @@ def compute_simple_baseline(close_df, share_amount, commission=9.95, impact=0.00
     cost = float((close_df_copy['Close'][0] * share_amount * (1.000 + impact)) + commission)
     filled_orders['cash_earned'][start_date] = -cost
     gains_holder -= cost
-    filled_orders['cumulative_gains'][start_date] = gains_holder
-    filled_orders['cumulative_percent'][start_date] = (gains_holder - filled_orders['cumulative_gains'][start_date])/abs(filled_orders['cumulative_gains'][start_date]) * 100
+    filled_orders['bankroll'][start_date] = gains_holder
+    filled_orders['cumulative_percent'][start_date] = (gains_holder - filled_orders['bankroll'][start_date])/abs(filled_orders['bankroll'][start_date]) * 100
     # Execute sell
     shares_holder -= share_amount
     filled_orders['holding'][end_date] = shares_holder
     cost = float((close_df_copy['Close'][-1] * share_amount * (1.000 + impact)) + commission)
     filled_orders['cash_earned'][end_date] = cost
     gains_holder += cost
-    filled_orders['cumulative_gains'][end_date] = gains_holder
-    filled_orders['cumulative_percent'][end_date] = (gains_holder - filled_orders['cumulative_gains'][start_date])/abs(filled_orders['cumulative_gains'][start_date]) * 100
+    filled_orders['bankroll'][end_date] = gains_holder
+    filled_orders['cumulative_percent'][end_date] = (gains_holder - filled_orders['bankroll'][start_date])/abs(filled_orders['bankroll'][start_date]) * 100
 
     summed = filled_orders.sum()
     filled_orders = filled_orders.dropna()
@@ -117,7 +123,11 @@ def compute_yearly_gains(order_book):
     date_holder = '{}-{}-{}'.format(order_book_start.year, order_book_start.month, order_book_start.day)
     next_years_date = '{}-{}-{}'.format(order_book_start.year + x, order_book_start.month, order_book_start.day)
     while int(next_years_date.split('-')[0]) <= int(order_book_end.year):
-        yearly_gain = ((order_book.loc[:next_years_date, 'cumulative_gains'][-1] - order_book.loc[date_holder:, 'cumulative_gains'][0])/abs(order_book.loc[date_holder:, 'cumulative_gains'][0]) * 100)
+        if x == 1:
+            yearly_gain = ((order_book.loc[:next_years_date, 'bankroll'][-1] - abs(order_book.loc[date_holder:, 'cash_earned'][
+                0])) / abs(order_book.loc[date_holder:, 'cash_earned'][0]) * 100)
+        else:
+            yearly_gain = ((order_book.loc[:next_years_date, 'bankroll'][-1] - order_book.loc[date_holder:, 'bankroll'][0])/abs(order_book.loc[date_holder:, 'bankroll'][0]) * 100)
         print('From {} to {} the yearly gain is {}'.format(date_holder, next_years_date, yearly_gain))
         date_holder = next_years_date
         yearly_gains_dict[x] = yearly_gain
@@ -127,11 +137,9 @@ def compute_yearly_gains(order_book):
     order_book_end_str = '{}-{}-{}'.format(order_book_end.year, order_book_end.month, order_book_end.day)
     remaining_gains = order_book.loc[date_holder:order_book_end_str].sum()['cash_earned']
     if remaining_gains > 0.0:
-        yearly_gain = ((order_book.loc[:order_book_end_str, 'cumulative_gains'][-1] - order_book.loc[date_holder:, 'cumulative_gains'][0])/abs(order_book.loc[date_holder:, 'cumulative_gains'][0]) * 100)
+        yearly_gain = ((order_book.loc[:order_book_end_str, 'bankroll'][-1] - order_book.loc[date_holder:, 'bankroll'][0])/abs(order_book.loc[date_holder:, 'bankroll'][0]) * 100)
         yearly_gains_dict[x] = yearly_gain
-
-    total_percent_gain = ((order_book['cash_earned'].sum() - order_book['cash_earned'][0]) / abs(
-        order_book['cash_earned'][0])) * 100
+    total_percent_gain = order_book['cumulative_percentage'][-1]
     print('THE TOTAL % gain : {}'.format(total_percent_gain))
     return yearly_gains_dict
 
@@ -155,8 +163,7 @@ def compare_strategies(buy_sell_order_book, long_short_order_book, target_close_
     spy_hold_portfolio = compute_simple_baseline(spy_close_df, int(args['share_amount']))
 
     graph_spy(spy_hold_portfolio, spy_close_df)
-    # compute_yearly_gains(target_hold_portfolio)
-    # compute_yearly_gains(spy_hold_portfolio)
+
 
 
 def graph_spy(spy_order_book, spy_close):

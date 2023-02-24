@@ -91,9 +91,9 @@ def index_len_resolver(df1, df2):
     df2_start = datetime.strptime(df2.index[0], '%Y-%m-%d')
     diff = (df2_start - df1_start).days
     if diff > 0:
-        df1 = df1[diff:]
+        df1 = df1[df2.index[0]:]
     elif diff < 0:
-        df2 = df2[-diff:]
+        df2 = df2[df1.index[0]:]
 
     df1_end = datetime.strptime(df1.index[-1], '%Y-%m-%d')
     df2_end = datetime.strptime(df2.index[-1], '%Y-%m-%d')
@@ -199,29 +199,18 @@ def add_long_short_shares(bs_df, amount_of_shares):
 
 def add_buy_sell_shares(bs_df, close_price, starting_value, offset=0.008, impact=0.005):
     holdings = 0
-    # entire_book_order = pd.DataFrame(index=bs_df.index, columns=['share_amount', 'gains', 'closing'])
     entire_book_order = pd.DataFrame(index=bs_df.index, columns=['share_amount'])
-
     gains_holder = starting_value
-
     for index in bs_df.index:
-        # BUY when holding nothing and gains is > 0
         if bs_df[index] == BUY and holdings == 0:
-            # entire_book_order['closing'][index] = close_price.loc[index][0]
             number_of_buyable_shares = (gains_holder * 0.90) / close_price.loc[index][0]
             gains_holder -= (close_price.loc[index][0] * number_of_buyable_shares)
-            # entire_book_order['gains'][index] = gains_holder
             entire_book_order['share_amount'][index] = number_of_buyable_shares
             holdings += number_of_buyable_shares
         elif bs_df[index] == SELL and holdings > 0:
-            # number_of_buyable_shares = gains_holder / sell_cost_per_share
-            # entire_book_order['closing'][index] = close_price.loc[index][0]
             entire_book_order['share_amount'][index] = holdings
             gains_holder = (close_price.loc[index][0] * holdings)
-            # entire_book_order['gains'][index] = gains_holder
             holdings -= holdings
-
     entire_book_order['bs_signal'] = bs_df
     entire_book_order = entire_book_order.dropna()
-    print(entire_book_order)
     return entire_book_order
