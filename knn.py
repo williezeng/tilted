@@ -74,5 +74,4 @@ class KNN(BaseModel):
                 best_parameters[k] = leaf_size_list[v]
             elif k == 'n_neighbors':
                 best_parameters[k] = n_neighbor_list[v]
-        print('best params :', best_parameters)
         return best_parameters

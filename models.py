@@ -30,6 +30,7 @@ class BaseModel(object):
         self.model_name = None
         self.rmse = None
         self.test_score = -1
+        self.train_score = -1
         self.xtrain, self.xtest, self.ytrain, self.ytest = self.setup_data(data_frame)
 
     def optimize_parameters(self, options):
@@ -72,16 +73,12 @@ class BaseModel(object):
             self.model = self.model(**self.params)
         else:
             self.model = self.model()
-
         self.model.fit(self.xtrain, self.ytrain['bs_signal'])
         self.ypred = pd.DataFrame(self.model.predict(self.xtest), index=self.ytest.index, columns=['bs_signal']).sort_index()  # predicted
         self.ytest = self.ytest.sort_index()
         self.rmse = mean_squared_error(self.ytest, self.ypred, squared=False)
-        train_score = self.model.score(self.xtrain, self.ytrain)
+        self.train_score = self.model.score(self.xtrain, self.ytrain)
         self.test_score = accuracy_score(self.ypred, self.ytest)
-        print("Mean Absolute Error: $", self.rmse)
-        print('test acc ', self.test_score)
-        print('train acc ', train_score)
 
     def generate_plots(self):
         df2 = pd.DataFrame(data=self.ypred, index=self.ytest.index, columns=['predicted']).astype('float')
