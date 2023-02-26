@@ -5,11 +5,13 @@ import matplotlib
 from datetime import datetime
 matplotlib.use('TkAgg')
 import matplotlib.dates as mdates
-
+from utils import trading_logger
 import matplotlib.pyplot as plt
 from tech_indicators import BUY, SELL, HOLD
 
 RECENT_RUN_DIR = os.path.join(os.path.curdir, 'recent_run')
+logger = trading_logger.getlogger()
+OUTPUT = []
 
 def check_buy_sell_signals(ypred, ytest):
     assert isinstance(ypred, pd.DataFrame)
@@ -28,10 +30,13 @@ def check_buy_sell_signals(ypred, ytest):
 
     percentage_buys = (correct_buys / total_buys) * 100
     percentage_sells = (correct_sells / total_sells) * 100
-    print('---------------------')
-    print('there are supposed to be {} buys. there are supposed to be {} sells'.format(total_buys, total_sells))
-    print('you made {} correct buys. you made {} correct sells'.format(correct_buys, correct_sells))
-    print('correct buy percentage {} and correct sell percentage {}'.format(percentage_buys, percentage_sells))
+    output = [
+        'there are supposed to be {} buys. there are supposed to be {} sells'.format(total_buys, total_sells),
+        'you made {} correct buys. you made {} correct sells'.format(correct_buys, correct_sells),
+        'correct buy percentage {} and correct sell percentage {}'.format(percentage_buys, percentage_sells)
+        ]
+    OUTPUT.extend(output)
+
 
 
 def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.005):
@@ -70,8 +75,7 @@ def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.00
     order_book_copy['cumulative_percentage'] = filled_orders['cumulative_percentage']
     order_book_copy['close'] = closing_price_df['Close']
     order_book_copy = order_book_copy.dropna()
-    print('model net profits {} from {} to {}'.format(order_book_copy.sum()['cash_earned'], order_book_copy.index[0], order_book_copy.index[-1]))
-
+    OUTPUT.append('model net profits {} from {} to {}'.format(order_book_copy.sum()['cash_earned'], order_book_copy.index[0], order_book_copy.index[-1]))
     return order_book_copy
 
 
@@ -107,11 +111,12 @@ def compute_simple_baseline(close_df, share_amount, commission=9.95, impact=0.00
 
     summed = filled_orders.sum()
     filled_orders = filled_orders.dropna()
-    print('----')
-    print('If you bought {} shares on {}, you would have {} on {}'.format(filled_orders['holding'][0], start_date,
-                                                                          summed['cash_earned'], end_date))
     percent_increase = (close_df_copy['Close'][-1] - close_df_copy['Close'][0]) / abs(close_df_copy['Close'][0]) * 100
-    print('The share increased by {} %'.format(percent_increase))
+    output = [
+        'If you bought {} shares on {}, you would have {} on {}'.format(filled_orders['holding'][0], start_date, summed['cash_earned'], end_date),
+        'The share increased by {} %'.format(percent_increase)
+        ]
+    OUTPUT.extend(output)
     return filled_orders
 
 
@@ -128,7 +133,7 @@ def compute_yearly_gains(order_book):
                 0])) / abs(order_book.loc[date_holder:, 'cash_earned'][0]) * 100)
         else:
             yearly_gain = ((order_book.loc[:next_years_date, 'bankroll'][-1] - order_book.loc[date_holder:, 'bankroll'][0])/abs(order_book.loc[date_holder:, 'bankroll'][0]) * 100)
-        print('From {} to {} the yearly gain is {}'.format(date_holder, next_years_date, yearly_gain))
+        OUTPUT.append('From {} to {} the yearly gain is {}'.format(date_holder, next_years_date, yearly_gain))
         date_holder = next_years_date
         yearly_gains_dict[x] = yearly_gain
         x += 1
@@ -140,36 +145,36 @@ def compute_yearly_gains(order_book):
         yearly_gain = ((order_book.loc[:order_book_end_str, 'bankroll'][-1] - order_book.loc[date_holder:, 'bankroll'][0])/abs(order_book.loc[date_holder:, 'bankroll'][0]) * 100)
         yearly_gains_dict[x] = yearly_gain
     total_percent_gain = order_book['cumulative_percentage'][-1]
-    print('THE TOTAL % gain : {}'.format(total_percent_gain))
-    return yearly_gains_dict
+    OUTPUT.append('THE TOTAL % gain : {}'.format(total_percent_gain))
+    return yearly_gains_dict, total_percent_gain
 
 def compare_strategies(buy_sell_order_book, long_short_order_book, target_close_df, spy_close_df, args):
-    print('----')
-    print('generating longs and shorts ')
+    OUTPUT.append('generating longs and shorts ')
     long_short_portfolio_values = compute_portfolio(long_short_order_book, target_close_df)
-    graph_order_book(long_short_portfolio_values, target_close_df, args['model_name'], args['file_name'],
-                     args["indicators"], args['length'])
-    compute_yearly_gains(long_short_portfolio_values)
-    long_short_portfolio_values.to_csv(os.path.join(RECENT_RUN_DIR, 'long_short_portfolio.csv'))
-    print('----')
-    print('generating buy and sell')
+    long_short_yearly_gains_dict, long_short_total_percent_gain = compute_yearly_gains(long_short_portfolio_values)
+    OUTPUT.append('generating buy and sell')
     buy_sell_portfolio_values = compute_portfolio(buy_sell_order_book, target_close_df)
-    buy_sell_portfolio_values.to_csv(os.path.join(RECENT_RUN_DIR, 'buy_short_portfolio.csv'))
-    compute_yearly_gains(buy_sell_portfolio_values)
+    buy_sell_yearly_gains_dict, buy_sell_total_percent_gain = compute_yearly_gains(buy_sell_portfolio_values)
 
-    print('----')
-    print('generating baselines')
+    OUTPUT.append('generating baselines')
     target_hold_portfolio = compute_simple_baseline(target_close_df, int(args['share_amount']))
     spy_hold_portfolio = compute_simple_baseline(spy_close_df, int(args['share_amount']))
 
-    graph_spy(spy_hold_portfolio, spy_close_df)
-
+    if args['save_recent']:
+        long_short_portfolio_values.to_csv(os.path.join(RECENT_RUN_DIR, 'long_short_portfolio.csv'))
+        buy_sell_portfolio_values.to_csv(os.path.join(RECENT_RUN_DIR, 'buy_short_portfolio.csv'))
+        graph_order_book(long_short_portfolio_values, target_close_df, args['model_name'], args['file_name'],
+                         args["indicators"], args['length'])
+        graph_spy(spy_hold_portfolio, spy_close_df)
+    # import pprint
+    # pprint.pprint(OUTPUT)
+    return buy_sell_portfolio_values, buy_sell_total_percent_gain, long_short_portfolio_values, long_short_total_percent_gain
 
 
 def graph_spy(spy_order_book, spy_close):
     plt.plot(list(spy_close.index), spy_close['Close'], label='price')
-    plt.plot(spy_order_book.index[0], spy_close['Close'][0], '--go', label='buy')
-    plt.plot(spy_order_book.index[1], spy_close['Close'][-1], '--ro', label='sell')
+    plt.plot(spy_order_book.index[0], spy_close['Close'][0], 's', label='buy')
+    plt.plot(spy_order_book.index[1], spy_close['Close'][-1], 's', label='sell')
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
     plt.xticks(rotation=90, fontweight='light', fontsize='x-small')
     plt.tight_layout()
@@ -192,8 +197,8 @@ def graph_order_book(order_book, close_data, model_name, file_name, list_of_indi
     buy_markers_price = [order_book['close'][x] for x in range(len(order_book)) if order_book['bs_signal'][x] == BUY]
 
     plt.plot(list(close_data.index), close_data['Close'], label='price')
-    plt.plot(sell_markers_date, sell_markers_price, '--ro', label='sell')
-    plt.plot(buy_markers_date, buy_markers_price, '--go', label='buy')
+    plt.plot(sell_markers_date, sell_markers_price, 's', label='sell')
+    plt.plot(buy_markers_date, buy_markers_price, 's', label='buy')
 
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
     plt.xticks(rotation=90, fontweight='light', fontsize='x-small')
