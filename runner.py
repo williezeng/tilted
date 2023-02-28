@@ -35,10 +35,11 @@ def build_args():
 
 if __name__ == "__main__":
     args = build_args()
-    if args['logger'] in LOGGER_LEVELS:
-        trading_logger.setlevel(LOGGER_LEVELS[args['logger']])
-    else:
+    if args['logger'] not in LOGGER_LEVELS:
         exit('idk your wack ass log level')
+    elif args['model_name'] not in NAME_TO_MODEL:
+        exit('must enter a valid model from {}'.format(NAME_TO_MODEL.keys()))
+    trading_logger.setlevel(LOGGER_LEVELS[args['logger']])
     buy_sell_total_percent_gain_runs = []
     long_short_total_percent_gain_runs = []
     test_accuracies_runs = []
@@ -49,17 +50,17 @@ if __name__ == "__main__":
     args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
     data_frame_from_ticker = tech_indicators.read_df_from_file(file_name)
     data_frame_from_spyfile = tech_indicators.read_df_from_file(spy_file_name)
-    if args['model_name'] not in NAME_TO_MODEL:
-        exit('must enter a valid model from {}'.format(NAME_TO_MODEL.keys()))
     for x in range(args["runs"]):
         model_instance = NAME_TO_MODEL[args['model_name']](args, data_frame_from_ticker)
         model_instance.train_and_predict()
         # model_instance.generate_plots()
         analyzer.check_buy_sell_signals(model_instance.ypred, model_instance.ytest)
-        long_short_order_book = tech_indicators.add_long_short_shares(model_instance.ypred['bs_signal'], int(args['share_amount']))
+        long_short_order_book = tech_indicators.add_long_short_shares(model_instance.ypred['bs_signal'], args['share_amount'])
         buy_sell_order_book = tech_indicators.add_buy_sell_shares(model_instance.ypred['bs_signal'], data_frame_from_ticker[['Close']],
                                                                   args['starting_value'])
-        # order_book.to_csv('tester.csv')
+        # model_instance.ypred.to_csv('ypred.csv')
+        # long_short_order_book.to_csv('long_short_tester.csv')
+        # buy_sell_order_book.to_csv('buy_sell_tester.csv')
         # tech_indicators.bbands_classification(data_frame_from_ticker)
         buy_sell_portfolio_values, buy_sell_total_percent_gain, long_short_portfolio_values, long_short_total_percent_gain = analyzer.compare_strategies(buy_sell_order_book, long_short_order_book, data_frame_from_ticker[['Close']], data_frame_from_spyfile[['Close']], args)
         # same buy/long/sell/short signals, just quantity is different
@@ -69,6 +70,10 @@ if __name__ == "__main__":
         long_short_total_percent_gain_runs.append(long_short_total_percent_gain)
         test_accuracies_runs.append(model_instance.test_score)
         train_accuracies_runs.append(model_instance.train_score)
+        long_short_buy_sell_tup = analyzer.compute_best_case(model_instance.ytest, data_frame_from_ticker, args['share_amount'], args['starting_value'])
+        import pprint
+        pprint.pprint(long_short_buy_sell_tup)
+
     output = f""" 
     after {args["runs"]} runs:
     the average percent gain for long shorts is : {sum(long_short_total_percent_gain_runs)/len(long_short_total_percent_gain_runs)}
