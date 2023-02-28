@@ -7,8 +7,7 @@ matplotlib.use('TkAgg')
 import matplotlib.dates as mdates
 from utils import trading_logger
 import matplotlib.pyplot as plt
-from tech_indicators import BUY, SELL, HOLD
-
+from tech_indicators import BUY, SELL, HOLD, add_long_short_shares, add_buy_sell_shares
 RECENT_RUN_DIR = os.path.join(os.path.curdir, 'recent_run')
 logger = trading_logger.getlogger()
 OUTPUT = []
@@ -38,6 +37,15 @@ def check_buy_sell_signals(ypred, ytest):
     OUTPUT.extend(output)
 
 
+def compute_best_case(ytest_df, closing_price_df, share_amount, starting_value):
+    long_short_order_book = add_long_short_shares(ytest_df['bs_signal'], share_amount)
+    buy_sell_order_book = add_buy_sell_shares(ytest_df['bs_signal'], closing_price_df, starting_value)
+    long_short_portfolio_values = compute_portfolio(long_short_order_book, closing_price_df)
+    buy_sell_portfolio_values = compute_portfolio(buy_sell_order_book, closing_price_df)
+
+    long_short_yearly_gains_dict, long_short_total_percent_gain = compute_yearly_gains(long_short_portfolio_values)
+    buy_sell_yearly_gains_dict, buy_sell_total_percent_gain = compute_yearly_gains(buy_sell_portfolio_values)
+    return (long_short_total_percent_gain, long_short_yearly_gains_dict), (buy_sell_total_percent_gain, buy_sell_yearly_gains_dict)
 
 def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.005):
     order_book_copy = order_book.copy()
