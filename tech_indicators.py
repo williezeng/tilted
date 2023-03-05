@@ -43,42 +43,28 @@ def bbands_calculation(data_frame, moving_average, length=10):
 
 
 def bbands_classification(close_prices_data_frame, lower_bb, upper_bb):
-    buy_price = []
-    sell_price = []
-    bb_signal = []
-    signal = 0
-    close_prices_df_copy = close_prices_data_frame.copy()
     close_prices_data_frame = close_prices_data_frame.iloc[1:]  # base buy/sell off previous prices -1 len
+    upper_bb, close_prices_data_frame = index_len_resolver(upper_bb, close_prices_data_frame)
+    upper_bb, lower_bb = index_len_resolver(upper_bb, lower_bb)
+    close_prices_df_copy = close_prices_data_frame.copy()
+    bb_signal = pd.DataFrame(index=close_prices_df_copy.index, columns=['bb_signal'])
     for i in range(1, len(close_prices_df_copy['Close'])):
         # BUY if dips lower than lower BB
-        if close_prices_df_copy['Close'][i - 1] > lower_bb[i - 1] and close_prices_df_copy['Close'][i] < lower_bb[i]:
-            if signal != 1:  # don't buy until sell
-                buy_price.append(close_prices_df_copy['Close'][i])
-                sell_price.append(np.nan)
-                signal = 1
-                bb_signal.append(signal)
-            else:
-                buy_price.append(np.nan)
-                sell_price.append(np.nan)
-                bb_signal.append(0)
-        # SELL if rises above higher BB
-        elif close_prices_df_copy['Close'][i - 1] < upper_bb[i - 1] and close_prices_df_copy['Close'][i] > upper_bb[i]:
-            if signal != -1:  # don't sell until buy
-                buy_price.append(np.nan)
-                sell_price.append(close_prices_df_copy['Close'][i])
-                signal = -1
-                bb_signal.append(signal)
-            else:
-                buy_price.append(np.nan)
-                sell_price.append(np.nan)
-                bb_signal.append(0)
-        else:
-            buy_price.append(np.nan)
-            sell_price.append(np.nan)
-            bb_signal.append(0)
+        if close_prices_df_copy['Close'][i - 1] >= lower_bb[i - 1] and close_prices_df_copy['Close'][i] <= lower_bb[i]:
+            bb_signal['bb_signal'][i] = 1
+        # BUY if rises past lower BB
+        elif close_prices_df_copy['Close'][i - 1] <= lower_bb[i - 1] and close_prices_df_copy['Close'][i] >= lower_bb[i]:
+            bb_signal['bb_signal'][i] = 1
 
-    close_prices_data_frame['bb_signal'] = bb_signal
-    return close_prices_data_frame
+        # SELL if rises above higher BB
+        elif close_prices_df_copy['Close'][i - 1] <= upper_bb[i - 1] and close_prices_df_copy['Close'][i] >= upper_bb[i]:
+            bb_signal['bb_signal'][i] = -1
+         # SELL if dips below higher BB
+        elif close_prices_df_copy['Close'][i - 1] >= upper_bb[i - 1] and close_prices_df_copy['Close'][i] <= upper_bb[i]:
+            bb_signal['bb_signal'][i] = -1
+        else:
+            bb_signal['bb_signal'][i] = 0
+    return bb_signal[1:]
 
 
 def read_df_from_file(name):
@@ -106,7 +92,8 @@ def index_len_resolver(df1, df2):
     return df1, df2
 
 
-def get_indicators(df, options=None, length=10):
+def get_indicators(df, options, length, y_test_lookahead):
+
     list_of_dfs = []
     ema, sma = moving_average(df[['Close']], length=length)
     lower_bb_sma, upper_bb_sma = bbands_calculation(df[['Close']], sma, length=length)
@@ -116,14 +103,16 @@ def get_indicators(df, options=None, length=10):
     bb = pd.DataFrame({'lower_bb_sma': lower_bb_sma, 'upper_bb_sma': upper_bb_sma, 'lower_bb_ema': lower_bb_ema,
                        'upper_bb_ema': upper_bb_ema})
 
-    y_label_df = create_ylabels(df_close[['Close']].astype(float))
+    y_label_df = create_ylabels(df_close[['Close']].astype(float), y_test_lookahead)
     df_close, y_label_df = index_len_resolver(df[['Close']], y_label_df)
+    bb_signal = bbands_classification(df_close, lower_bb_ema, upper_bb_ema)
     OPTION_MAP = {'sma': pd.DataFrame({'SMA_{}'.format(length): sma}),
                   'ema': pd.DataFrame({'EMA_{}'.format(length): ema}),
                   'bb': bb,
                   'high': df[['High']],
                   'volume': df[['Volume']],
-                  'close': df_close[['Close']]
+                  'close': df_close[['Close']],
+                  'bb_signal': bb_signal,
                   }
     for option in options:
         if option in OPTION_MAP:
@@ -140,7 +129,7 @@ def normalize_indicators(dfs):
     return pd.concat(normalized_df, axis=1)
 
 
-def create_ylabels(df, lookahead_days=5):
+def create_ylabels(df, lookahead_days):
     """
     Creates the Y labels (Buy/Sell/Hold) for training
     :param df:
@@ -149,6 +138,7 @@ def create_ylabels(df, lookahead_days=5):
     """
     # Returns buy/sell/hold signals
     # Shortens the data because our logic is based on the lookahead/future price
+    # The lookahead days depends on every stock ticker, slower stocks would need a longer day
     trainY = []
     df_copy = df.copy()
     closed_price_series = df_copy['Close']
@@ -166,7 +156,6 @@ def create_ylabels(df, lookahead_days=5):
 
 
 def add_long_short_shares(bs_df, amount_of_shares):
-    # TODO: Write tests
     """
     long 200 to fill our shorts and hold 100
     short 200 to sell our 100 and hold 100 shares that we don't have
