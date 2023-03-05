@@ -24,6 +24,7 @@ class BaseModel(object):
         self.length_of_moving_averages = options.get('length')
         self.indicators = options.get('indicators')
         self.data_name = options.get('file_name')
+        self.y_test_lookahead_days = options.get('lookahead_days')
 
         self.ypred = None
         self.model = None
@@ -63,8 +64,7 @@ class BaseModel(object):
         pass
 
     def setup_data(self, data_frame):
-        indicator_df, buy_sell_hold_df = tech_indicators.get_indicators(data_frame, options=self.indicators,
-                                                                        length=self.length_of_moving_averages)
+        indicator_df, buy_sell_hold_df = tech_indicators.get_indicators(data_frame, self.indicators, self.length_of_moving_averages, self.y_test_lookahead_days)
         normalized_indicators_df = tech_indicators.normalize_indicators(indicator_df)
         return train_test_split(normalized_indicators_df, buy_sell_hold_df, shuffle=True, test_size=0.20)
 

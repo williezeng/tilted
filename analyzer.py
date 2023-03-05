@@ -42,7 +42,12 @@ def compute_best_case(ytest_df, closing_price_df, share_amount, starting_value):
     buy_sell_order_book = add_buy_sell_shares(ytest_df['bs_signal'], closing_price_df, starting_value)
     long_short_portfolio_values = compute_portfolio(long_short_order_book, closing_price_df)
     buy_sell_portfolio_values = compute_portfolio(buy_sell_order_book, closing_price_df)
-
+    # buy_sell_portfolio_values.to_csv('best_case_buy.csv')
+    # long_short_portfolio_values.to_csv('best_case_long.csv')
+    # graph_order_book(buy_sell_portfolio_values, closing_price_df, 'best_case', 'buy_sell',
+    #                  'no indicators used', '5_day_lookahead')
+    # graph_order_book(long_short_portfolio_values, closing_price_df, 'best_case', 'long_short',
+    #                  'no indicators used', '5_day_lookahead')
     long_short_yearly_gains_dict, long_short_total_percent_gain = compute_yearly_gains(long_short_portfolio_values)
     buy_sell_yearly_gains_dict, buy_sell_total_percent_gain = compute_yearly_gains(buy_sell_portfolio_values)
     return (long_short_total_percent_gain, long_short_yearly_gains_dict), (buy_sell_total_percent_gain, buy_sell_yearly_gains_dict)
@@ -87,7 +92,7 @@ def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.00
     return order_book_copy
 
 
-def compute_simple_baseline(close_df, share_amount, commission=9.95, impact=0.005):
+def compute_simple_baseline(name, close_df, share_amount, commission=9.95, impact=0.005):
     """
     Computes the value of holding the share amnt on the first day
     INPUT: BUY/SELL orderbook DO NOT use LONG/SHORTS
@@ -121,7 +126,7 @@ def compute_simple_baseline(close_df, share_amount, commission=9.95, impact=0.00
     filled_orders = filled_orders.dropna()
     percent_increase = (close_df_copy['Close'][-1] - close_df_copy['Close'][0]) / abs(close_df_copy['Close'][0]) * 100
     output = [
-        'If you bought {} shares on {}, you would have {} on {}'.format(filled_orders['holding'][0], start_date, summed['cash_earned'], end_date),
+        'If you bought {} shares of {} on {}, you would have {} on {}'.format(filled_orders['holding'][0], name, start_date, summed['cash_earned'], end_date),
         'The share increased by {} %'.format(percent_increase)
         ]
     OUTPUT.extend(output)
@@ -152,11 +157,21 @@ def compute_yearly_gains(order_book):
     if remaining_gains > 0.0:
         yearly_gain = ((order_book.loc[:order_book_end_str, 'bankroll'][-1] - order_book.loc[date_holder:, 'bankroll'][0])/abs(order_book.loc[date_holder:, 'bankroll'][0]) * 100)
         yearly_gains_dict[x] = yearly_gain
-    total_percent_gain = order_book['cumulative_percentage'][-1]
+    if order_book['bs_signal'][-1] == BUY:
+        total_percent_gain = order_book['cumulative_percentage'][-2]
+    else:
+        total_percent_gain = order_book['cumulative_percentage'][-1]
+
     OUTPUT.append('THE TOTAL % gain : {}'.format(total_percent_gain))
     return yearly_gains_dict, total_percent_gain
 
-def compare_strategies(buy_sell_order_book, long_short_order_book, target_close_df, spy_close_df, args):
+def get_spy(spy_close_df, args):
+    spy_hold_portfolio = compute_simple_baseline("spy", spy_close_df, args['share_amount'])
+    graph_spy(spy_hold_portfolio, spy_close_df)
+    print('\n'.join(OUTPUT))
+
+
+def compare_strategies(buy_sell_order_book, long_short_order_book, target_close_df, args):
     OUTPUT.append('generating longs and shorts ')
     long_short_portfolio_values = compute_portfolio(long_short_order_book, target_close_df)
     long_short_yearly_gains_dict, long_short_total_percent_gain = compute_yearly_gains(long_short_portfolio_values)
@@ -165,17 +180,15 @@ def compare_strategies(buy_sell_order_book, long_short_order_book, target_close_
     buy_sell_yearly_gains_dict, buy_sell_total_percent_gain = compute_yearly_gains(buy_sell_portfolio_values)
 
     OUTPUT.append('generating baselines')
-    target_hold_portfolio = compute_simple_baseline(target_close_df, int(args['share_amount']))
-    spy_hold_portfolio = compute_simple_baseline(spy_close_df, int(args['share_amount']))
-
+    target_hold_portfolio = compute_simple_baseline(args["file_name"], target_close_df, int(args['share_amount']))
+    if args["inspect"]:
+        print('\n'.join(OUTPUT))
     if args['save_recent']:
         long_short_portfolio_values.to_csv(os.path.join(RECENT_RUN_DIR, 'long_short_portfolio.csv'))
         buy_sell_portfolio_values.to_csv(os.path.join(RECENT_RUN_DIR, 'buy_short_portfolio.csv'))
         graph_order_book(long_short_portfolio_values, target_close_df, args['model_name'], args['file_name'],
                          args["indicators"], args['length'])
-        graph_spy(spy_hold_portfolio, spy_close_df)
-    # import pprint
-    # pprint.pprint(OUTPUT)
+
     return buy_sell_portfolio_values, buy_sell_total_percent_gain, long_short_portfolio_values, long_short_total_percent_gain
 
 

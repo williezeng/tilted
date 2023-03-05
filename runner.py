@@ -7,6 +7,8 @@ import analyzer
 from knn import KNN
 from dt import DecisionTree
 from logistic_regression import TiltedLogisticRegression
+import multiprocessing
+
 NAME_TO_MODEL = {'knn': KNN,
                  'decision_trees': DecisionTree,
                  'logistic_regression': TiltedLogisticRegression}
@@ -19,6 +21,30 @@ LOGGER_LEVELS = {
 logger = trading_logger.getlogger()
 
 
+def run(arguments, df_from_ticker, buy_sell_total_percent_gain_runs, long_short_total_percent_gain_runs, test_accuracies_runs, train_accuracies_runs):
+    model_instance = NAME_TO_MODEL[arguments['model_name']](arguments, df_from_ticker)
+    model_instance.train_and_predict()
+    # model_instance.generate_plots()
+    analyzer.check_buy_sell_signals(model_instance.ypred, model_instance.ytest)
+    long_short_order_book = tech_indicators.add_long_short_shares(model_instance.ypred['bs_signal'],
+                                                                  arguments['share_amount'])
+    buy_sell_order_book = tech_indicators.add_buy_sell_shares(model_instance.ypred['bs_signal'],
+                                                              df_from_ticker[['Close']],
+                                                              arguments['starting_value'])
+    # model_instance.ypred.to_csv('ypred.csv')
+    # long_short_order_book.to_csv('long_short_tester.csv')
+    # buy_sell_order_book.to_csv('buy_sell_tester.csv')
+    # tech_indicators.bbands_classification(data_frame_from_ticker)
+    buy_sell_portfolio_values, buy_sell_total_percent_gain, long_short_portfolio_values, long_short_total_percent_gain = analyzer.compare_strategies(buy_sell_order_book, long_short_order_book, df_from_ticker[['Close']], arguments)
+    # same buy/long/sell/short signals, just quantity is different
+    # analyzer.graph_order_book(buy_sell_portfolio_values, data_frame_from_file[['Close']], args['model_name'], args['file_name'], args["indicators"], args['length'])
+    # model_instance.save_best_model()
+    buy_sell_total_percent_gain_runs.append(buy_sell_total_percent_gain)
+    long_short_total_percent_gain_runs.append(long_short_total_percent_gain)
+    test_accuracies_runs.append(model_instance.test_score)
+    train_accuracies_runs.append(model_instance.train_score)
+
+
 def build_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
@@ -29,6 +55,12 @@ def build_args():
     parser.add_argument('--share_amount', help='the amount of share you want to buy/sell', type=int, required=False, default=100)
     parser.add_argument('--starting_value', help='the starting value', type=int, required=False, default=100000)
     parser.add_argument('--save_recent', help='save the long/short and buy/sell portfolios', type=bool, required=False, default=False)
+    parser.add_argument('--inspect', help='inspect the yearly gains', type=bool, required=False, default=False)
+    parser.add_argument('--p', help='parallel', type=bool, required=False, default=False)
+    parser.add_argument('--spy', help='only get spy', type=bool, required=False, default=False)
+
+
+    parser.add_argument('--lookahead_days', help='set the lookahead days for ytest', type=int, required=False, default=6)
     parser.add_argument('--logger', choices=LOGGER_LEVELS.keys(), default='debug', type=str, help='provide a logging level within {}'.format(LOGGER_LEVELS.keys()))
     parser.add_argument('--runs', default=1, type=int, help='specify amount of runs')
     return vars(parser.parse_args())
@@ -40,45 +72,41 @@ if __name__ == "__main__":
     elif args['model_name'] not in NAME_TO_MODEL:
         exit('must enter a valid model from {}'.format(NAME_TO_MODEL.keys()))
     trading_logger.setlevel(LOGGER_LEVELS[args['logger']])
-    buy_sell_total_percent_gain_runs = []
-    long_short_total_percent_gain_runs = []
-    test_accuracies_runs = []
-    train_accuracies_runs = []
 
+    long_short_buy_sell_tup = []
     file_name = os.path.join(constants.YAHOO_DATA_DIR, args['file_name'])
     spy_file_name = os.path.join(constants.YAHOO_DATA_DIR, 'spy500.csv')
     args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
     data_frame_from_ticker = tech_indicators.read_df_from_file(file_name)
     data_frame_from_spyfile = tech_indicators.read_df_from_file(spy_file_name)
-    for x in range(args["runs"]):
-        model_instance = NAME_TO_MODEL[args['model_name']](args, data_frame_from_ticker)
-        model_instance.train_and_predict()
-        # model_instance.generate_plots()
-        analyzer.check_buy_sell_signals(model_instance.ypred, model_instance.ytest)
-        long_short_order_book = tech_indicators.add_long_short_shares(model_instance.ypred['bs_signal'], args['share_amount'])
-        buy_sell_order_book = tech_indicators.add_buy_sell_shares(model_instance.ypred['bs_signal'], data_frame_from_ticker[['Close']],
-                                                                  args['starting_value'])
-        # model_instance.ypred.to_csv('ypred.csv')
-        # long_short_order_book.to_csv('long_short_tester.csv')
-        # buy_sell_order_book.to_csv('buy_sell_tester.csv')
-        # tech_indicators.bbands_classification(data_frame_from_ticker)
-        buy_sell_portfolio_values, buy_sell_total_percent_gain, long_short_portfolio_values, long_short_total_percent_gain = analyzer.compare_strategies(buy_sell_order_book, long_short_order_book, data_frame_from_ticker[['Close']], data_frame_from_spyfile[['Close']], args)
-        # same buy/long/sell/short signals, just quantity is different
-        # analyzer.graph_order_book(buy_sell_portfolio_values, data_frame_from_file[['Close']], args['model_name'], args['file_name'], args["indicators"], args['length'])
-        # model_instance.save_best_model()
-        buy_sell_total_percent_gain_runs.append(buy_sell_total_percent_gain)
-        long_short_total_percent_gain_runs.append(long_short_total_percent_gain)
-        test_accuracies_runs.append(model_instance.test_score)
-        train_accuracies_runs.append(model_instance.train_score)
-        long_short_buy_sell_tup = analyzer.compute_best_case(model_instance.ytest, data_frame_from_ticker, args['share_amount'], args['starting_value'])
-        import pprint
-        pprint.pprint(long_short_buy_sell_tup)
+    if args['spy']:
+        analyzer.get_spy(data_frame_from_spyfile, args)
+        exit()
+    with multiprocessing.Manager() as manager:
+        buy_sell_total_percent_gain_runs = manager.list()
+        long_short_total_percent_gain_runs = manager.list()
+        test_accuracies_runs = manager.list()
+        train_accuracies_runs = manager.list()
+        with multiprocessing.Pool(processes=4) as pool:
+            pool.starmap(run, [(args, data_frame_from_ticker, buy_sell_total_percent_gain_runs, long_short_total_percent_gain_runs, test_accuracies_runs, train_accuracies_runs)] * args['runs'])
+        result_buy_sell_total_percent_gain_runs = list(buy_sell_total_percent_gain_runs)
+        result_long_short_total_percent_gain_runs = list(long_short_total_percent_gain_runs)
+        result_test_accuracies_runs = list(test_accuracies_runs)
+        result_train_accuracies_runs = list(train_accuracies_runs)
 
-    output = f""" 
-    after {args["runs"]} runs:
-    the average percent gain for long shorts is : {sum(long_short_total_percent_gain_runs)/len(long_short_total_percent_gain_runs)}
-    the average percent gain for buy sell is : {sum(buy_sell_total_percent_gain_runs)/len(buy_sell_total_percent_gain_runs)}
-    the average test accuracy is : {sum(test_accuracies_runs)/len(test_accuracies_runs)}
-    the average train accuracy is : {sum(train_accuracies_runs)/len(train_accuracies_runs)}
+
+    #     if len(long_short_buy_sell_tup) > 0:
+    #         continue
+    #     else:
+    #         long_short_buy_sell_tup = analyzer.compute_best_case(model_instance.ytest, data_frame_from_ticker, args['share_amount'], args['starting_value'])
+    #         print(f'best long_short percent gain {long_short_buy_sell_tup[0][0]}, best buy sell percent gain {long_short_buy_sell_tup[1][0]}')
+    #
+    print(result_buy_sell_total_percent_gain_runs)
+    output = f"""
+    after {args["runs"]} runs of the {args["model_name"]} with {args["length"]} day averages, start value of {args["starting_value"]}, share amount of {args["share_amount"]}, lookahead days at {args['lookahead_days']}, indicators: {args["indicators"]}
+    the average percent gain for long shorts is : {sum(result_long_short_total_percent_gain_runs)/len(result_long_short_total_percent_gain_runs)}
+    the average percent gain for buy sell is : {sum(result_buy_sell_total_percent_gain_runs)/len(result_buy_sell_total_percent_gain_runs)}
+    the average test accuracy is : {sum(result_test_accuracies_runs)/len(result_test_accuracies_runs)}
+    the average train accuracy is : {sum(result_train_accuracies_runs)/len(result_train_accuracies_runs)}
     """
     print(output)
