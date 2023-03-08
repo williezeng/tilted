@@ -59,7 +59,7 @@ def bbands_classification(close_prices_data_frame, lower_bb, upper_bb):
         # SELL if rises above higher BB
         elif close_prices_df_copy['Close'][i - 1] <= upper_bb[i - 1] and close_prices_df_copy['Close'][i] >= upper_bb[i]:
             bb_signal['bb_signal'][i] = -1
-         # SELL if dips below higher BB
+        # SELL if dips below higher BB
         elif close_prices_df_copy['Close'][i - 1] >= upper_bb[i - 1] and close_prices_df_copy['Close'][i] <= upper_bb[i]:
             bb_signal['bb_signal'][i] = -1
         else:
@@ -125,7 +125,10 @@ def get_indicators(df, options, length, y_test_lookahead):
 def normalize_indicators(dfs):
     normalized_df = []
     for dataf in dfs:
-        normalized_df.append(dfs[dataf].astype(float) / dfs[dataf].astype(float).iloc[0])
+        if set(dfs[dataf].values) == {0, 1, -1}:
+            normalized_df.append(dfs[dataf].astype(float))
+        else:
+            normalized_df.append(dfs[dataf].astype(float) / dfs[dataf].astype(float).iloc[0])
     return pd.concat(normalized_df, axis=1)
 
 
