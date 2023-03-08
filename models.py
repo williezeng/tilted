@@ -1,7 +1,6 @@
 from sklearn.model_selection import train_test_split, cross_val_score
 import pandas as pd
 import matplotlib
-
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_squared_error, accuracy_score
@@ -25,7 +24,7 @@ class BaseModel(object):
         self.indicators = options.get('indicators')
         self.data_name = options.get('file_name')
         self.y_test_lookahead_days = options.get('lookahead_days')
-
+        self.random_int_seed = options.get('random_seed')
         self.ypred = None
         self.model = None
         self.model_name = None
@@ -66,7 +65,7 @@ class BaseModel(object):
     def setup_data(self, data_frame):
         indicator_df, buy_sell_hold_df = tech_indicators.get_indicators(data_frame, self.indicators, self.length_of_moving_averages, self.y_test_lookahead_days)
         normalized_indicators_df = tech_indicators.normalize_indicators(indicator_df)
-        return train_test_split(normalized_indicators_df, buy_sell_hold_df, shuffle=True, test_size=0.20)
+        return train_test_split(normalized_indicators_df, buy_sell_hold_df, shuffle=True, test_size=0.20, random_state=self.random_int_seed)
 
     def train_and_predict(self):
         if self.params:

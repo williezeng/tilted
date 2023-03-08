@@ -21,7 +21,8 @@ LOGGER_LEVELS = {
 logger = trading_logger.getlogger()
 
 
-def run(arguments, df_from_ticker, buy_sell_total_percent_gain_runs, long_short_total_percent_gain_runs, test_accuracies_runs, train_accuracies_runs):
+def parallel_trainer_evaluater(arguments, random_seed, df_from_ticker):
+    arguments['random_seed'] = random_seed
     model_instance = NAME_TO_MODEL[arguments['model_name']](arguments, df_from_ticker)
     model_instance.train_and_predict()
     # model_instance.generate_plots()
@@ -39,10 +40,7 @@ def run(arguments, df_from_ticker, buy_sell_total_percent_gain_runs, long_short_
     # same buy/long/sell/short signals, just quantity is different
     # analyzer.graph_order_book(buy_sell_portfolio_values, data_frame_from_file[['Close']], args['model_name'], args['file_name'], args["indicators"], args['length'])
     # model_instance.save_best_model()
-    buy_sell_total_percent_gain_runs.append(buy_sell_total_percent_gain)
-    long_short_total_percent_gain_runs.append(long_short_total_percent_gain)
-    test_accuracies_runs.append(model_instance.test_score)
-    train_accuracies_runs.append(model_instance.train_score)
+    return buy_sell_total_percent_gain, long_short_total_percent_gain, model_instance.test_score, model_instance.train_score
 
 
 def build_args():
@@ -56,10 +54,8 @@ def build_args():
     parser.add_argument('--starting_value', help='the starting value', type=int, required=False, default=100000)
     parser.add_argument('--save_recent', help='save the long/short and buy/sell portfolios', type=bool, required=False, default=False)
     parser.add_argument('--inspect', help='inspect the yearly gains', type=bool, required=False, default=False)
-    parser.add_argument('--p', help='parallel', type=bool, required=False, default=False)
+    parser.add_argument('--sequential', help='run in sequential', type=bool, required=False, default=False)
     parser.add_argument('--spy', help='only get spy', type=bool, required=False, default=False)
-
-
     parser.add_argument('--lookahead_days', help='set the lookahead days for ytest', type=int, required=False, default=6)
     parser.add_argument('--logger', choices=LOGGER_LEVELS.keys(), default='debug', type=str, help='provide a logging level within {}'.format(LOGGER_LEVELS.keys()))
     parser.add_argument('--runs', default=1, type=int, help='specify amount of runs')
@@ -72,27 +68,33 @@ if __name__ == "__main__":
     elif args['model_name'] not in NAME_TO_MODEL:
         exit('must enter a valid model from {}'.format(NAME_TO_MODEL.keys()))
     trading_logger.setlevel(LOGGER_LEVELS[args['logger']])
-
     long_short_buy_sell_tup = []
     file_name = os.path.join(constants.YAHOO_DATA_DIR, args['file_name'])
     spy_file_name = os.path.join(constants.YAHOO_DATA_DIR, 'spy500.csv')
     args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
     data_frame_from_ticker = tech_indicators.read_df_from_file(file_name)
     data_frame_from_spyfile = tech_indicators.read_df_from_file(spy_file_name)
+    result_buy_sell_total_percent_gain_runs = []
+    result_long_short_total_percent_gain_runs = []
+    result_test_accuracies_runs = []
+    result_train_accuracies_runs = []
+    list_of_results = []
     if args['spy']:
         analyzer.get_spy(data_frame_from_spyfile, args)
         exit()
-    with multiprocessing.Manager() as manager:
-        buy_sell_total_percent_gain_runs = manager.list()
-        long_short_total_percent_gain_runs = manager.list()
-        test_accuracies_runs = manager.list()
-        train_accuracies_runs = manager.list()
+    if args['sequential']:
+        for run in range(args['runs']):
+            list_of_results.append(parallel_trainer_evaluater(args, 6, data_frame_from_ticker))
+    else:
         with multiprocessing.Pool(processes=4) as pool:
-            pool.starmap(run, [(args, data_frame_from_ticker, buy_sell_total_percent_gain_runs, long_short_total_percent_gain_runs, test_accuracies_runs, train_accuracies_runs)] * args['runs'])
-        result_buy_sell_total_percent_gain_runs = list(buy_sell_total_percent_gain_runs)
-        result_long_short_total_percent_gain_runs = list(long_short_total_percent_gain_runs)
-        result_test_accuracies_runs = list(test_accuracies_runs)
-        result_train_accuracies_runs = list(train_accuracies_runs)
+            pool_of_results = pool.starmap_async(parallel_trainer_evaluater, [(args, random_seed, data_frame_from_ticker) for random_seed in range(args['runs'])])
+            list_of_results = pool_of_results.get()
+    for buy_sell_percent_gain, long_short_percent_gain, test_score, train_score in list_of_results:
+        result_buy_sell_total_percent_gain_runs.append(buy_sell_percent_gain)
+        result_long_short_total_percent_gain_runs.append(long_short_percent_gain)
+        result_test_accuracies_runs.append(test_score)
+        result_train_accuracies_runs.append(train_score)
+
 
 
     #     if len(long_short_buy_sell_tup) > 0:
@@ -101,7 +103,6 @@ if __name__ == "__main__":
     #         long_short_buy_sell_tup = analyzer.compute_best_case(model_instance.ytest, data_frame_from_ticker, args['share_amount'], args['starting_value'])
     #         print(f'best long_short percent gain {long_short_buy_sell_tup[0][0]}, best buy sell percent gain {long_short_buy_sell_tup[1][0]}')
     #
-    print(result_buy_sell_total_percent_gain_runs)
     output = f"""
     after {args["runs"]} runs of the {args["model_name"]} with {args["length"]} day averages, start value of {args["starting_value"]}, share amount of {args["share_amount"]}, lookahead days at {args['lookahead_days']}, indicators: {args["indicators"]}
     the average percent gain for long shorts is : {sum(result_long_short_total_percent_gain_runs)/len(result_long_short_total_percent_gain_runs)}
