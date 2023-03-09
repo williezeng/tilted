@@ -6,12 +6,14 @@ import tech_indicators
 import analyzer
 from knn import KNN
 from dt import DecisionTree
-from logistic_regression import TiltedLogisticRegression
+from rf import RandomForest
 import multiprocessing
 
-NAME_TO_MODEL = {'knn': KNN,
+NAME_TO_MODEL = {
+                 'knn': KNN,
                  'decision_trees': DecisionTree,
-                 'logistic_regression': TiltedLogisticRegression}
+                 'random_forest': RandomForest,
+                }
 LOGGER_LEVELS = {
                 'info': logging.INFO,
                 'debug': logging.DEBUG,
