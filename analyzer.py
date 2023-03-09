@@ -19,7 +19,11 @@ def check_buy_sell_signals(ypred, ytest):
     correct_sells = 0
     total_len = len(ypred)
     total_buys = len([x for x in ytest['bs_signal'] if x == 1])
+    total_predicted_buys = len([x for x in ypred['bs_signal'] if x == 1])
+
     total_sells = len([x for x in ytest['bs_signal'] if x == -1])
+    total_predicted_sells = len([x for x in ypred['bs_signal'] if x == -1])
+
     for x in range(total_len):
         if ypred['bs_signal'][x] == ytest['bs_signal'][x]:
             if ypred['bs_signal'][x] == 1:  # buy
@@ -30,8 +34,10 @@ def check_buy_sell_signals(ypred, ytest):
     percentage_buys = (correct_buys / total_buys) * 100
     percentage_sells = (correct_sells / total_sells) * 100
     output = [
+        'there are supposed to be {} trades. The model made {} trades.'.format(total_buys+total_sells, total_predicted_buys+total_predicted_sells),
         'there are supposed to be {} buys. there are supposed to be {} sells'.format(total_buys, total_sells),
         'you made {} correct buys. you made {} correct sells'.format(correct_buys, correct_sells),
+        'you made {} incorrect buys. you made {} incorrect sells'.format(total_predicted_buys-correct_buys, total_predicted_sells-correct_sells),
         'correct buy percentage {} and correct sell percentage {}'.format(percentage_buys, percentage_sells)
         ]
     OUTPUT.extend(output)
