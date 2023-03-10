@@ -1,15 +1,9 @@
 import os
 import numpy as np
-from utils import constants
 from datetime import datetime
-from sklearn.model_selection import train_test_split
-# Machine learning libraries
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
+
 import pandas as pd
-import pandas_ta
-from talib import BBANDS
-import math
+
 import matplotlib
 
 matplotlib.use('TkAgg')
@@ -104,7 +98,8 @@ def get_indicators(df, options, length, y_test_lookahead):
                        'upper_bb_ema': upper_bb_ema})
 
     y_label_df = create_ylabels(df_close[['Close']].astype(float), y_test_lookahead)
-    df_close, y_label_df = index_len_resolver(df[['Close']], y_label_df)
+    # df_close, y_label_df = index_len_resolver(df[['Close']], y_label_df)
+
     bb_signal = bbands_classification(df_close, lower_bb_ema, upper_bb_ema)
     OPTION_MAP = {'sma': pd.DataFrame({'SMA_{}'.format(length): sma}),
                   'ema': pd.DataFrame({'EMA_{}'.format(length): ema}),
@@ -119,7 +114,7 @@ def get_indicators(df, options, length, y_test_lookahead):
             list_of_dfs.append(OPTION_MAP[option])
     x = pd.concat(list_of_dfs, axis=1)
     x = x.dropna()
-    return index_len_resolver(x, y_label_df)
+    return x, y_label_df
 
 
 def normalize_indicators(dfs):
@@ -188,6 +183,7 @@ def add_long_short_shares(bs_df, amount_of_shares):
                if not np.isnan(entire_book_order['share_amount'][x])]
     entire_book_order = entire_book_order.dropna()
     return entire_book_order
+
 
 def add_buy_sell_shares(bs_df, close_price, starting_value, offset=0.008, impact=0.005):
     holdings = 0

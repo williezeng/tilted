@@ -31,7 +31,7 @@ class BaseModel(object):
         self.rmse = None
         self.test_score = -1
         self.train_score = -1
-        self.xtrain, self.xtest, self.ytrain, self.ytest = self.setup_data(data_frame)
+        self.xtrain, self.xtest, self.ytrain, self.ytest, self.live_df = self.setup_data(data_frame)
 
     def optimize_parameters(self, options):
         if options.get('optimize_params'):
@@ -64,20 +64,39 @@ class BaseModel(object):
 
     def setup_data(self, data_frame):
         indicator_df, buy_sell_hold_df = tech_indicators.get_indicators(data_frame, self.indicators, self.length_of_moving_averages, self.y_test_lookahead_days)
-        normalized_indicators_df = tech_indicators.normalize_indicators(indicator_df)
-        return train_test_split(normalized_indicators_df, buy_sell_hold_df, shuffle=True, test_size=0.20, random_state=self.random_int_seed)
+        refined_indicators_df, refined_bs_df = tech_indicators.index_len_resolver(indicator_df, buy_sell_hold_df)
+        normalized_indicators_df = tech_indicators.normalize_indicators(refined_indicators_df)
+        # the buy_sell_hold_df will always END earlier than the indicator_df because of the lookahead days
+        # the indicator_df will always START later than the buy_sell_hold_df because of the average_day length
+        # bsh       =      [ , , , ]
+        # indicator =         [ , , , , ]
+        live_days = list(set(indicator_df.index) - set(buy_sell_hold_df.index))
+        live_days.sort()
+        xtrain, xtest, ytrain, ytest = train_test_split(normalized_indicators_df, refined_bs_df, shuffle=True, test_size=0.20, random_state=self.random_int_seed)
+        return xtrain, xtest, ytrain, ytest, indicator_df.loc[live_days]
 
-    def train_and_predict(self):
+
+    def train(self):
         if self.params:
             self.model = self.model(**self.params)
         else:
             self.model = self.model()
         self.model.fit(self.xtrain, self.ytrain['bs_signal'])
-        self.ypred = pd.DataFrame(self.model.predict(self.xtest), index=self.ytest.index, columns=['bs_signal']).sort_index()  # predicted
+
+    def simulation_predict(self):
+        self.ypred = pd.DataFrame(self.model.predict(self.xtest), index=self.xtest.index, columns=['bs_signal']).sort_index()  # predicted
         self.ytest = self.ytest.sort_index()
         self.rmse = mean_squared_error(self.ytest, self.ypred, squared=False)
         self.train_score = self.model.score(self.xtrain, self.ytrain)
         self.test_score = accuracy_score(self.ypred, self.ytest)
+
+    def live_predict(self):
+        predicted_live_data = pd.DataFrame(self.model.predict(self.live_df), index=self.live_df.index, columns=['bs_signal']).sort_index()
+        return predicted_live_data
+
+    def train_and_predict(self):
+        self.train()
+        self.simulation_predict()
 
     def generate_plots(self):
         df2 = pd.DataFrame(data=self.ypred, index=self.ytest.index, columns=['predicted']).astype('float')
