@@ -1,7 +1,7 @@
 import logging
 import os
 import argparse
-
+import statistics
 import pandas
 import pandas as pd
 from utils import constants, trading_logger
@@ -143,10 +143,15 @@ if __name__ == "__main__":
     # apply the function to each row of the dataframe
     counts_df = live_predictions_average_df.apply(count_occurrences, axis=1)
 
+    #      the average percent gain for long shorts is : {sum(result_long_short_total_percent_gain_runs)/len(result_long_short_total_percent_gain_runs)}
+    #      the std dev for long shorts is: {statistics.stdev(result_long_short_total_percent_gain_runs)}
+
     output = f"""
     after {args["runs"]} runs of the {args["model_name"]} with {args["length"]} day averages, start value of {args["starting_value"]}, share amount of {args["share_amount"]}, lookahead days at {args['lookahead_days']}, indicators: {args["indicators"]}
-    the average percent gain for long shorts is : {sum(result_long_short_total_percent_gain_runs)/len(result_long_short_total_percent_gain_runs)}
     the average percent gain for buy sell is : {sum(result_buy_sell_total_percent_gain_runs)/len(result_buy_sell_total_percent_gain_runs)}
+    the std dev for buy sell is: {statistics.stdev(result_buy_sell_total_percent_gain_runs)}
+    the min for buy sell is: {min(result_buy_sell_total_percent_gain_runs)}
+    the max for buy sell is: {max(result_buy_sell_total_percent_gain_runs)}
     the average test accuracy is : {sum(result_test_accuracies_runs)/len(result_test_accuracies_runs)}
     the average train accuracy is : {sum(result_train_accuracies_runs)/len(result_train_accuracies_runs)}
     """
