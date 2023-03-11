@@ -1,4 +1,3 @@
-import os
 import numpy as np
 from datetime import datetime
 
@@ -7,8 +6,7 @@ import pandas as pd
 import matplotlib
 
 matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+
 
 BUY = 1
 SELL = -1
@@ -18,14 +16,26 @@ HOLD = 0
 # TODO:  correlation, relative strength index (RSI), the difference between the open price of yesterday and today, difference close price of yesterday
 
 
-def moving_average(data_frame, length=10):
+def moving_average(data_frame, length):
     dataframe_copy = data_frame.copy()
-    ema = dataframe_copy.ta.ema(length=length, append=True).dropna()
-    sma = dataframe_copy.ta.sma(length=length, append=True).dropna()
+    ema = dataframe_copy.ta.ema(length=length).dropna()
+    sma = dataframe_copy.ta.sma(length=length).dropna()
     return ema, sma
 
 
-def bbands_calculation(data_frame, moving_average, length=10):
+def get_obv_vol(data_frame):
+    dataframe_copy = data_frame.copy()
+    obv = dataframe_copy.ta.obv().dropna()
+    return obv
+
+
+def get_cmf_vol(data_frame, length):
+    dataframe_copy = data_frame.copy()
+    cmf = dataframe_copy.ta.cmf(length=length).dropna()
+    return cmf
+
+
+def bbands_calculation(data_frame, moving_average, length):
     # imported pandasta bbands calculations are broken, lingering na's in their sma implementation
     # input should be some sort of moving average, df
     standard_deviation = data_frame.ta.stdev(length=length).dropna()
@@ -89,9 +99,11 @@ def index_len_resolver(df1, df2):
 def get_indicators(df, options, length, y_test_lookahead):
 
     list_of_dfs = []
-    ema, sma = moving_average(df[['Close']], length=length)
-    lower_bb_sma, upper_bb_sma = bbands_calculation(df[['Close']], sma, length=length)
-    lower_bb_ema, upper_bb_ema = bbands_calculation(df[['Close']], ema, length=length)
+    ema, sma = moving_average(df[['Close']], length)
+    obv_vol = get_obv_vol(df)
+    cmf_vol = get_cmf_vol(df, length)
+    lower_bb_sma, upper_bb_sma = bbands_calculation(df[['Close']], sma, length)
+    lower_bb_ema, upper_bb_ema = bbands_calculation(df[['Close']], ema, length)
     # averages are calculated given n previous days of information, drop the NAs
     df_close = df[['Close']].dropna()
     bb = pd.DataFrame({'lower_bb_sma': lower_bb_sma, 'upper_bb_sma': upper_bb_sma, 'lower_bb_ema': lower_bb_ema,
@@ -105,9 +117,12 @@ def get_indicators(df, options, length, y_test_lookahead):
                   'ema': pd.DataFrame({'EMA_{}'.format(length): ema}),
                   'bb': bb,
                   'high': df[['High']],
+                  'low': df[['Low']],
                   'volume': df[['Volume']],
                   'close': df_close[['Close']],
                   'bb_signal': bb_signal,
+                  'cmf': cmf_vol,
+                  'obv': obv_vol,
                   }
     for option in options:
         if option in OPTION_MAP:
