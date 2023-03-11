@@ -177,7 +177,11 @@ def compute_yearly_gains(order_book):
         yearly_gain = ((order_book.loc[:order_book_end_str, 'bankroll'][-1] - order_book.loc[date_holder:, 'bankroll'][0])/abs(order_book.loc[date_holder:, 'bankroll'][0]) * 100)
         yearly_gains_dict[x] = yearly_gain
     if order_book['bs_signal'][-1] == BUY:
-        total_percent_gain = order_book['cumulative_percentage'][-2]
+        try:
+            total_percent_gain = order_book['cumulative_percentage'][-2]
+        except:
+            import pdb
+            pdb.set_trace()
     else:
         total_percent_gain = order_book['cumulative_percentage'][-1]
 
