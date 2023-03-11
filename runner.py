@@ -143,14 +143,18 @@ if __name__ == "__main__":
             results_dict[tuple(combination)] = percent_gain_dict
 
         for percent_gain_key in percent_gain_dict:
+            count = 0
             print(f'the best to worst {percent_gain_key}')
             if percent_gain_key in ['min_percent_gain', 'std_percent_gain']:
                 sorted_combinations = sorted(results_dict.items(), key=lambda x: x[1][percent_gain_key], reverse=False)
             else:
                 sorted_combinations = sorted(results_dict.items(), key=lambda x: x[1][percent_gain_key], reverse=True)
             for combination, results in sorted_combinations:
+                if count == 3:
+                    break
                 print(
                     f"Indicators: {combination} - {percent_gain_key} - {results[percent_gain_key]}")
+                count += 1
             print('*********************')
     else:
         list_of_results = simulation_mode(args, data_frame_from_ticker)
