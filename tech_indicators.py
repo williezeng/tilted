@@ -34,6 +34,14 @@ def get_cmf_vol(data_frame, length):
     cmf = dataframe_copy.ta.cmf(length=length).dropna()
     return cmf
 
+def get_rsi(data_frame, length):
+    # It oscillates between 0 and 100,
+    # readings above 70 indicating overbought conditions
+    # readings below 30 indicating oversold conditions
+    dataframe_copy = data_frame.copy()
+    rsi = dataframe_copy.ta.rsi(length=length).dropna()
+    return rsi
+
 
 def bbands_calculation(data_frame, moving_average, length):
     # imported pandasta bbands calculations are broken, lingering na's in their sma implementation
@@ -123,6 +131,7 @@ def get_indicators(df, options, length, y_test_lookahead):
                   'bb_signal': bb_signal,
                   'cmf': cmf_vol,
                   'obv': obv_vol,
+                  'rsi': get_rsi(df, length),
                   }
     for option in options:
         if option in OPTION_MAP:
@@ -157,9 +166,9 @@ def create_ylabels(df, lookahead_days):
     closed_price_series = df_copy['Close']
     for i in range(closed_price_series.shape[0] - lookahead_days):
         ratio = (closed_price_series[i + lookahead_days] - closed_price_series[i]) / closed_price_series[i]
-        if ratio > (0.02):  # positive ratio that's higher than trade impact + commission
+        if ratio > 0.03:  # positive ratio that's higher than trade impact + commission
             trainY.append(BUY)
-        elif ratio < (-0.02):
+        elif ratio < -0.03:
             trainY.append(SELL)  # sell
         else:
             trainY.append(HOLD)

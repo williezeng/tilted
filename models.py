@@ -81,6 +81,7 @@ class BaseModel(object):
             self.model = self.model(**self.params)
         else:
             self.model = self.model()
+
         self.model.fit(self.xtrain, self.ytrain['bs_signal'])
 
     def simulation_predict(self):
