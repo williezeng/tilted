@@ -13,6 +13,7 @@ MAX_DEPTH = list(range(1, 100, 1))
 RF_PARAMS = {'n_estimators': 200}
 RF_PARAMS.update(DT_PARAMS)
 
+
 class RandomForest(BaseModel):
     def __init__(self, options, data_frame):
         super().__init__(options, data_frame)
@@ -22,8 +23,6 @@ class RandomForest(BaseModel):
             self.params = self.find_best_parameters(self.create_parameter_space())
         else:
             self.params = RF_PARAMS
-
-        self.optimize_parameters(options)
 
     def create_parameter_space(self):
         parameter_space = {'max_depth': hp.choice('max_depth', MAX_DEPTH),

@@ -10,12 +10,13 @@ from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
 LEAF_SAMPLES = list(range(1, 500, 10))
 MAX_DEPTH = list(range(1, 100, 1))
 
-DT_PARAMS = {'min_samples_leaf': 1,
-             'max_depth': None}
+DT_PARAMS = {'min_samples_leaf': 5,
+             'max_depth': 10,
+             'criterion': 'entropy'}
 
 PARAMETER_SPACE = {
                    "min_samples_leaf": hp.choice('min_samples_leaf', LEAF_SAMPLES),
-                   "max_depth": hp.choice('max_depth', MAX_DEPTH)
+                   "max_depth": hp.choice('max_depth', MAX_DEPTH),
                    }
 
 PARAM_TO_LIST_MAP = {"min_samples_leaf": LEAF_SAMPLES,

@@ -1,0 +1,24 @@
+the best to worst average_percent_gain
+Indicators: ['bb', 'cmf', 'obv', 'rsi', 'volume'] - average_percent_gain - 93183.2973017331
+Indicators: ['bb', 'bb_signal', 'obv', 'rsi', 'volume'] - average_percent_gain - 92934.67780645634
+Indicators: ['bb', 'bb_signal', 'cmf', 'obv', 'rsi'] - average_percent_gain - 92893.14322272515
+*********************
+the best to worst std_percent_gain
+Indicators: ['bb', 'ema', 'low', 'rsi', 'sma'] - std_percent_gain - 29562.24075234683
+Indicators: ['bb', 'bb_signal', 'ema', 'rsi', 'sma'] - std_percent_gain - 29797.48774576948
+Indicators: ['bb', 'cmf', 'ema', 'rsi', 'sma'] - std_percent_gain - 29922.97415984683
+*********************
+the best to worst min_percent_gain
+Indicators: ['bb', 'ema', 'high', 'rsi', 'sma'] - min_percent_gain - 26012.715192441436
+Indicators: ['bb', 'ema', 'low', 'rsi', 'sma'] - min_percent_gain - 26012.715192441436
+Indicators: ['bb', 'close', 'ema', 'rsi', 'sma'] - min_percent_gain - 19891.7471183104
+*********************
+the best to worst max_percent_gain
+Indicators: ['bb', 'close', 'low', 'obv', 'rsi', 'sma'] - max_percent_gain - 417796.05119687074
+Indicators: ['bb', 'close', 'low', 'rsi', 'sma', 'volume'] - max_percent_gain - 417796.05119687074
+Indicators: ['bb', 'bb_signal', 'cmf', 'low', 'rsi', 'sma'] - max_percent_gain - 417796.05119687074
+*********************
+the best to worst average_test_acc
+Indicators: ['bb', 'ema', 'obv', 'rsi', 'volume'] - average_test_acc - 0.8498900375939814
+Indicators: ['bb', 'cmf', 'ema', 'rsi', 'volume'] - average_test_acc - 0.8496939571150065
+Indicators: ['bb', 'cmf', 'ema', 'obv', 'rsi'] - average_test_acc - 0.8496649797570822
