@@ -39,8 +39,9 @@ def parallel_trainer_evaluater(args):
     analyzer.analyze_prediction_to_test(model_instance.ypred, model_instance.ytest, df_from_ticker, arguments)
     if arguments['check_model']:
         analyzer.graph_series(model_instance.ytrain, df_from_ticker, 'ytrain')
-        analyzer.graph_series(model_instance.ytrain, df_from_ticker, 'ytest')
-        analyzer.graph_series(model_instance.ytrain, df_from_ticker, 'ypred')
+        analyzer.graph_series(model_instance.ytest, df_from_ticker, 'ytest')
+        analyzer.graph_series(model_instance.ypred, df_from_ticker, 'ypred')
+        model_instance.generate_plots()
 
     long_short_order_book = tech_indicators.add_long_short_shares(model_instance.ypred['bs_signal'],
                                                                   arguments['share_amount'])
@@ -114,8 +115,8 @@ if __name__ == "__main__":
     file_name = os.path.join(constants.YAHOO_DATA_DIR, args['file_name'])
     spy_file_name = os.path.join(constants.YAHOO_DATA_DIR, 'spy500.csv')
     args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
-    if len(args["indicators"]) < MIN_REQUIRED_TRADING_INDICATORS:
-        exit(f"you must specify {MIN_REQUIRED_TRADING_INDICATORS} or more indicators")
+    # if len(args["indicators"]) < MIN_REQUIRED_TRADING_INDICATORS:
+    #     exit(f"you must specify {MIN_REQUIRED_TRADING_INDICATORS} or more indicators")
     data_frame_from_ticker = tech_indicators.read_df_from_file(file_name)
     data_frame_from_spyfile = tech_indicators.read_df_from_file(spy_file_name)
     result_buy_sell_total_percent_gain_runs = []

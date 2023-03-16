@@ -25,6 +25,7 @@ class BaseModel(object):
         self.data_name = options.get('file_name')
         self.y_test_lookahead_days = options.get('lookahead_days')
         self.random_int_seed = options.get('random_seed')
+        self.weights = None
         self.ypred = None
         self.model = None
         self.model_name = None
@@ -72,7 +73,7 @@ class BaseModel(object):
         # indicator =         [ , , , , ]
         live_days = list(set(indicator_df.index) - set(buy_sell_hold_df.index))
         live_days.sort()
-        xtrain, xtest, ytrain, ytest = train_test_split(normalized_indicators_df, refined_bs_df, shuffle=True, test_size=0.20, random_state=self.random_int_seed)
+        xtrain, xtest, ytrain, ytest = train_test_split(normalized_indicators_df, refined_bs_df, shuffle=True, test_size=0.15, random_state=self.random_int_seed)
         return xtrain, xtest, ytrain, ytest, indicator_df.loc[live_days]
 
 
@@ -81,8 +82,11 @@ class BaseModel(object):
             self.model = self.model(**self.params)
         else:
             self.model = self.model()
+        if self.weights:
+            self.model.fit(self.xtrain, self.ytrain['bs_signal'], sample_weight=self.weights)
+        else:
+            self.model.fit(self.xtrain, self.ytrain['bs_signal'])
 
-        self.model.fit(self.xtrain, self.ytrain['bs_signal'])
 
     def simulation_predict(self):
         self.ypred = pd.DataFrame(self.model.predict(self.xtest), index=self.xtest.index, columns=['bs_signal']).sort_index()  # predicted
@@ -100,16 +104,7 @@ class BaseModel(object):
         self.simulation_predict()
 
     def generate_plots(self):
-        df2 = pd.DataFrame(data=self.ypred, index=self.ytest.index, columns=['predicted']).astype('float')
-        df3 = self.ytest[['bs_signal']].astype('float').rename(columns={'Close': 'actual'})
-        ax = df2.plot()
-        df3.plot(ax=ax, title='bs_signal pred values vs real values', fontsize=10)
-        ax.set_xlabel('Date')
-        ax.set_ylabel('{} bsh values'.format(self.data_name))
-        plt.text(0.5, 0.5, 'rmse: ' + str(self.rmse), ha='center', va='center', fontsize='small')
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig("{}{}_{}_plot.png".format(self.data_name, self.length_of_moving_averages, self.model_name), dpi=500)
+        pass
 
     def save_model(self):
         joblib.dump(self.model, SAVED_MODEL_PATH.format(name=self.model_name))

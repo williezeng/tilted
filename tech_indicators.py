@@ -98,9 +98,9 @@ def index_len_resolver(df1, df2):
     diff = (df2_end - df1_end).days
 
     if diff > 0:
-        df2 = df2[:-diff]
+        df2 = df2[:df1.index[-1]]
     elif diff < 0:
-        df1 = df1[:diff]
+        df1 = df1[:df2.index[-1]]
     return df1, df2
 
 

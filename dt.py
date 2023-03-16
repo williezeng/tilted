@@ -1,17 +1,20 @@
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, plot_tree
 
 import matplotlib
 matplotlib.use('TkAgg')
-
+import numpy as np
 import math
 from models import BaseModel
-
+from sklearn.utils import class_weight
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
+import matplotlib.pyplot as plt
+from sklearn.tree import export_graphviz
+
 LEAF_SAMPLES = list(range(1, 500, 10))
 MAX_DEPTH = list(range(1, 100, 1))
 
 DT_PARAMS = {'min_samples_leaf': 5,
-             'max_depth': 10,
+             'max_depth': 15,
              'criterion': 'entropy'}
 
 PARAMETER_SPACE = {
@@ -27,6 +30,10 @@ class DecisionTree(BaseModel):
         super().__init__(options, data_frame)
         self.model = DecisionTreeClassifier
         self.model_name = 'decision_tree'
+        n_samples = len(self.ytrain)
+        # self.weights = [i / n_samples for i in range(1, n_samples + 1)]
+        # import pdb
+        # pdb.set_trace()
         if options.get('optimize_params'):
             self.params = self.find_best_parameters(PARAMETER_SPACE)
         else:
@@ -48,3 +55,6 @@ class DecisionTree(BaseModel):
         print(best_parameters)
         return best_parameters
 
+    def generate_plots(self):
+        feature_names = self.xtrain.columns
+        export_graphviz(self.model, out_file='tree.dot', class_names=['sell', 'hold', 'buy'], feature_names=feature_names, filled=True)
