@@ -13,8 +13,11 @@ from sklearn.tree import export_graphviz
 LEAF_SAMPLES = list(range(1, 500, 10))
 MAX_DEPTH = list(range(1, 100, 1))
 
-DT_PARAMS = {'min_samples_leaf': 5,
-             'max_depth': 15,
+DT_PARAMS = {'min_samples_leaf': 2,
+             'min_samples_split': 2,
+             'ccp_alpha': 0.0001,
+             'max_depth': None,
+             'max_features': 'sqrt',
              'criterion': 'entropy'}
 
 PARAMETER_SPACE = {
@@ -32,10 +35,9 @@ class DecisionTree(BaseModel):
         self.model_name = 'decision_tree'
         n_samples = len(self.ytrain)
         # self.weights = [i / n_samples for i in range(1, n_samples + 1)]
-        # import pdb
-        # pdb.set_trace()
+
         if options.get('optimize_params'):
-            self.params = self.find_best_parameters(PARAMETER_SPACE)
+            self.params = DT_PARAMS.update(self.find_best_parameters(PARAMETER_SPACE))
         else:
             self.params = DT_PARAMS
 

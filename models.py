@@ -1,4 +1,4 @@
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, KFold
 import pandas as pd
 import matplotlib
 matplotlib.use('TkAgg')
@@ -7,32 +7,44 @@ from sklearn.metrics import mean_squared_error, accuracy_score
 import tech_indicators
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
 import joblib
+from sklearn.ensemble import RandomForestClassifier
 import os
 import math
 from abc import ABC, abstractmethod
 from analyzer import check_buy_sell_signals
+import numpy as np
+
 
 best = math.inf
 
 BEST_RUN_DIR = os.path.join(os.path.curdir, 'best_run')
 SAVED_MODEL = 'finalized_{name}.sav'
 SAVED_MODEL_PATH = os.path.join(BEST_RUN_DIR, SAVED_MODEL)
+MODEL_NAME_TO_CLASSIFIER = {'random_forest': RandomForestClassifier}
+
 
 class BaseModel(object):
     def __init__(self, options, data_frame):
+        self.live_df = None
+        self.refined_bs_df = None
+        self.normalized_indicators_df = None
         self.length_of_moving_averages = options.get('length')
+        self.data_frame = data_frame
         self.indicators = options.get('indicators')
         self.data_name = options.get('file_name')
         self.y_test_lookahead_days = options.get('lookahead_days')
         self.random_int_seed = options.get('random_seed')
         self.weights = None
-        self.ypred = None
         self.model = None
         self.model_name = None
         self.rmse = None
         self.test_score = -1
         self.train_score = -1
-        self.xtrain, self.xtest, self.ytrain, self.ytest, self.live_df = self.setup_data(data_frame)
+        self.params = None
+
+    def handle_params(self, optimize_params):
+        pass
+
 
     def optimize_parameters(self, options):
         if options.get('optimize_params'):
@@ -63,45 +75,62 @@ class BaseModel(object):
     def find_best_parameters(self, parameter_space):
         pass
 
-    def setup_data(self, data_frame):
-        indicator_df, buy_sell_hold_df = tech_indicators.get_indicators(data_frame, self.indicators, self.length_of_moving_averages, self.y_test_lookahead_days)
+    def setup_data(self):
+        indicator_df, buy_sell_hold_df = tech_indicators.get_indicators(self.data_frame, self.indicators, self.length_of_moving_averages, self.y_test_lookahead_days)
         refined_indicators_df, refined_bs_df = tech_indicators.index_len_resolver(indicator_df, buy_sell_hold_df)
         normalized_indicators_df = tech_indicators.normalize_indicators(refined_indicators_df)
         # the buy_sell_hold_df will always END earlier than the indicator_df because of the lookahead days
         # the indicator_df will always START later than the buy_sell_hold_df because of the average_day length
         # bsh       =      [ , , , ]
         # indicator =         [ , , , , ]
-        live_days = list(set(indicator_df.index) - set(buy_sell_hold_df.index))
-        live_days.sort()
-        xtrain, xtest, ytrain, ytest = train_test_split(normalized_indicators_df, refined_bs_df, shuffle=True, test_size=0.15, random_state=self.random_int_seed)
-        return xtrain, xtest, ytrain, ytest, indicator_df.loc[live_days]
+        future_prediction_days = list(set(indicator_df.index) - set(buy_sell_hold_df.index))
+        future_prediction_days.sort()
+        return normalized_indicators_df, refined_bs_df, indicator_df.loc[future_prediction_days]
 
 
-    def train(self):
-        if self.params:
-            self.model = self.model(**self.params)
+
+
+    def train(self, xtrain, ytrain):
+        if self.params is not None:
+            self.model = MODEL_NAME_TO_CLASSIFIER[self.model_name](**self.params)
         else:
-            self.model = self.model()
+            exit('NO PARAMS?')
         if self.weights:
-            self.model.fit(self.xtrain, self.ytrain['bs_signal'], sample_weight=self.weights)
+            self.model.fit(xtrain, ytrain['bs_signal'], sample_weight=self.weights)
         else:
-            self.model.fit(self.xtrain, self.ytrain['bs_signal'])
+            self.model.fit(xtrain, ytrain['bs_signal'])
 
-
-    def simulation_predict(self):
-        self.ypred = pd.DataFrame(self.model.predict(self.xtest), index=self.xtest.index, columns=['bs_signal']).sort_index()  # predicted
-        self.ytest = self.ytest.sort_index()
-        self.rmse = mean_squared_error(self.ytest, self.ypred, squared=False)
-        self.train_score = self.model.score(self.xtrain, self.ytrain)
-        self.test_score = accuracy_score(self.ypred, self.ytest)
-
-    def live_predict(self):
-        predicted_live_data = pd.DataFrame(self.model.predict(self.live_df), index=self.live_df.index, columns=['bs_signal']).sort_index()
-        return predicted_live_data
 
     def train_and_predict(self):
-        self.train()
-        self.simulation_predict()
+        xtrain, xtest, ytrain, ytest = None, None, None, None
+        # Define the size of the rolling window
+        constant_test_size = 1
+        constant_train_size = 12
+        test_size_product = constant_test_size * self.y_test_lookahead_days
+        train_size_product = constant_train_size * self.y_test_lookahead_days
+        # Initialize an empty list to store the predictions
+        predictions = pd.DataFrame()
+        correct_test_output = pd.DataFrame()
+
+        np.random.seed(self.random_int_seed)
+
+        # shuffle both DataFrames using the same index
+
+        for i in range(train_size_product, len(self.normalized_indicators_df), train_size_product+test_size_product):
+            # Split the window into training and test sets
+            # shuffled training data
+            idx = np.random.permutation(self.normalized_indicators_df.iloc[:i].index)
+            xtrain = self.normalized_indicators_df.loc[idx]
+            ytrain = self.refined_bs_df.loc[idx]
+            self.train(xtrain, ytrain)
+
+            xtest = self.normalized_indicators_df.iloc[i:i+test_size_product]
+            ytest = self.refined_bs_df.iloc[i:i+test_size_product]
+            ypred = pd.DataFrame(self.model.predict(xtest), index=xtest.index, columns=['bs_signal'])
+            correct_test_output = pd.concat([correct_test_output, ytest])
+            predictions = pd.concat([predictions, ypred])
+
+        return xtrain, xtest, ytrain, correct_test_output, predictions, self.model.score(xtrain, ytrain), accuracy_score(predictions, correct_test_output)
 
     def generate_plots(self):
         pass

@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib
+import traceback
 from datetime import datetime
 matplotlib.use('TkAgg')
 import matplotlib.dates as mdates
@@ -15,9 +16,9 @@ logger = trading_logger.getlogger()
 OUTPUT = []
 
 
-def analyze_prediction_to_test(ypred, ytest, dataframe_from_tickers, args):
+def analyze_prediction_to_test(ypred, ytest, dataframe_from_tickers, share_amount, starting_value, lookahead_days, save_recent):
     check_buy_sell_signals(ypred, ytest)
-    compute_best_case(ytest, dataframe_from_tickers, args['share_amount'], args['starting_value'], args['lookahead_days'], args['save_recent'])
+    compute_best_case(ytest, dataframe_from_tickers, share_amount, starting_value, lookahead_days, save_recent)
 
 
 def check_buy_sell_signals(ypred, ytest):
@@ -52,24 +53,22 @@ def check_buy_sell_signals(ypred, ytest):
 
 
 def compute_best_case(ytest_df, closing_price_df, share_amount, starting_value, lookahead, save_recent=False):
-    long_short_order_book = add_long_short_shares(ytest_df['bs_signal'], share_amount)
+    # long_short_order_book = add_long_short_shares(ytest_df['bs_signal'], share_amount)
     buy_sell_order_book = add_buy_sell_shares(ytest_df['bs_signal'], closing_price_df, starting_value)
-    long_short_portfolio_values = compute_portfolio(long_short_order_book, closing_price_df)
+    # long_short_portfolio_values = compute_portfolio(long_short_order_book, closing_price_df)
     buy_sell_portfolio_values = compute_portfolio(buy_sell_order_book, closing_price_df)
     # buy_sell_portfolio_values.to_csv('best_case_buy.csv')
     # long_short_portfolio_values.to_csv('best_case_long.csv')
     if save_recent:
         graph_order_book(buy_sell_portfolio_values, closing_price_df, 'best_case', 'buy_sell',
                          'no indicators used', lookahead)
-        graph_order_book(long_short_portfolio_values, closing_price_df, 'best_case', 'long_short',
-                         'no indicators used', lookahead)
-    long_short_yearly_gains_dict, long_short_total_percent_gain = compute_yearly_gains(long_short_portfolio_values)
+        # graph_order_book(long_short_portfolio_values, closing_price_df, 'best_case', 'long_short',
+        #                  'no indicators used', lookahead)
+    # long_short_yearly_gains_dict, long_short_total_percent_gain = compute_yearly_gains(long_short_portfolio_values)
     buy_sell_yearly_gains_dict, buy_sell_total_percent_gain = compute_yearly_gains(buy_sell_portfolio_values)
-    output = [f'best long_short percent gain {long_short_total_percent_gain}, best buy sell percent gain {buy_sell_total_percent_gain}',
-              ]
-
+    output = [f'best buy sell percent gain {buy_sell_total_percent_gain}']
     OUTPUT.extend(output)
-    return (long_short_total_percent_gain, long_short_yearly_gains_dict), (buy_sell_total_percent_gain, buy_sell_yearly_gains_dict)
+    return buy_sell_total_percent_gain, buy_sell_yearly_gains_dict
 
 def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.005):
     order_book_copy = order_book.copy()
@@ -176,44 +175,39 @@ def compute_yearly_gains(order_book):
     if remaining_gains > 0.0:
         yearly_gain = ((order_book.loc[:order_book_end_str, 'bankroll'][-1] - order_book.loc[date_holder:, 'bankroll'][0])/abs(order_book.loc[date_holder:, 'bankroll'][0]) * 100)
         yearly_gains_dict[x] = yearly_gain
-    if order_book['bs_signal'][-1] == BUY:
-        try:
-            total_percent_gain = order_book['cumulative_percentage'][-2]
-        except:
-            import pdb
-            pdb.set_trace()
+    if order_book['bs_signal'][-1] == BUY and len(order_book) > 1:
+        total_percent_gain = order_book['cumulative_percentage'][-2]
     else:
         total_percent_gain = order_book['cumulative_percentage'][-1]
 
     OUTPUT.append('THE TOTAL % gain : {}'.format(total_percent_gain))
     return yearly_gains_dict, total_percent_gain
 
-def get_spy(spy_close_df, args):
-    spy_hold_portfolio = compute_simple_baseline("spy", spy_close_df, args['share_amount'])
+def get_spy(spy_close_df, share_amount):
+    spy_hold_portfolio = compute_simple_baseline("spy", spy_close_df, share_amount)
     graph_spy(spy_hold_portfolio, spy_close_df)
     print('\n'.join(OUTPUT))
 
 
-def compare_strategies(buy_sell_order_book, long_short_order_book, target_close_df, args):
-    OUTPUT.append('generating longs and shorts ')
-    long_short_portfolio_values = compute_portfolio(long_short_order_book, target_close_df)
-    long_short_yearly_gains_dict, long_short_total_percent_gain = compute_yearly_gains(long_short_portfolio_values)
+def compare_strategies(buy_sell_order_book, target_close_df, file_name, model_name, indicators, length, share_amount, inspect, save_recent):
+    # OUTPUT.append('generating longs and shorts ')
+    # long_short_portfolio_values = compute_portfolio(long_short_order_book, target_close_df)
+    # long_short_yearly_gains_dict, long_short_total_percent_gain = compute_yearly_gains(long_short_portfolio_values)
     OUTPUT.append('generating buy and sell')
     buy_sell_portfolio_values = compute_portfolio(buy_sell_order_book, target_close_df)
     buy_sell_yearly_gains_dict, buy_sell_total_percent_gain = compute_yearly_gains(buy_sell_portfolio_values)
 
     OUTPUT.append('generating baselines')
-    target_hold_portfolio = compute_simple_baseline(args["file_name"], target_close_df, int(args['share_amount']))
-    if args["inspect"]:
+    target_hold_portfolio = compute_simple_baseline(file_name, target_close_df, share_amount)
+    if inspect:
         print('\n'.join(OUTPUT))
-    if args['save_recent']:
-        long_short_portfolio_values.to_csv(os.path.join(RECENT_RUN_DIR, 'long_short_portfolio.csv'))
+    if save_recent:
+        # long_short_portfolio_values.to_csv(os.path.join(RECENT_RUN_DIR, 'long_short_portfolio.csv'))
         buy_sell_portfolio_values.to_csv(os.path.join(RECENT_RUN_DIR, 'buy_short_portfolio.csv'))
-        graph_order_book(long_short_portfolio_values, target_close_df, args['model_name'], args['file_name'],
-                         args["indicators"], args['length'])
+        graph_order_book(buy_sell_portfolio_values, target_close_df, model_name, file_name,
+                         indicators, length)
 
-    return buy_sell_portfolio_values, buy_sell_total_percent_gain, long_short_portfolio_values, long_short_total_percent_gain
-
+    return buy_sell_portfolio_values, buy_sell_total_percent_gain
 
 def graph_spy(spy_order_book, spy_close):
     plt.plot(list(spy_close.index), spy_close['Close'], label='price')
