@@ -21,8 +21,6 @@ class RandomForest(BaseModel):
         self.handle_params(options.get('optimize_params'))
         self.normalized_indicators_df, self.refined_bs_df, self.live_df = self.setup_data()
         self.xtrain, self.xtest, self.ytrain, self.ytest, self.ypred, self.train_score, self.test_score = self.train_and_predict()
-        # self.ytest = self.ytest[-50:]
-        # self.ypred = self.ypred[-50:]
 
 
     def live_predict(self):
