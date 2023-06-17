@@ -108,13 +108,12 @@ class BaseModel(object):
         correct_test_output = pd.DataFrame()
 
         np.random.seed(self.random_int_seed)
-        k = 20
-
+        k = 2      # chunks
+        # we want to keep a training to test ratio
         # Calculate the chunk size
         chunk_size = len(self.normalized_indicators_df) // k
         # Number each element in the DF into corresponding CHUNKs by creating a one-dimensional array from 0 to len(X)-1
         chunk_indices = np.arange(len(self.normalized_indicators_df)) // chunk_size
-        np.random.shuffle(chunk_indices)
 
         # train the model based on the randomized chunk indices
         # Create indices for the chunks
@@ -122,35 +121,19 @@ class BaseModel(object):
         # get indices marked for 0 for training
         # last three indices in that will be for validation
 
-        # 1 fold, get indices marked for 1
         for fold in range(k):
-            # Get the indices for the current fold
-            val_indices = np.where(chunk_indices == fold)[0]
-            train_indices = np.where(chunk_indices != fold)[0]
-            # Split the data into training and validation sets for the current fold
-            X_train, X_val = self.normalized_indicators_df.iloc[train_indices], self.normalized_indicators_df.iloc[val_indices]
-            y_train, y_val = self.refined_bs_df.iloc[train_indices], self.refined_bs_df.iloc[val_indices]
-            # self.train(xtrain, ytrain)
-            # ypred = pd.DataFrame(self.model.predict(xtest), index=xtest.index, columns=['bs_signal'])
+            # Get the indices for the current fold, reserve the last lookahead indices for testing
+            training_indices = np.where(chunk_indices == fold)[0][:-self.y_test_lookahead_days]
+            test_indices = np.where(chunk_indices == fold)[0][-self.y_test_lookahead_days:]
+            np.random.shuffle(training_indices)
 
-            import pdb
-            pdb.set_trace()
-        # shuffle both DataFrames using the same index
-        import pdb
-        pdb.set_trace()
-        # for i in range(train_size_product, , train_size_product+test_size_product):
-        #     # Split the window into training and test sets
-        #     # shuffled training data
-        #     idx = np.random.permutation(self.normalized_indicators_df.iloc[:i].index)
-        #     xtrain = self.normalized_indicators_df.loc[idx]
-        #     ytrain = self.refined_bs_df.loc[idx]
-        #     self.train(xtrain, ytrain)
-        #
-        #     xtest = self.normalized_indicators_df.iloc[i:i+test_size_product]
-        #     ytest = self.refined_bs_df.iloc[i:i+test_size_product]
-        #     ypred = pd.DataFrame(self.model.predict(xtest), index=xtest.index, columns=['bs_signal'])
-        #     correct_test_output = pd.concat([correct_test_output, ytest])
-        #     predictions = pd.concat([predictions, ypred])
+            xtrain, xtest = self.normalized_indicators_df.iloc[training_indices], self.normalized_indicators_df.iloc[test_indices]
+            ytrain, ytest = self.refined_bs_df.iloc[training_indices], self.refined_bs_df.iloc[test_indices]
+            self.train(xtrain, ytrain)
+            ypred = pd.DataFrame(self.model.predict(xtest), index=xtest.index, columns=['bs_signal'])
+
+            correct_test_output = pd.concat([correct_test_output, ytest])
+            predictions = pd.concat([predictions, ypred])
 
         return xtrain, xtest, ytrain, correct_test_output, predictions, self.model.score(xtrain, ytrain), accuracy_score(predictions, correct_test_output)
 
