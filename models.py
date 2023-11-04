@@ -42,9 +42,6 @@ class BaseModel(object):
         self.train_score = -1
         self.params = None
 
-    def handle_params(self, optimize_params):
-        pass
-
 
     def optimize_parameters(self, options):
         if options.get('optimize_params'):
@@ -87,9 +84,6 @@ class BaseModel(object):
         future_prediction_days.sort()
         return normalized_indicators_df, refined_bs_df, indicator_df.loc[future_prediction_days]
 
-
-
-
     def train(self, xtrain, ytrain):
         if self.params is not None:
             self.model = MODEL_NAME_TO_CLASSIFIER[self.model_name](**self.params)
@@ -100,42 +94,37 @@ class BaseModel(object):
         else:
             self.model.fit(xtrain, ytrain['bs_signal'])
 
-
     def train_and_predict(self):
-        xtrain, xtest, ytrain, ytest = None, None, None, None
-        # Initialize an empty list to store the predictions
         predictions = pd.DataFrame()
+        cumulative_training_indicator_data = pd.DataFrame()
+        cumulative_train_bs_data = pd.DataFrame()
+        cumulative_test_indicator_data = pd.DataFrame()
         correct_test_output = pd.DataFrame()
-
         np.random.seed(self.random_int_seed)
         k = 2      # chunks
         # we want to keep a training to test ratio
         # Calculate the chunk size
         chunk_size = len(self.normalized_indicators_df) // k
-        # Number each element in the DF into corresponding CHUNKs by creating a one-dimensional array from 0 to len(X)-1
         chunk_indices = np.arange(len(self.normalized_indicators_df)) // chunk_size
 
-        # train the model based on the randomized chunk indices
-        # Create indices for the chunks
-        # 0 fold ,
-        # get indices marked for 0 for training
-        # last three indices in that will be for validation
-
-        for fold in range(k):
+        for fold in range(0, k):
             # Get the indices for the current fold, reserve the last lookahead indices for testing
+            # df =  [[      Training          ][ Testing  ]] [[      Training          ][ Testing  ]]
             training_indices = np.where(chunk_indices == fold)[0][:-self.y_test_lookahead_days]
             test_indices = np.where(chunk_indices == fold)[0][-self.y_test_lookahead_days:]
             np.random.shuffle(training_indices)
-
             xtrain, xtest = self.normalized_indicators_df.iloc[training_indices], self.normalized_indicators_df.iloc[test_indices]
             ytrain, ytest = self.refined_bs_df.iloc[training_indices], self.refined_bs_df.iloc[test_indices]
-            self.train(xtrain, ytrain)
+            cumulative_training_indicator_data = pd.concat([cumulative_training_indicator_data, xtrain])
+            cumulative_train_bs_data = pd.concat([cumulative_train_bs_data, ytrain])
+            self.train(cumulative_training_indicator_data, cumulative_train_bs_data)
+            #TODO: Do we want to repredict previous predictions? or just move forward? Currently we're just predicting forward
             ypred = pd.DataFrame(self.model.predict(xtest), index=xtest.index, columns=['bs_signal'])
-
+            cumulative_test_indicator_data =  pd.concat([cumulative_test_indicator_data, xtest])
             correct_test_output = pd.concat([correct_test_output, ytest])
             predictions = pd.concat([predictions, ypred])
 
-        return xtrain, xtest, ytrain, correct_test_output, predictions, self.model.score(xtrain, ytrain), accuracy_score(predictions, correct_test_output)
+        return cumulative_training_indicator_data, cumulative_train_bs_data, cumulative_test_indicator_data, correct_test_output, predictions, self.model.score(cumulative_training_indicator_data, cumulative_train_bs_data), accuracy_score(predictions, correct_test_output)
 
     def generate_plots(self):
         pass

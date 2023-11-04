@@ -106,10 +106,8 @@ def find_best_combination(arguments, df_ticker):
             for buy_sell_percent_gain, test_score, train_score, live_predictions in list_of_results:
                 result_buy_sell_total_percent_gain_runs.append(buy_sell_percent_gain)
                 result_test_accuracies_runs.append(test_score)
-            average_percent_gain = sum(result_buy_sell_total_percent_gain_runs) / len(
-                result_buy_sell_total_percent_gain_runs)
-            std_percent_gain = statistics.stdev(result_buy_sell_total_percent_gain_runs) if len(
-                result_buy_sell_total_percent_gain_runs) > 1 else None
+            average_percent_gain = sum(result_buy_sell_total_percent_gain_runs) / len(result_buy_sell_total_percent_gain_runs)
+            std_percent_gain = statistics.stdev(result_buy_sell_total_percent_gain_runs) if len(result_buy_sell_total_percent_gain_runs) > 1 else None
             min_percent_gain = min(result_buy_sell_total_percent_gain_runs)
             max_percent_gain = max(result_buy_sell_total_percent_gain_runs)
             average_test_acc = sum(result_test_accuracies_runs) / len(result_test_accuracies_runs)

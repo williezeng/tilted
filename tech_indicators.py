@@ -118,7 +118,6 @@ def get_indicators(df, options, length, y_test_lookahead):
                        'upper_bb_ema': upper_bb_ema})
 
     y_label_df = create_ylabels(df_close[['Close']].astype(float), y_test_lookahead)
-    # df_close, y_label_df = index_len_resolver(df[['Close']], y_label_df)
 
     bb_signal = bbands_classification(df_close, lower_bb_ema, upper_bb_ema)
     OPTION_MAP = {'sma': pd.DataFrame({'SMA_{}'.format(length): sma}),
