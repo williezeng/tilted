@@ -100,31 +100,41 @@ class BaseModel(object):
         cumulative_train_bs_data = pd.DataFrame()
         cumulative_test_indicator_data = pd.DataFrame()
         correct_test_output = pd.DataFrame()
-        np.random.seed(self.random_int_seed)
         k = 2      # chunks
         # we want to keep a training to test ratio
         # Calculate the chunk size
         chunk_size = len(self.normalized_indicators_df) // k
         chunk_indices = np.arange(len(self.normalized_indicators_df)) // chunk_size
+        # Assuming you have a DataFrame or numpy arrays for your data and labels
+        # X = your_data  # Features
+        # y = your_labels  # Target variable
+        # Split the data into training and testing sets with an 80:20 ratio
 
-        for fold in range(0, k):
-            # Get the indices for the current fold, reserve the last lookahead indices for testing
-            # df =  [[      Training          ][ Testing  ]] [[      Training          ][ Testing  ]]
-            training_indices = np.where(chunk_indices == fold)[0][:-self.y_test_lookahead_days]
-            test_indices = np.where(chunk_indices == fold)[0][-self.y_test_lookahead_days:]
-            np.random.shuffle(training_indices)
-            xtrain, xtest = self.normalized_indicators_df.iloc[training_indices], self.normalized_indicators_df.iloc[test_indices]
-            ytrain, ytest = self.refined_bs_df.iloc[training_indices], self.refined_bs_df.iloc[test_indices]
-            cumulative_training_indicator_data = pd.concat([cumulative_training_indicator_data, xtrain])
-            cumulative_train_bs_data = pd.concat([cumulative_train_bs_data, ytrain])
-            self.train(cumulative_training_indicator_data, cumulative_train_bs_data)
-            #TODO: Do we want to repredict previous predictions? or just move forward? Currently we're just predicting forward
-            ypred = pd.DataFrame(self.model.predict(xtest), index=xtest.index, columns=['bs_signal'])
-            cumulative_test_indicator_data =  pd.concat([cumulative_test_indicator_data, xtest])
-            correct_test_output = pd.concat([correct_test_output, ytest])
-            predictions = pd.concat([predictions, ypred])
+        X_train, X_test, y_train, y_test = train_test_split(self.normalized_indicators_df, self.refined_bs_df, test_size=0.1, shuffle=False)
+        training_indices = list(range(0, len(X_train)))
+        np.random.seed(self.random_int_seed)
+        np.random.shuffle(training_indices)
+        shuffled_xtrain = X_train.iloc[training_indices]
+        shuffled_ytrain = y_train.iloc[training_indices]
+        self.train(shuffled_xtrain, shuffled_ytrain)
+        ypred = pd.DataFrame(self.model.predict(X_test), index=X_test.index, columns=['bs_signal'])
 
-        return cumulative_training_indicator_data, cumulative_train_bs_data, cumulative_test_indicator_data, correct_test_output, predictions, self.model.score(cumulative_training_indicator_data, cumulative_train_bs_data), accuracy_score(predictions, correct_test_output)
+        # for fold in range(0, k):
+        #     # Get the indices for the current fold, reserve the last lookahead indices for testing
+        #     # df =  [[      Training          ][ Testing  ]] [[      Training          ][ Testing  ]]
+        #     training_indices = np.where(chunk_indices == fold)[0][:-self.y_test_lookahead_days]
+        #     test_indices = np.where(chunk_indices == fold)[0][-self.y_test_lookahead_days:]
+        #     np.random.shuffle(training_indices)
+        #     ytrain, ytest = self.refined_bs_df.iloc[training_indices], self.refined_bs_df.iloc[test_indices]
+        #     cumulative_training_indicator_data = pd.concat([cumulative_training_indicator_data, xtrain])
+        #     cumulative_train_bs_data = pd.concat([cumulative_train_bs_data, ytrain])
+        #     #TODO: Do we want to repredict previous predictions? or just move forward? Currently we're just predicting forward
+        #     ypred = pd.DataFrame(self.model.predict(xtest), index=xtest.index, columns=['bs_signal'])
+        #     cumulative_test_indicator_data =  pd.concat([cumulative_test_indicator_data, xtest])
+        #     correct_test_output = pd.concat([correct_test_output, ytest])
+        #     predictions = pd.concat([predictions, ypred])
+
+        return shuffled_xtrain, shuffled_ytrain, X_test, y_test, ypred, self.model.score(shuffled_xtrain, shuffled_ytrain), accuracy_score(ypred, y_test)
 
     def generate_plots(self):
         pass

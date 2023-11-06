@@ -214,6 +214,7 @@ def add_buy_sell_shares(bs_df, close_price, starting_value, offset=0.008, impact
     gains_holder = starting_value
     for index in bs_df.index:
         if bs_df[index] == BUY and holdings == 0:
+            # 0.90 for risk management
             number_of_buyable_shares = (gains_holder * 0.90) / close_price.loc[index][0]
             gains_holder -= (close_price.loc[index][0] * number_of_buyable_shares)
             entire_book_order['share_amount'][index] = number_of_buyable_shares

@@ -13,22 +13,22 @@ from rf import RandomForest
 import multiprocessing
 from tqdm import tqdm
 from itertools import combinations
-import datetime
 from utils import external_ticks
 
 NAME_TO_MODEL = {
-                 'knn': KNN,
-                 'decision_trees': DecisionTree,
-                 'random_forest': RandomForest,
-                }
+    'knn': KNN,
+    'decision_trees': DecisionTree,
+    'random_forest': RandomForest,
+}
 LOGGER_LEVELS = {
-                'info': logging.INFO,
-                'debug': logging.DEBUG,
-                'warning': logging.WARNING,
-                'critical': logging.CRITICAL
-                 }
+    'info': logging.INFO,
+    'debug': logging.DEBUG,
+    'warning': logging.WARNING,
+    'critical': logging.CRITICAL
+}
 logger = trading_logger.getlogger()
 MIN_REQUIRED_TRADING_INDICATORS = 5
+
 
 def parallel_trainer_evaluater(tuple_of_data):
     arguments, random_seed, df_from_ticker = tuple_of_data
@@ -43,29 +43,19 @@ def parallel_trainer_evaluater(tuple_of_data):
     starting_value = arguments['starting_value']
     lookahead_days = arguments['lookahead_days']
     model_instance = NAME_TO_MODEL[arguments['model_name']](arguments, df_from_ticker)
-    # model_instance.generate_plots()
-    analyzer.analyze_prediction_to_test(model_instance.ypred, model_instance.ytest, df_from_ticker, share_amount, starting_value, lookahead_days, save_recent)
+    analyzer.analyze_prediction_to_test(model_instance.ypred, model_instance.ytest, df_from_ticker, share_amount,
+                                        starting_value, lookahead_days, save_recent)
     if arguments['check_model']:
         analyzer.graph_series(model_instance.ytrain, df_from_ticker, 'ytrain')
         analyzer.graph_series(model_instance.ytest, df_from_ticker, 'ytest')
         analyzer.graph_series(model_instance.ypred, df_from_ticker, 'ypred')
         model_instance.generate_plots()
 
-    # long_short_order_book = tech_indicators.add_long_short_shares(model_instance.ypred['bs_signal'],
-    #                                                               arguments['share_amount'])
-    buy_sell_order_book = tech_indicators.add_buy_sell_shares(model_instance.ypred['bs_signal'],
-                                                              df_from_ticker[['Close']],
-                                                              arguments['starting_value'])
-    # model_instance.ypred.to_csv('ypred.csv')
-    # long_short_order_book.to_csv('long_short_tester.csv')
-    # buy_sell_order_book.to_csv('buy_sell_tester.csv')
-    # tech_indicators.bbands_classification(data_frame_from_ticker)
+    # the simulation starts here:
 
     buy_sell_portfolio_values, buy_sell_total_percent_gain = analyzer.compare_strategies(
-        buy_sell_order_book, df_from_ticker[['Close']], file_name, model_name, indicators, length, share_amount, inspect, save_recent)
-    # same buy/long/sell/short signals, just quantity is different
-    # analyzer.graph_order_book(buy_sell_portfolio_values, data_frame_from_file[['Close']], args['model_name'], args['file_name'], args["indicators"], args['length'])
-    # model_instance.save_best_model()
+        model_instance.ypred['bs_signal'], df_from_ticker[['Close']], file_name, model_name, indicators, length, share_amount, starting_value, inspect, save_recent)
+
     live_predictions = model_instance.live_predict()
     return buy_sell_total_percent_gain, model_instance.test_score, model_instance.train_score, live_predictions
 
@@ -85,6 +75,7 @@ def simulation_mode(arguments, data_frame_from_ticker, disable_progress_bar=Fals
                     results.append(result)
                     bar.update(1)
     return results
+
 
 def find_best_combination(arguments, df_ticker):
     # for every combination of tech indicators, spawn threads to train the model defined by the number of runs
@@ -106,8 +97,10 @@ def find_best_combination(arguments, df_ticker):
             for buy_sell_percent_gain, test_score, train_score, live_predictions in list_of_results:
                 result_buy_sell_total_percent_gain_runs.append(buy_sell_percent_gain)
                 result_test_accuracies_runs.append(test_score)
-            average_percent_gain = sum(result_buy_sell_total_percent_gain_runs) / len(result_buy_sell_total_percent_gain_runs)
-            std_percent_gain = statistics.stdev(result_buy_sell_total_percent_gain_runs) if len(result_buy_sell_total_percent_gain_runs) > 1 else None
+            average_percent_gain = sum(result_buy_sell_total_percent_gain_runs) / len(
+                result_buy_sell_total_percent_gain_runs)
+            std_percent_gain = statistics.stdev(result_buy_sell_total_percent_gain_runs) if len(
+                result_buy_sell_total_percent_gain_runs) > 1 else None
             min_percent_gain = min(result_buy_sell_total_percent_gain_runs)
             max_percent_gain = max(result_buy_sell_total_percent_gain_runs)
             average_test_acc = sum(result_test_accuracies_runs) / len(result_test_accuracies_runs)
@@ -150,6 +143,7 @@ def run_models(arguments, df_ticker):
         result_test_accuracies_runs.append(test_score)
         result_train_accuracies_runs.append(train_score)
         live_predictions_average_df = pd.concat([live_predictions_average_df, live_predictions], axis=1)
+
     # define a function to count the occurrences of -1, 0, and 1 in a row
     def count_occurrences(row):
         return row.value_counts()
@@ -179,26 +173,37 @@ def get_df_from_file(f_path):
     data_frame_from_ticker.name = f_path
     return data_frame_from_ticker
 
+
 def build_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
     parser.add_argument('--file_name', help='the name of the file', type=str)
-    parser.add_argument('--indicators', help=f'the technical indicators, you must specify {MIN_REQUIRED_TRADING_INDICATORS} or more', type=str, required=True)
-    parser.add_argument('--optimize_params', help='find best model parameters', type=bool, required=False, default=False)
+    parser.add_argument('--indicators',
+                        help=f'the technical indicators, you must specify {MIN_REQUIRED_TRADING_INDICATORS} or more',
+                        type=str, required=True)
+    parser.add_argument('--optimize_params', help='find best model parameters', type=bool, required=False,
+                        default=False)
     parser.add_argument('--model_name', help='the model you want to run', type=str, required=True)
-    parser.add_argument('--share_amount', help='the amount of share you want to buy/sell', type=int, required=False, default=10)
+    parser.add_argument('--share_amount', help='the amount of share you want to buy/sell', type=int, required=False,
+                        default=10)
     parser.add_argument('--starting_value', help='the starting value', type=int, required=False, default=1000)
-    parser.add_argument('--save_recent', help='save the long/short and buy/sell portfolios', type=bool, required=False, default=False)
+    parser.add_argument('--save_recent', help='save the long/short and buy/sell portfolios', type=bool, required=False,
+                        default=False)
     parser.add_argument('--inspect', help='inspect the yearly gains', type=bool, required=False, default=False)
     parser.add_argument('--sequential', help='run in sequential', type=bool, required=False, default=False)
     parser.add_argument('--spy', help='only get spy', type=bool, required=False, default=False)
-    parser.add_argument('--lookahead_days', help='set the lookahead days for ytest', type=int, required=False, default=6)
-    parser.add_argument('--logger', choices=LOGGER_LEVELS.keys(), default='debug', type=str, help='provide a logging level within {}'.format(LOGGER_LEVELS.keys()))
+    parser.add_argument('--lookahead_days', help='set the lookahead days for ytest', type=int, required=False,
+                        default=6)
+    parser.add_argument('--logger', choices=LOGGER_LEVELS.keys(), default='debug', type=str,
+                        help='provide a logging level within {}'.format(LOGGER_LEVELS.keys()))
     parser.add_argument('--runs', default=1, type=int, help='specify amount of runs')
-    parser.add_argument('--find_best_combination', default=False, type=bool, help='find the best combo of indicators', required=False)
-    parser.add_argument('--check_model', type=bool, required=False, default=False, help="specify to see plots of the ytrain ytest ypred generated data")
+    parser.add_argument('--find_best_combination', default=False, type=bool, help='find the best combo of indicators',
+                        required=False)
+    parser.add_argument('--check_model', type=bool, required=False, default=False,
+                        help="specify to see plots of the ytrain ytest ypred generated data")
     parser.add_argument('--all', type=bool, default=False, help='run through all data inside yahoo_data')
     return vars(parser.parse_args())
+
 
 if __name__ == "__main__":
     args = build_args()
