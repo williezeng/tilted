@@ -59,15 +59,14 @@ def compute_best_case(ytest_df, closing_price_df, share_amount, starting_value, 
     # buy_sell_portfolio_values.to_csv('best_case_buy.csv')
     if save_recent:
         graph_order_book(buy_sell_portfolio_values, closing_price_df, 'best_case', 'buy_sell', 'no indicators used', lookahead)
-    buy_sell_yearly_gains_dict, buy_sell_total_percent_gain = compute_yearly_gains(buy_sell_portfolio_values)
+    compute_yearly_gains(buy_sell_portfolio_values)
     output = [f'best buy sell percent gain {buy_sell_total_percent_gain}']
     OUTPUT.extend(output)
-    return buy_sell_total_percent_gain, buy_sell_yearly_gains_dict
 
 
 def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.005):
     order_book_copy = order_book.copy()
-    filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['close', 'holding', 'executed_cost', 'bankroll', 'total_portfolio_value', 'cumulative_percentage'])
+    filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['close', 'holding', 'executed_cost', 'bankroll', 'total_portfolio_value', 'cumulative_percentage', 'baseline_hold', 'baseline_hold_percentage'])
     shares_holder = 0
     gains_holder = 0
     start_date = order_book_copy.index[0]
@@ -75,6 +74,8 @@ def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.00
         close_price = closing_price_df['Close'][index]
         filled_orders['close'][index] = close_price
         total_share_value = close_price * order_book_copy.loc[index, 'share_amount']
+        filled_orders['baseline_hold'][index] = abs(total_share_value)
+        filled_orders['baseline_hold_percentage'][index] = ((filled_orders['baseline_hold'][index] - filled_orders['baseline_hold'][start_date]) / filled_orders['baseline_hold'][start_date]) * 100
         if order_book_copy.loc[index, 'bs_signal'] == BUY:
             shares_holder += order_book_copy.loc[index, 'share_amount']
             filled_orders['holding'][index] = shares_holder
@@ -109,72 +110,11 @@ def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.00
     return portfolio_df
 
 
-def compute_simple_baseline(name, close_df, share_amount, commission=9.95, impact=0.005):
-    """
-    Computes the value of holding the share amnt on the first day
-    INPUT: BUY/SELL orderbook DO NOT use LONG/SHORTS
-    """
-    #TODO: IS THIS IMPLEMENTED??!?!?!
-    close_df_copy = close_df.copy()
-    close_df_copy = close_df_copy.dropna()
-    start_date = close_df_copy.index[0]
-    end_date = close_df_copy.index[-1]
-    filled_orders = pd.DataFrame(index=close_df_copy.index, columns=['holding', 'executed_cost', 'bankroll', 'cumulative_percent'])
-    shares_holder = 0
-    gains_holder = 0
-
-    # Execute buy
-    shares_holder += share_amount
-    filled_orders['holding'][start_date] = shares_holder
-    cost = float((close_df_copy['Close'][0] * share_amount * (1.000 + impact)) + commission)
-    filled_orders['executed_cost'][start_date] = -cost
-    gains_holder -= cost
-    filled_orders['bankroll'][start_date] = gains_holder
-    filled_orders['cumulative_percent'][start_date] = (gains_holder - filled_orders['bankroll'][start_date])/abs(filled_orders['bankroll'][start_date]) * 100
-    # Execute sell
-    shares_holder -= share_amount
-    filled_orders['holding'][end_date] = shares_holder
-    cost = float((close_df_copy['Close'][-1] * share_amount * (1.000 + impact)) + commission)
-    filled_orders['executed_cost'][end_date] = cost
-    gains_holder += cost
-    filled_orders['bankroll'][end_date] = gains_holder
-    filled_orders['cumulative_percent'][end_date] = (gains_holder - filled_orders['bankroll'][start_date])/abs(filled_orders['bankroll'][start_date]) * 100
-
-    summed = filled_orders.sum()
-    filled_orders = filled_orders.dropna()
-    percent_increase = (close_df_copy['Close'][-1] - close_df_copy['Close'][0]) / abs(close_df_copy['Close'][0]) * 100
-    output = [
-        'If you bought {} shares of {} on {}, you would have {} on {}'.format(filled_orders['holding'][0], name, start_date, summed['cash_earned'], end_date),
-        'The share increased by {} %'.format(percent_increase)
-        ]
-    OUTPUT.extend(output)
-    return filled_orders
-
-
 def compute_yearly_gains(order_book):
-    yearly_gains_dict = {}
-    order_book_start = datetime.strptime(order_book.index[0], '%Y-%m-%d')
-    order_book_end = datetime.strptime(order_book.index[-1], '%Y-%m-%d')
-    x = 1
-    date_holder = '{}-{}-{}'.format(order_book_start.year, order_book_start.month, order_book_start.day)
-    next_years_date = '{}-{}-{}'.format(order_book_start.year + x, order_book_start.month, order_book_start.day)
-    while int(next_years_date.split('-')[0]) <= int(order_book_end.year):
-
-        if x == 1:
-            yearly_gain = ((order_book.loc[:next_years_date, 'total_portfolio_value'][-1] - order_book.loc[date_holder:, 'total_portfolio_value'][0]) /
-                           order_book.loc[date_holder:, 'total_portfolio_value'][0]) * 100
-        else:
-            yearly_gain = ((order_book.loc[:next_years_date, 'total_portfolio_value'][-1] - order_book.loc[date_holder:, 'total_portfolio_value'][0]) /
-                           order_book.loc[date_holder:, 'total_portfolio_value'][0]) * 100
-        OUTPUT.append('From {} to {} the yearly gain is {}'.format(date_holder, next_years_date, yearly_gain))
-        date_holder = next_years_date
-        yearly_gains_dict[x] = yearly_gain
-        x += 1
-        next_years_date = '{}-{}-{}'.format(order_book_start.year + x, order_book_start.month, order_book_start.day)
+    end_of_year_portfolio_df = order_book.groupby(pd.to_datetime(order_book.index).year).last()
+    OUTPUT.append(f'THE TOTAL % gain : {end_of_year_portfolio_df['cumulative_percentage'][-1]}')
 
 
-    OUTPUT.append('THE TOTAL % gain : {}'.format(order_book['total_portfolio_value'][-1]))
-    return yearly_gains_dict, total_percent_gain
 
 def get_spy(spy_close_df, share_amount):
     spy_hold_portfolio = compute_simple_baseline("spy", spy_close_df, share_amount)
