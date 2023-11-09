@@ -1,15 +1,11 @@
 from sklearn.tree import DecisionTreeClassifier, plot_tree
 
 import matplotlib
-matplotlib.use('TkAgg')
-import numpy as np
-import math
+import pandas as pd
 from models import BaseModel
-from sklearn.utils import class_weight
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
-import matplotlib.pyplot as plt
 from sklearn.tree import export_graphviz
-
+import math
 LEAF_SAMPLES = list(range(1, 500, 10))
 MAX_DEPTH = list(range(1, 100, 1))
 
@@ -31,15 +27,30 @@ PARAM_TO_LIST_MAP = {"min_samples_leaf": LEAF_SAMPLES,
 class DecisionTree(BaseModel):
     def __init__(self, options, data_frame):
         super().__init__(options, data_frame)
-        self.model = DecisionTreeClassifier
         self.model_name = 'decision_tree'
-        n_samples = len(self.ytrain)
-        # self.weights = [i / n_samples for i in range(1, n_samples + 1)]
-
+        self.params = DT_PARAMS
+        self.normalized_indicators_df, self.refined_bs_df, self.live_df = self.setup_data()
+        self.xtrain, self.ytrain, self.xtest, self.ytest, self.ypred, self.train_score, self.test_score = self.train_and_predict()
         if options.get('optimize_params'):
-            self.params = DT_PARAMS.update(self.find_best_parameters(PARAMETER_SPACE))
-        else:
-            self.params = DT_PARAMS
+            self.handle_params()
+            self.xtrain, self.ytrain, self.xtest, self.ytest, self.ypred, self.train_score, self.test_score = self.train_and_predict()
+
+    def live_predict(self):
+        self.train(self.normalized_indicators_df, self.refined_bs_df)
+        predicted_live_data = pd.DataFrame(self.model.predict(self.live_df), index=self.live_df.index,
+                                           columns=['bs_signal'])
+        return predicted_live_data
+
+    def handle_params(self):
+        self.params.update(self.find_best_parameters(self.create_parameter_space()))
+
+    def create_parameter_space(self):
+        parameter_space = {'max_depth': hp.choice('max_depth', MAX_DEPTH),
+
+                           }
+        return parameter_space
+
+    best = math.inf
 
 
     def find_best_parameters(self, parameter_space):
@@ -47,7 +58,7 @@ class DecisionTree(BaseModel):
         best_parameters = fmin(fn=self.optimize_params_score,
                                space=parameter_space,
                                algo=tpe.suggest,  # the logic which chooses next parameter to try
-                               max_evals=1000,
+                               max_evals=100,
                                trials=trials
                                )
 

@@ -24,7 +24,7 @@ def analyze_prediction_to_test(ypred, ytest, dataframe_from_tickers, share_amoun
     buy_sell_order_book = add_buy_sell_shares(ytest['bs_signal'], dataframe_from_tickers, starting_value)
 
     compute_portfolio(buy_sell_order_book, dataframe_from_tickers)
-
+    print(OUTPUT)
 
 def check_buy_sell_signals(ypred, ytest):
     assert isinstance(ypred, pd.DataFrame)

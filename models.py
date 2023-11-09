@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 from analyzer import check_buy_sell_signals
 import numpy as np
 
+from sklearn.tree import DecisionTreeClassifier, plot_tree
 
 best = math.inf
 
@@ -23,7 +24,8 @@ BEST_RUN_DIR = os.path.join(os.path.curdir, 'best_run')
 SAVED_MODEL = 'finalized_{name}.sav'
 SAVED_MODEL_PATH = os.path.join(BEST_RUN_DIR, SAVED_MODEL)
 MODEL_NAME_TO_CLASSIFIER = {'random_forest': RandomForestClassifier,
-                            'knn': KNeighborsClassifier}
+                            'knn': KNeighborsClassifier,
+                            'decision_tree': DecisionTreeClassifier}
 
 
 class BaseModel(object):
@@ -138,7 +140,7 @@ class BaseModel(object):
         #     correct_test_output = pd.concat([correct_test_output, ytest])
         #     predictions = pd.concat([predictions, ypred])
 
-        return X_train, y_train, X_test, y_test, ypred, self.model.score(X_train, y_train), accuracy_score(ypred, y_test)
+        return X_train, y_train, X_test, y_test, ypred, self.model.score(X_train, y_train), accuracy_score(y_test, ypred)
 
     def generate_plots(self):
         pass
