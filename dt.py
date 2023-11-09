@@ -44,12 +44,12 @@ class DecisionTree(BaseModel):
 
     def find_best_parameters(self, parameter_space):
         trials = Trials()
-        best_parameters = fmin(fn=self.f,
-                           space=parameter_space,
-                           algo=tpe.suggest,  # the logic which chooses next parameter to try
-                           max_evals=1000,
-                           trials=trials
-                           )
+        best_parameters = fmin(fn=self.optimize_params_score,
+                               space=parameter_space,
+                               algo=tpe.suggest,  # the logic which chooses next parameter to try
+                               max_evals=1000,
+                               trials=trials
+                               )
 
         for k, v in best_parameters.items():
             if k in PARAM_TO_LIST_MAP:

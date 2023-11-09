@@ -8,6 +8,8 @@ import tech_indicators
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
 import joblib
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+
 import os
 import math
 from abc import ABC, abstractmethod
@@ -20,7 +22,8 @@ best = math.inf
 BEST_RUN_DIR = os.path.join(os.path.curdir, 'best_run')
 SAVED_MODEL = 'finalized_{name}.sav'
 SAVED_MODEL_PATH = os.path.join(BEST_RUN_DIR, SAVED_MODEL)
-MODEL_NAME_TO_CLASSIFIER = {'random_forest': RandomForestClassifier}
+MODEL_NAME_TO_CLASSIFIER = {'random_forest': RandomForestClassifier,
+                            'knn': KNeighborsClassifier}
 
 
 class BaseModel(object):
@@ -55,12 +58,12 @@ class BaseModel(object):
         pass
 
     def accuracy_model(self, params):
-        model_instance = self.model(**params)
+        model_instance = MODEL_NAME_TO_CLASSIFIER[self.model_name](**self.params)
         model_instance.fit(self.xtrain, self.ytrain['bs_signal'])
         y_pred = model_instance.predict(self.xtest)
         return mean_squared_error(self.ytest['bs_signal'], y_pred, squared=False)
 
-    def f(self, params):
+    def optimize_params_score(self, params):
         global best
         acc = self.accuracy_model(params)
         if acc < best:
@@ -86,6 +89,7 @@ class BaseModel(object):
 
     def train(self, xtrain, ytrain):
         if self.params is not None:
+            print(self.params)
             self.model = MODEL_NAME_TO_CLASSIFIER[self.model_name](**self.params)
         else:
             exit('NO PARAMS?')

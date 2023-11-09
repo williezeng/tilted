@@ -18,7 +18,8 @@ OUTPUT = []
 
 def analyze_prediction_to_test(ypred, ytest, dataframe_from_tickers, share_amount, starting_value, lookahead_days, save_recent):
     check_buy_sell_signals(ypred, ytest)
-    compute_best_case(ytest, dataframe_from_tickers, share_amount, starting_value, lookahead_days, save_recent)
+    output = [f"\nHere is the best case scenario:"]
+    OUTPUT.extend(output)
 
 
 def check_buy_sell_signals(ypred, ytest):
@@ -52,16 +53,14 @@ def check_buy_sell_signals(ypred, ytest):
         ]
     OUTPUT.extend(output)
 
-
-def compute_best_case(ytest_df, closing_price_df, share_amount, starting_value, lookahead, save_recent=False):
-    buy_sell_order_book = add_buy_sell_shares(ytest_df['bs_signal'], closing_price_df, starting_value)
-    buy_sell_portfolio_values, benchmark_df = compute_portfolio(buy_sell_order_book, closing_price_df)
-    # buy_sell_portfolio_values.to_csv('best_case_buy.csv')
-    if save_recent:
-        graph_order_book(buy_sell_portfolio_values, closing_price_df, 'best_case', 'buy_sell', 'no indicators used', lookahead)
-    buy_sell_total_percent_gain_df = compute_yearly_gains(buy_sell_portfolio_values)
-    output = [f"best buy sell percent gain {buy_sell_total_percent_gain_df['cumulative_percentage'].iloc[-1]}"]
-    OUTPUT.extend(output)
+#
+# def compute_best_case(ytest_df, closing_price_df, share_amount, starting_value, lookahead, save_recent=False):
+#     buy_sell_order_book = add_buy_sell_shares(ytest_df['bs_signal'], closing_price_df, starting_value)
+#     buy_sell_portfolio_values, benchmark_df = compute_portfolio(buy_sell_order_book, closing_price_df)
+#     # buy_sell_portfolio_values.to_csv('best_case_buy.csv')
+#     if save_recent:
+#         graph_order_book(buy_sell_portfolio_values, closing_price_df, 'best_case', 'buy_sell', 'no indicators used', lookahead)
+#     buy_sell_total_percent_gain_df = compute_yearly_gains(buy_sell_portfolio_values)
 
 
 def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.005):
@@ -115,7 +114,8 @@ def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.00
                                                              filled_orders['total_portfolio_value'][start_date]) * 100
 
     portfolio_df = pd.concat([order_book_copy, filled_orders, ], axis=1)
-    OUTPUT.append('model net profits {} from {} to {}'.format(portfolio_df['total_portfolio_value'][-1], order_book_copy.index[0], order_book_copy.index[-1]))
+    OUTPUT.append(f"model net profits {portfolio_df['cumulative_percentage'][-1]} % from {order_book_copy.index[0]} to {order_book_copy.index[-1]}\n"
+                  f"The baseline {benchmark_df['baseline_percentage'][-1]} % from {order_book_copy.index[0]} to {order_book_copy.index[-1]}\n")
     return portfolio_df, benchmark_df
 
 
@@ -130,15 +130,9 @@ def compare_strategies(yprediction, target_close_df, file_name, model_name, indi
     # long_short_portfolio_values = compute_portfolio(long_short_order_book, target_close_df)
     # long_short_yearly_gains_dict, long_short_total_percent_gain = compute_yearly_gains(long_short_portfolio_values)
     buy_sell_order_book = add_buy_sell_shares(yprediction, target_close_df, starting_value)
-
     OUTPUT.append('_ Generating Summary _')
     buy_sell_portfolio_values, benchmark_df = compute_portfolio(buy_sell_order_book, target_close_df)
     yearly_end_of_year_df = compute_yearly_gains(buy_sell_portfolio_values)
-
-    OUTPUT.append(f"THE TOTAL % gain: {yearly_end_of_year_df['cumulative_percentage'].iloc[-1]}\n"
-                  # f"THE TOTAL portfolio value: {yearly_end_of_year_df['total_portfolio_value'].iloc[-1]}\n"
-                  f"The BASELINE % gain: {benchmark_df['baseline_percentage'].iloc[-1]}")
-
     if inspect:
         print('\n'.join(OUTPUT))
     if save_recent:
