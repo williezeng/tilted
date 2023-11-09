@@ -95,16 +95,16 @@ class BaseModel(object):
             self.model.fit(xtrain, ytrain['bs_signal'])
 
     def train_and_predict(self):
-        predictions = pd.DataFrame()
-        cumulative_training_indicator_data = pd.DataFrame()
-        cumulative_train_bs_data = pd.DataFrame()
-        cumulative_test_indicator_data = pd.DataFrame()
-        correct_test_output = pd.DataFrame()
-        k = 2      # chunks
-        # we want to keep a training to test ratio
-        # Calculate the chunk size
-        chunk_size = len(self.normalized_indicators_df) // k
-        chunk_indices = np.arange(len(self.normalized_indicators_df)) // chunk_size
+        # predictions = pd.DataFrame()
+        # cumulative_training_indicator_data = pd.DataFrame()
+        # cumulative_train_bs_data = pd.DataFrame()
+        # cumulative_test_indicator_data = pd.DataFrame()
+        # correct_test_output = pd.DataFrame()
+        # k = 2      # chunks
+        # # we want to keep a training to test ratio
+        # # Calculate the chunk size
+        # chunk_size = len(self.normalized_indicators_df) // k
+        # chunk_indices = np.arange(len(self.normalized_indicators_df)) // chunk_size
         # Assuming you have a DataFrame or numpy arrays for your data and labels
         # X = your_data  # Features
         # y = your_labels  # Target variable

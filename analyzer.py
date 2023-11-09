@@ -55,37 +55,46 @@ def check_buy_sell_signals(ypred, ytest):
 
 def compute_best_case(ytest_df, closing_price_df, share_amount, starting_value, lookahead, save_recent=False):
     buy_sell_order_book = add_buy_sell_shares(ytest_df['bs_signal'], closing_price_df, starting_value)
-    buy_sell_portfolio_values = compute_portfolio(buy_sell_order_book, closing_price_df)
+    buy_sell_portfolio_values, benchmark_df = compute_portfolio(buy_sell_order_book, closing_price_df)
     # buy_sell_portfolio_values.to_csv('best_case_buy.csv')
     if save_recent:
         graph_order_book(buy_sell_portfolio_values, closing_price_df, 'best_case', 'buy_sell', 'no indicators used', lookahead)
-    compute_yearly_gains(buy_sell_portfolio_values)
-    output = [f'best buy sell percent gain {buy_sell_total_percent_gain}']
+    buy_sell_total_percent_gain_df = compute_yearly_gains(buy_sell_portfolio_values)
+    output = [f"best buy sell percent gain {buy_sell_total_percent_gain_df['cumulative_percentage'].iloc[-1]}"]
     OUTPUT.extend(output)
 
 
 def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.005):
     order_book_copy = order_book.copy()
-    filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['close', 'holding', 'executed_cost', 'bankroll', 'total_portfolio_value', 'cumulative_percentage', 'baseline_hold', 'baseline_hold_percentage'])
+    filled_orders = pd.DataFrame(index=order_book_copy.index, columns=['close', 'holding', 'executed_cost', 'bankroll', 'total_portfolio_value', 'cumulative_percentage'])
+    benchmark_df = pd.DataFrame(index=order_book_copy.index, columns=['close', 'holding', 'baseline_portfolio_value', 'baseline_percentage'])
     shares_holder = 0
     gains_holder = 0
+
     start_date = order_book_copy.index[0]
+    start_amount = order_book_copy.loc[start_date, 'share_amount']
     for index in order_book_copy.index:
         close_price = closing_price_df['Close'][index]
         filled_orders['close'][index] = close_price
+        benchmark_df['close'][index] = close_price
         total_share_value = close_price * order_book_copy.loc[index, 'share_amount']
-        filled_orders['baseline_hold'][index] = abs(total_share_value)
-        filled_orders['baseline_hold_percentage'][index] = ((filled_orders['baseline_hold'][index] - filled_orders['baseline_hold'][start_date]) / filled_orders['baseline_hold'][start_date]) * 100
+        benchmark_df['holding'][index] = start_amount
+        benchmark_df['baseline_portfolio_value'][index] = close_price * start_amount
+        benchmark_df['baseline_percentage'][index] = ((benchmark_df['baseline_portfolio_value'][index] -
+                                                             benchmark_df['baseline_portfolio_value'][start_date]) /
+                                                            benchmark_df['baseline_portfolio_value'][start_date]) * 100
+
         if order_book_copy.loc[index, 'bs_signal'] == BUY:
             shares_holder += order_book_copy.loc[index, 'share_amount']
             filled_orders['holding'][index] = shares_holder
             cost = float((total_share_value * (1.000 + impact)) + commission)
-            filled_orders['executed_cost'][index] = -cost
             if index == start_date:
                 gains_holder = 0
                 filled_orders['bankroll'][index] = gains_holder
                 filled_orders['total_portfolio_value'][index] = abs(total_share_value)
                 filled_orders['cumulative_percentage'][index] = 0
+                benchmark_df['baseline_portfolio_value'][index] = abs(total_share_value)
+                benchmark_df['baseline_percentage'][index] = 0
             else:
                 gains_holder -= cost
                 filled_orders['bankroll'][index] = gains_holder
@@ -107,19 +116,13 @@ def compute_portfolio(order_book, closing_price_df, commission=9.95, impact=0.00
 
     portfolio_df = pd.concat([order_book_copy, filled_orders, ], axis=1)
     OUTPUT.append('model net profits {} from {} to {}'.format(portfolio_df['total_portfolio_value'][-1], order_book_copy.index[0], order_book_copy.index[-1]))
-    return portfolio_df
+    return portfolio_df, benchmark_df
 
 
 def compute_yearly_gains(order_book):
     end_of_year_portfolio_df = order_book.groupby(pd.to_datetime(order_book.index).year).last()
-    OUTPUT.append(f'THE TOTAL % gain : {end_of_year_portfolio_df['cumulative_percentage'][-1]}')
+    return end_of_year_portfolio_df
 
-
-
-def get_spy(spy_close_df, share_amount):
-    spy_hold_portfolio = compute_simple_baseline("spy", spy_close_df, share_amount)
-    graph_spy(spy_hold_portfolio, spy_close_df)
-    print('\n'.join(OUTPUT))
 
 
 def compare_strategies(yprediction, target_close_df, file_name, model_name, indicators, length, share_amount, starting_value, inspect, save_recent):
@@ -127,12 +130,15 @@ def compare_strategies(yprediction, target_close_df, file_name, model_name, indi
     # long_short_portfolio_values = compute_portfolio(long_short_order_book, target_close_df)
     # long_short_yearly_gains_dict, long_short_total_percent_gain = compute_yearly_gains(long_short_portfolio_values)
     buy_sell_order_book = add_buy_sell_shares(yprediction, target_close_df, starting_value)
-    OUTPUT.append('generating buy and sell')
-    buy_sell_portfolio_values = compute_portfolio(buy_sell_order_book, target_close_df)
-    buy_sell_yearly_gains_dict, buy_sell_total_percent_gain = compute_yearly_gains(buy_sell_portfolio_values)
 
-    OUTPUT.append('generating baselines')
-    target_hold_portfolio = compute_simple_baseline(file_name, target_close_df, share_amount)
+    OUTPUT.append('_ Generating Summary _')
+    buy_sell_portfolio_values, benchmark_df = compute_portfolio(buy_sell_order_book, target_close_df)
+    yearly_end_of_year_df = compute_yearly_gains(buy_sell_portfolio_values)
+
+    OUTPUT.append(f"THE TOTAL % gain: {yearly_end_of_year_df['cumulative_percentage'].iloc[-1]}\n"
+                  # f"THE TOTAL portfolio value: {yearly_end_of_year_df['total_portfolio_value'].iloc[-1]}\n"
+                  f"The BASELINE % gain: {benchmark_df['baseline_percentage'].iloc[-1]}")
+
     if inspect:
         print('\n'.join(OUTPUT))
     if save_recent:
@@ -141,7 +147,7 @@ def compare_strategies(yprediction, target_close_df, file_name, model_name, indi
         graph_order_book(buy_sell_portfolio_values, target_close_df, model_name, file_name,
                          indicators, length)
 
-    return buy_sell_portfolio_values, buy_sell_total_percent_gain
+    return buy_sell_portfolio_values, yearly_end_of_year_df['cumulative_percentage'].iloc[-1]
 
 def graph_spy(spy_order_book, spy_close):
     plt.plot(list(spy_close.index), spy_close['Close'], label='price')
