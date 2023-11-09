@@ -114,13 +114,13 @@ class BaseModel(object):
         # y = your_labels  # Target variable
         # Split the data into training and testing sets with an 80:20 ratio
 
-        X_train, X_test, y_train, y_test = train_test_split(self.normalized_indicators_df, self.refined_bs_df, test_size=0.1, shuffle=False)
+        X_train, X_test, y_train, y_test = train_test_split(self.normalized_indicators_df, self.refined_bs_df, test_size=0.2, shuffle=False)
         training_indices = list(range(0, len(X_train)))
-        np.random.seed(self.random_int_seed)
-        np.random.shuffle(training_indices)
-        shuffled_xtrain = X_train.iloc[training_indices]
-        shuffled_ytrain = y_train.iloc[training_indices]
-        self.train(shuffled_xtrain, shuffled_ytrain)
+        # np.random.seed(self.random_int_seed)
+        # np.random.shuffle(training_indices)
+        # shuffled_xtrain = X_train.iloc[training_indices]
+        # shuffled_ytrain = y_train.iloc[training_indices]
+        self.train(X_train, y_train)
         ypred = pd.DataFrame(self.model.predict(X_test), index=X_test.index, columns=['bs_signal'])
 
         # for fold in range(0, k):
@@ -138,7 +138,7 @@ class BaseModel(object):
         #     correct_test_output = pd.concat([correct_test_output, ytest])
         #     predictions = pd.concat([predictions, ypred])
 
-        return shuffled_xtrain, shuffled_ytrain, X_test, y_test, ypred, self.model.score(shuffled_xtrain, shuffled_ytrain), accuracy_score(ypred, y_test)
+        return X_train, y_train, X_test, y_test, ypred, self.model.score(X_train, y_train), accuracy_score(ypred, y_test)
 
     def generate_plots(self):
         pass
