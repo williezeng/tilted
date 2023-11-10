@@ -6,14 +6,15 @@ from models import BaseModel
 from hyperopt import hp, fmin, tpe, STATUS_OK, Trials, anneal
 from sklearn.tree import export_graphviz
 import math
-LEAF_SAMPLES = list(range(1, 500, 10))
+LEAF_SAMPLES = list(range(1, 100, 10))
 MAX_DEPTH = list(range(1, 100, 1))
 
-DT_PARAMS = {'min_samples_leaf': 2,
-             'min_samples_split': 2,
+DT_PARAMS = {
+             # 'min_samples_leaf': 12,
+             # 'min_samples_split': 12,
              'ccp_alpha': 0.0001,
-             'max_depth': None,
-             'max_features': 'sqrt',
+             'max_depth': 15,
+             'max_leaf_nodes': 60,
              'criterion': 'entropy'}
 
 PARAMETER_SPACE = {
@@ -22,7 +23,8 @@ PARAMETER_SPACE = {
                    }
 
 PARAM_TO_LIST_MAP = {"min_samples_leaf": LEAF_SAMPLES,
-                     "max_depth": MAX_DEPTH}
+                     "max_depth": MAX_DEPTH,
+                     'max_leaf_nodes': LEAF_SAMPLES }
 
 class DecisionTree(BaseModel):
     def __init__(self, options, data_frame):
@@ -35,6 +37,7 @@ class DecisionTree(BaseModel):
             self.handle_params()
             self.xtrain, self.ytrain, self.xtest, self.ytest, self.ypred, self.train_score, self.test_score = self.train_and_predict()
 
+
     def live_predict(self):
         self.train(self.normalized_indicators_df, self.refined_bs_df)
         predicted_live_data = pd.DataFrame(self.model.predict(self.live_df), index=self.live_df.index,
@@ -46,7 +49,8 @@ class DecisionTree(BaseModel):
 
     def create_parameter_space(self):
         parameter_space = {'max_depth': hp.choice('max_depth', MAX_DEPTH),
-
+                           'max_leaf_nodes': hp.choice('max_leaf_nodes', LEAF_SAMPLES),
+                           'n_estimators': hp.choice('n_estimators', [90, 120, 150, 180, 210, 300])
                            }
         return parameter_space
 
@@ -58,7 +62,7 @@ class DecisionTree(BaseModel):
         best_parameters = fmin(fn=self.optimize_params_score,
                                space=parameter_space,
                                algo=tpe.suggest,  # the logic which chooses next parameter to try
-                               max_evals=100,
+                               max_evals=30,
                                trials=trials
                                )
 

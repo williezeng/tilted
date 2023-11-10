@@ -37,7 +37,7 @@ class KNN(BaseModel):
     def __init__(self, options, data_frame):
         super().__init__(options, data_frame)
         self.model_name = 'knn'
-        self.params = {'n_neighbors': 2}
+        self.params = {'n_neighbors': 1}
 
         self.normalized_indicators_df, self.refined_bs_df, self.live_df = self.setup_data()
         self.xtrain, self.ytrain, self.xtest, self.ytest, self.ypred, self.train_score, self.test_score = self.train_and_predict()

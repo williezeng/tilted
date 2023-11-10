@@ -90,15 +90,15 @@ class BaseModel(object):
         return normalized_indicators_df, refined_bs_df, indicator_df.loc[future_prediction_days]
 
     def train(self, xtrain, ytrain):
-        if self.params is not None:
-            print(self.params)
+        print(self.params)
+        if self.params:
             self.model = MODEL_NAME_TO_CLASSIFIER[self.model_name](**self.params)
         else:
-            exit('NO PARAMS?')
-        if self.weights:
-            self.model.fit(xtrain, ytrain['bs_signal'], sample_weight=self.weights)
-        else:
-            self.model.fit(xtrain, ytrain['bs_signal'])
+            self.model = MODEL_NAME_TO_CLASSIFIER[self.model_name]()
+        self.model.fit(xtrain, ytrain['bs_signal'])
+
+
+
 
     def train_and_predict(self):
         # predictions = pd.DataFrame()
@@ -116,13 +116,14 @@ class BaseModel(object):
         # y = your_labels  # Target variable
         # Split the data into training and testing sets with an 80:20 ratio
 
-        X_train, X_test, y_train, y_test = train_test_split(self.normalized_indicators_df, self.refined_bs_df, test_size=0.2, shuffle=False)
+        X_train, X_test, y_train, y_test = train_test_split(self.normalized_indicators_df, self.refined_bs_df, test_size=0.1, shuffle=False)
         training_indices = list(range(0, len(X_train)))
         # np.random.seed(self.random_int_seed)
         # np.random.shuffle(training_indices)
         # shuffled_xtrain = X_train.iloc[training_indices]
         # shuffled_ytrain = y_train.iloc[training_indices]
         self.train(X_train, y_train)
+
         ypred = pd.DataFrame(self.model.predict(X_test), index=X_test.index, columns=['bs_signal'])
 
         # for fold in range(0, k):

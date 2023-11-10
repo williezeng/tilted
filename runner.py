@@ -14,6 +14,7 @@ import multiprocessing
 from tqdm import tqdm
 from itertools import combinations
 from utils import external_ticks
+import matplotlib.pyplot as plt
 
 NAME_TO_MODEL = {
     'knn': KNN,

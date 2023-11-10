@@ -165,9 +165,9 @@ def create_ylabels(df, lookahead_days):
     closed_price_series = df_copy['Close']
     for i in range(closed_price_series.shape[0] - lookahead_days):
         ratio = (closed_price_series[i + lookahead_days] - closed_price_series[i]) / closed_price_series[i]
-        if ratio > 0.03:  # positive ratio that's higher than trade impact + commission
+        if ratio > 0.06:  # positive ratio that's higher than trade impact + commission
             trainY.append(BUY)
-        elif ratio < -0.03:
+        elif ratio < -0.06:
             trainY.append(SELL)  # sell
         else:
             trainY.append(HOLD)
@@ -215,7 +215,7 @@ def add_buy_sell_shares(bs_df, close_price, starting_value, offset=0.008, impact
     for index in bs_df.index:
         if bs_df[index] == BUY and holdings == 0:
             # 0.90 for risk management
-            number_of_buyable_shares = (gains_holder * 0.90) / close_price.loc[index][0]
+            number_of_buyable_shares = (gains_holder * 0.95) / close_price.loc[index][0]
             gains_holder -= (close_price.loc[index][0] * number_of_buyable_shares)
             entire_book_order['share_amount'][index] = number_of_buyable_shares
             holdings += number_of_buyable_shares
