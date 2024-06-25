@@ -15,7 +15,7 @@ from tqdm import tqdm
 from itertools import combinations
 from utils import external_ticks
 import matplotlib.pyplot as plt
-
+from tech_indicators import TECHNICAL_INDICATORS
 NAME_TO_MODEL = {
     'knn': KNN,
     'decision_trees': DecisionTree,
@@ -180,7 +180,7 @@ def build_args():
     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
     parser.add_argument('--file_name', help='the name of the file', type=str)
     parser.add_argument('--indicators',
-                        help=f'the technical indicators, you must specify {MIN_REQUIRED_TRADING_INDICATORS} or more',
+                        help=f'the technical indicators, you must specify one of{TECHNICAL_INDICATORS}',
                         type=str, required=True)
     parser.add_argument('--optimize_params', help='find best model parameters', type=bool, required=False,
                         default=False)
@@ -205,7 +205,7 @@ def build_args():
     parser.add_argument('--all', type=bool, default=False, help='run through all data inside yahoo_data')
     return vars(parser.parse_args())
 
-
+from models import BaseModel
 if __name__ == "__main__":
     args = build_args()
     if args['logger'] not in LOGGER_LEVELS:
@@ -222,9 +222,19 @@ if __name__ == "__main__":
         analyzer.get_spy(data_frame_from_spyfile, args)
         exit()
     if args['all']:
-        for file_path in external_ticks.get_all_csvs():
+        files = os.listdir(constants.YAHOO_DATA_DIR)
+        # Filter files that do not start with '00-'
+        filtered_files = [file for file in files if not file.startswith('00-')]
+        for file_name in filtered_files:
+            file_path = os.path.join(constants.YAHOO_DATA_DIR, file_name)
             df_from_ticker = get_df_from_file(file_path)
-            run_models(args, df_from_ticker)
+            dt_instance = NAME_TO_MODEL[args['model_name']](args, df_from_ticker)
+            normalized_indicators_df, bs_df, df_for_predictions = dt_instance.setup_data()
+            normalized_indicators_to_buy_sell_df = pd.merge(normalized_indicators_df, bs_df, left_index=True, right_index=True)
+            # split training
+            # split testing
+            df.to_csv(os.path.join(DATA_DIR, '{}.csv'.format(name)))
+
     elif args['file_name']:
         file_path = os.path.join(constants.YAHOO_DATA_DIR, args['file_name'])
         df_from_ticker = get_df_from_file(file_path)

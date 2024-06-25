@@ -6,8 +6,7 @@ import pandas as pd
 import matplotlib
 
 matplotlib.use('TkAgg')
-
-
+TECHNICAL_INDICATORS = ['sma', 'ema', 'bb', 'high', 'low', 'volume', 'close', 'bb_signal', 'cmf', 'obv', 'rsi']
 BUY = 1
 SELL = -1
 HOLD = 0
