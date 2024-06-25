@@ -77,17 +77,7 @@ class BaseModel(object):
     def find_best_parameters(self, parameter_space):
         pass
 
-    def setup_data(self):
-        indicator_df, buy_sell_hold_df = tech_indicators.get_indicators(self.data_frame, self.indicators, self.length_of_moving_averages, self.y_test_lookahead_days)
-        refined_indicators_df, refined_bs_df = tech_indicators.index_len_resolver(indicator_df, buy_sell_hold_df)
-        normalized_indicators_df = tech_indicators.normalize_indicators(refined_indicators_df)
-        # the buy_sell_hold_df will always END earlier than the indicator_df because of the lookahead days
-        # the indicator_df will always START later than the buy_sell_hold_df because of the average_day length
-        # bsh       =      [ , , , ]
-        # indicator =         [ , , , , ]
-        future_prediction_days = list(set(indicator_df.index) - set(buy_sell_hold_df.index))
-        future_prediction_days.sort()
-        return normalized_indicators_df, refined_bs_df, indicator_df.loc[future_prediction_days]
+
 
     def train(self, xtrain, ytrain):
         print(self.params)

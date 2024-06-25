@@ -1,13 +1,13 @@
 # For details on your rights to use the actual data downloaded. Remember - the Yahoo! finance API is intended for personal use only.
-
+import sys
 import os
 import pandas as pd
 import datetime
 from pandas_datareader import data as pdr
-from concurrent import futures
+import multiprocessing
 import yfinance as yf
 import argparse
-import time
+from utils.constants import BANNED_TICKERS
 yf.pdr_override()
 
 DATA_DIR = os.path.join(os.path.curdir, 'yahoo_data')
@@ -44,8 +44,8 @@ def build_args():
 
     return parser.parse_args()
 
-def write_to_file(name, start_date, end_date):
-    # print('fetching ' + name)
+def write_to_file(params):
+    name, start_date, end_date = params
     df = fetch_data(name, start_date, end_date)
     df.to_csv(os.path.join(DATA_DIR, '{}.csv'.format(name)))
 
@@ -56,17 +56,24 @@ def get_all_tickers():
     return tickers_list
 
 
+def convert_ticker(ticker):
+    return ticker.replace('.', '-')
+
 if __name__ == "__main__":
     args = build_args()
     if args.top500:
         fortune_500_df = get_fortune_500_tickers()
         fortune_500_df.to_csv(os.path.join(DATA_DIR, '00_fortune_500_tickers.csv'), index=False, header=False)
     elif args.all:
-        tickers = get_all_tickers()
-        with futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(write_to_file, ticker, args.start, args.end) for ticker in tickers]
+        fortune_500_df = get_fortune_500_tickers()
+        fortune_500_df.to_csv(os.path.join(DATA_DIR, '00_fortune_500_tickers.csv'), index=False, header=False)
+        converted_tickers = [convert_ticker(ticker) for ticker in get_all_tickers()]
+        params_list = [(ticker, args.start, args.end) for ticker in converted_tickers if ticker not in BANNED_TICKERS]
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            pool.map(write_to_file, params_list)
     elif args.name:
-        write_to_file(args.name, args.start, args.end)
+        params = (args.name, args.start, args.end)
+        write_to_file(params)
     else:
         exit('need either --name or --all_in_folder')
 

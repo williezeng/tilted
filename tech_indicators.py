@@ -78,10 +78,6 @@ def bbands_classification(close_prices_data_frame, lower_bb, upper_bb):
     return bb_signal[1:]
 
 
-def read_df_from_file(name):
-    df = pd.read_csv(name, index_col=[0], header=[0], skipinitialspace=True)
-    return df
-
 
 def index_len_resolver(df1, df2):
     df1_start = datetime.strptime(df1.index[0], '%Y-%m-%d')
@@ -225,3 +221,16 @@ def add_buy_sell_shares(bs_df, close_price, starting_value, offset=0.008, impact
     entire_book_order['bs_signal'] = bs_df
     entire_book_order = entire_book_order.dropna()
     return entire_book_order
+
+
+def setup_data(df_from_ticker, indicators, length, lookahead_days):
+    indicator_df, buy_sell_hold_df = get_indicators(df_from_ticker, indicators, length, lookahead_days)
+    refined_indicators_df, refined_bs_df = index_len_resolver(indicator_df, buy_sell_hold_df)
+    normalized_indicators_df = normalize_indicators(refined_indicators_df)
+    # the buy_sell_hold_df will always END earlier than the indicator_df because of the lookahead days
+    # the indicator_df will always START later than the buy_sell_hold_df because of the average_day length
+    # bsh       =      [ , , , ]
+    # indicator =         [ , , , , ]
+    future_prediction_days = list(set(indicator_df.index) - set(buy_sell_hold_df.index))
+    future_prediction_days.sort()
+    return normalized_indicators_df, refined_bs_df, indicator_df.loc[future_prediction_days]

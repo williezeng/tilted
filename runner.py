@@ -15,9 +15,11 @@ from tqdm import tqdm
 from itertools import combinations
 from utils import external_ticks
 import matplotlib.pyplot as plt
-from tech_indicators import TECHNICAL_INDICATORS
+from tech_indicators import TECHNICAL_INDICATORS, setup_data
 from sklearn.model_selection import train_test_split, KFold
 
+TRAINING_DATA_DIR = 'training_data'
+TESTING_DATA_DIR = 'testing_data'
 NAME_TO_MODEL = {
     'knn': KNN,
     'decision_trees': DecisionTree,
@@ -172,9 +174,21 @@ def run_models(arguments, df_ticker):
 
 
 def get_df_from_file(f_path):
-    data_frame_from_ticker = tech_indicators.read_df_from_file(f_path)
-    data_frame_from_ticker.name = f_path
-    return data_frame_from_ticker
+    df = pd.read_csv(f_path, index_col=[0], header=[0], skipinitialspace=True)
+    df.name = f_path
+    return df
+
+
+def parallel_data_splitter(file_name):
+    filepath = os.path.join(constants.YAHOO_DATA_DIR, file_name)
+    stock_df = get_df_from_file(filepath)
+    try:
+        normalized_indicators_df, bs_df, df_for_predictions = setup_data(stock_df, args['indicators'], args['length'], args['lookahead_days'])
+        x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.1, shuffle=False)
+        pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(TRAINING_DATA_DIR, f'training_{file_name}'))
+        pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(TESTING_DATA_DIR, f'testing_{file_name}'))
+    except Exception as e:
+        print(f"Failed to process {file_name}: {e}")
 
 
 def build_args():
@@ -207,7 +221,6 @@ def build_args():
     parser.add_argument('--all', type=bool, default=False, help='run through all data inside yahoo_data')
     return vars(parser.parse_args())
 
-from models import BaseModel
 if __name__ == "__main__":
     args = build_args()
     if args['logger'] not in LOGGER_LEVELS:
@@ -216,29 +229,17 @@ if __name__ == "__main__":
         exit('must enter a valid model from {}'.format(NAME_TO_MODEL.keys()))
     trading_logger.setlevel(LOGGER_LEVELS[args['logger']])
     args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
-    # if len(args["indicators"]) < MIN_REQUIRED_TRADING_INDICATORS:
-    #     exit(f"you must specify {MIN_REQUIRED_TRADING_INDICATORS} or more indicators")
     if args['spy']:
         spy_file_name = os.path.join(constants.YAHOO_DATA_DIR, 'SPY.csv')
-        data_frame_from_spyfile = tech_indicators.read_df_from_file(spy_file_name)
+        data_frame_from_spyfile = get_df_from_file(spy_file_name)
         analyzer.get_spy(data_frame_from_spyfile, args)
         exit()
     if args['all']:
         files = os.listdir(constants.YAHOO_DATA_DIR)
         # Filter files that do not start with '00-'
-        filtered_files = [file for file in files if not file.startswith('00-')]
-        for file_name in filtered_files:
-            file_path = os.path.join(constants.YAHOO_DATA_DIR, file_name)
-            df_from_ticker = get_df_from_file(file_path)
-            dt_instance = NAME_TO_MODEL[args['model_name']](args, df_from_ticker)
-            normalized_indicators_df, bs_df, df_for_predictions = dt_instance.setup_data()
-            X_train, X_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.1, shuffle=False)
-
-            TRAINING_DATA_DIR = 'training_data'
-            TESTING_DATA_DIR = 'testing_data'
-            pd.merge(X_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(TRAINING_DATA_DIR, f'training_{file_name}'))
-            pd.merge(X_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(TESTING_DATA_DIR, f'testing_{file_name}'))
-
+        filtered_files = [file for file in files if not file.startswith('00_')]
+        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+            pool.map(parallel_data_splitter, filtered_files)
     elif args['file_name']:
         file_path = os.path.join(constants.YAHOO_DATA_DIR, args['file_name'])
         df_from_ticker = get_df_from_file(file_path)
