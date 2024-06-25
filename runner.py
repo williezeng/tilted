@@ -16,6 +16,8 @@ from itertools import combinations
 from utils import external_ticks
 import matplotlib.pyplot as plt
 from tech_indicators import TECHNICAL_INDICATORS
+from sklearn.model_selection import train_test_split, KFold
+
 NAME_TO_MODEL = {
     'knn': KNN,
     'decision_trees': DecisionTree,
@@ -230,10 +232,12 @@ if __name__ == "__main__":
             df_from_ticker = get_df_from_file(file_path)
             dt_instance = NAME_TO_MODEL[args['model_name']](args, df_from_ticker)
             normalized_indicators_df, bs_df, df_for_predictions = dt_instance.setup_data()
-            normalized_indicators_to_buy_sell_df = pd.merge(normalized_indicators_df, bs_df, left_index=True, right_index=True)
-            # split training
-            # split testing
-            df.to_csv(os.path.join(DATA_DIR, '{}.csv'.format(name)))
+            X_train, X_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.1, shuffle=False)
+
+            TRAINING_DATA_DIR = 'training_data'
+            TESTING_DATA_DIR = 'testing_data'
+            pd.merge(X_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(TRAINING_DATA_DIR, f'training_{file_name}'))
+            pd.merge(X_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(TESTING_DATA_DIR, f'testing_{file_name}'))
 
     elif args['file_name']:
         file_path = os.path.join(constants.YAHOO_DATA_DIR, args['file_name'])
