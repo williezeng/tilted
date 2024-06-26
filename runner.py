@@ -5,7 +5,7 @@ import statistics
 import pandas
 import pandas as pd
 from utils import constants, trading_logger
-import tech_indicators
+from sklearn.metrics import mean_squared_error, accuracy_score
 import analyzer
 from knn import KNN
 from dt import DecisionTree
@@ -14,9 +14,10 @@ import multiprocessing
 from tqdm import tqdm
 from itertools import combinations
 from utils import external_ticks
-import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier
 from tech_indicators import TECHNICAL_INDICATORS, setup_data
 from sklearn.model_selection import train_test_split, KFold
+import joblib
 
 TRAINING_DATA_DIR = 'training_data'
 TESTING_DATA_DIR = 'testing_data'
@@ -191,6 +192,25 @@ def parallel_data_splitter(file_name):
         print(f"Failed to process {file_name}: {e}")
 
 
+def process_data(data_dir):
+    files = os.listdir(data_dir)
+    x_list = []
+    y_list = []
+    for file in files:
+        if not file.endswith('.csv') or file.startswith('00_'):
+            continue
+        df = pd.read_csv(os.path.join(data_dir, file), index_col='Date', parse_dates=['Date'])
+
+        # Extract the 'bs_signal' column and remove it from the df
+        y_train = df.pop('bs_signal')
+        x_list.append(df)
+        y_list.append(y_train)
+    x_indicators = pd.concat(x_list)
+    y_bs_signals = pd.concat(y_list)
+    x_indicators.to_csv(os.path.join(data_dir, '00_concatenated_indicators.csv'))
+    y_bs_signals.to_csv(os.path.join(data_dir, '00_concatenated_buy_sell_signals.csv'))
+
+
 def build_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
@@ -218,8 +238,12 @@ def build_args():
                         required=False)
     parser.add_argument('--check_model', type=bool, required=False, default=False,
                         help="specify to see plots of the ytrain ytest ypred generated data")
-    parser.add_argument('--all', type=bool, default=False, help='run through all data inside yahoo_data')
+    parser.add_argument('--preprocess_all', type=bool, default=False, help='run through all data inside yahoo_data')
+    parser.add_argument('--process_all', type=bool, default=False, help='run through all data inside yahoo_data')
+    parser.add_argument('--train_all', type=bool, default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--score', type=bool, default=False, help='train a model with the csv files in training_data/')
     return vars(parser.parse_args())
+
 
 if __name__ == "__main__":
     args = build_args()
@@ -234,12 +258,33 @@ if __name__ == "__main__":
         data_frame_from_spyfile = get_df_from_file(spy_file_name)
         analyzer.get_spy(data_frame_from_spyfile, args)
         exit()
-    if args['all']:
+    elif args['preprocess_all']:
         files = os.listdir(constants.YAHOO_DATA_DIR)
         # Filter files that do not start with '00-'
         filtered_files = [file for file in files if not file.startswith('00_')]
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
             pool.map(parallel_data_splitter, filtered_files)
+    elif args['process_all']:
+        process_data(TRAINING_DATA_DIR)
+        process_data(TESTING_DATA_DIR)
+    elif args['train_all']:
+        files = os.listdir(TRAINING_DATA_DIR)
+        x_train = pd.read_csv(os.path.join(TRAINING_DATA_DIR, constants.CONCATENATED_INDICATORS_FILE), index_col='Date', parse_dates=['Date'])
+        y_train = pd.read_csv(os.path.join(TRAINING_DATA_DIR, constants.CONCATENATED_BUY_SELL_SIGNALS_FILE), index_col='Date', parse_dates=['Date'])
+        rf = RandomForestClassifier()
+        rf.fit(x_train, y_train['bs_signal'])
+        # save
+        joblib.dump(rf, os.path.join(TESTING_DATA_DIR, constants.SAVED_MODEL_FILE))
+        print(f'Training accuracy: {rf.score(x_train, y_train)}')
+    elif args['predict_all']:
+        x_test = pd.read_csv(os.path.join(TESTING_DATA_DIR, constants.CONCATENATED_INDICATORS_FILE), index_col='Date', parse_dates=['Date'])
+        # load
+        loaded_rf = joblib.load(os.path.join(TESTING_DATA_DIR, constants.SAVED_MODEL_FILE))
+        ypred = pd.DataFrame(loaded_rf.predict(x_test), index=x_test.index, columns=['bs_signal'])
+        ypred.to_csv(os.path.join(TESTING_DATA_DIR, constants.PREDICTION_FILE))
+        y_pred = pd.read_csv(os.path.join(TESTING_DATA_DIR, constants.PREDICTION_FILE), index_col='Date', parse_dates=['Date'])
+        y_test = pd.read_csv(os.path.join(TESTING_DATA_DIR, constants.CONCATENATED_BUY_SELL_SIGNALS_FILE), index_col='Date', parse_dates=['Date'])
+        print(f'Testing accuracy: {accuracy_score(y_test, y_pred)}')
     elif args['file_name']:
         file_path = os.path.join(constants.YAHOO_DATA_DIR, args['file_name'])
         df_from_ticker = get_df_from_file(file_path)
