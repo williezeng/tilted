@@ -271,7 +271,7 @@ if __name__ == "__main__":
         files = os.listdir(TRAINING_DATA_DIR)
         x_train = pd.read_csv(os.path.join(TRAINING_DATA_DIR, constants.CONCATENATED_INDICATORS_FILE), index_col='Date', parse_dates=['Date'])
         y_train = pd.read_csv(os.path.join(TRAINING_DATA_DIR, constants.CONCATENATED_BUY_SELL_SIGNALS_FILE), index_col='Date', parse_dates=['Date'])
-        rf = RandomForestClassifier()
+        rf = RandomForestClassifier(n_estimators=100, n_jobs=-1)
         rf.fit(x_train, y_train['bs_signal'])
         # save
         joblib.dump(rf, os.path.join(TESTING_DATA_DIR, constants.SAVED_MODEL_FILE))
