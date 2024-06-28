@@ -243,7 +243,7 @@ def build_args():
     parser.add_argument('--sequential', help='run in sequential', type=bool, required=False, default=False)
     parser.add_argument('--spy', help='only get spy', type=bool, required=False, default=False)
     parser.add_argument('--lookahead_days', help='set the lookahead days for ytest', type=int, required=False,
-                        default=6)
+                        default=10)
     parser.add_argument('--logger', choices=LOGGER_LEVELS.keys(), default='debug', type=str,
                         help='provide a logging level within {}'.format(LOGGER_LEVELS.keys()))
     parser.add_argument('--runs', default=1, type=int, help='specify amount of runs')
@@ -259,7 +259,6 @@ def build_args():
     parser.add_argument('--predict_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     return vars(parser.parse_args())
-
 
 
 def create_graph(close_data, bs_series):
@@ -300,7 +299,7 @@ def visualize_data(data_files_map):
     else:
         print(f'the map is unexpected {data_files_map}')
         return
-    with multiprocessing.Pool(processes=4) as pool:
+    with multiprocessing.Pool(processes=6) as pool:
         results = pool.map(visualize, params)
 
 
@@ -312,7 +311,7 @@ if __name__ == "__main__":
     if args['preprocess_all']:
         print("stage 1: Preprocessing Data")
         list_of_files_in_yahoo_dir = get_absolute_file_paths(constants.YAHOO_DATA_DIR)
-        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        with multiprocessing.Pool(processes=4) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
         print("stage 1: Preprocessing Data Done")
     if args['combine_all']:
@@ -327,7 +326,7 @@ if __name__ == "__main__":
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
         rf = RandomForestClassifier(n_estimators=100, n_jobs=-1)
-        x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=42)
+        x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         rf.fit(x_train, y_train['bs_signal'])
         # save
         joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)

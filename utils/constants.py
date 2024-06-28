@@ -26,3 +26,9 @@ TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE = os.path.join(TRAINING_COMBINED_DAT
 
 TESTING_CONCATENATED_INDICATORS_FILE = os.path.join(TESTING_COMBINED_DATA_DIR_PATH, '00_concatenated_indicators.csv')
 TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE = os.path.join(TESTING_COMBINED_DATA_DIR_PATH, '00_concatenated_buy_sell_signals.csv')
+
+SHUFFLE_RANDOM_STATE = 63
+
+# Threshold needs to be higher than trade impact + commission
+BUY_THRESHOLD = 0.05
+SELL_THRESHOLD = -BUY_THRESHOLD

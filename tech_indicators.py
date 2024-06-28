@@ -1,13 +1,12 @@
 import numpy as np
 from datetime import datetime
-
 import pandas as pd
-
 import matplotlib
+from utils import constants
 
 matplotlib.use('TkAgg')
-TECHNICAL_INDICATORS = ['sma', 'ema', 'bb', 'high', 'low', 'volume', 'close', 'cmf', 'obv', 'rsi']
-# 'bb_signal' is faulty
+TECHNICAL_INDICATORS = ['sma', 'ema', 'bb', 'high', 'low', 'volume', 'close', 'cmf']
+# 'bb_signal,  'obv', 'rsi'' is faulty
 #
 BUY = 1
 SELL = -1
@@ -163,10 +162,11 @@ def create_ylabels(df, lookahead_days):
     closed_price_series = df_copy['Close']
     for i in range(closed_price_series.shape[0] - lookahead_days):
         ratio = (closed_price_series[i + lookahead_days] - closed_price_series[i]) / closed_price_series[i]
-        if ratio > 0.06:  # positive ratio that's higher than trade impact + commission
+        # a larger buy threshold will result to fewer trades.
+        if ratio > constants.BUY_THRESHOLD:
             trainY.append(BUY)
-        elif ratio < -0.06:
-            trainY.append(SELL)  # sell
+        elif ratio < constants.SELL_THRESHOLD:
+            trainY.append(SELL)
         else:
             trainY.append(HOLD)
     df_copy = df_copy[:-lookahead_days]
