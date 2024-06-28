@@ -5,7 +5,7 @@ import statistics
 import pandas
 import pandas as pd
 from utils import constants, trading_logger
-from sklearn.metrics import mean_squared_error, accuracy_score
+from sklearn.metrics import accuracy_score
 import analyzer
 from knn import KNN
 from dt import DecisionTree
@@ -13,14 +13,13 @@ from rf import RandomForest
 import multiprocessing
 from tqdm import tqdm
 from itertools import combinations
-from utils import external_ticks
 from sklearn.ensemble import RandomForestClassifier
 from tech_indicators import TECHNICAL_INDICATORS, setup_data
-from sklearn.model_selection import train_test_split, KFold
+from sklearn.model_selection import train_test_split
 import joblib
 
-TRAINING_DATA_DIR = 'training_data'
-TESTING_DATA_DIR = 'testing_data'
+from utils.constants import TRAINING_DATA_DIR, TESTING_DATA_DIR
+
 NAME_TO_MODEL = {
     'knn': KNN,
     'decision_trees': DecisionTree,
@@ -174,18 +173,13 @@ def run_models(arguments, df_ticker):
     print(counts_df)
 
 
-def get_df_from_file(f_path):
-    df = pd.read_csv(f_path, index_col=[0], header=[0], skipinitialspace=True)
-    df.name = f_path
-    return df
-
 
 def parallel_data_splitter(file_name):
-    filepath = os.path.join(constants.YAHOO_DATA_DIR, file_name)
-    stock_df = get_df_from_file(filepath)
+    stock_df = pd.read_csv(file_name, index_col=[0], header=[0], skipinitialspace=True)
+    stock_df.name = file_name
     try:
         normalized_indicators_df, bs_df, df_for_predictions = setup_data(stock_df, args['indicators'], args['length'], args['lookahead_days'])
-        x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.1, shuffle=False)
+        x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.15, shuffle=True)
         pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(TRAINING_DATA_DIR, f'training_{file_name}'))
         pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(TESTING_DATA_DIR, f'testing_{file_name}'))
     except Exception as e:
@@ -215,12 +209,8 @@ def build_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
     parser.add_argument('--file_name', help='the name of the file', type=str)
-    parser.add_argument('--indicators',
-                        help=f'the technical indicators, you must specify one of{TECHNICAL_INDICATORS}',
-                        type=str, required=True)
     parser.add_argument('--optimize_params', help='find best model parameters', type=bool, required=False,
                         default=False)
-    parser.add_argument('--model_name', help='the model you want to run', type=str, required=True)
     parser.add_argument('--share_amount', help='the amount of share you want to buy/sell', type=int, required=False,
                         default=10)
     parser.add_argument('--starting_value', help='the starting value', type=int, required=False, default=1000)
@@ -238,32 +228,32 @@ def build_args():
                         required=False)
     parser.add_argument('--check_model', type=bool, required=False, default=False,
                         help="specify to see plots of the ytrain ytest ypred generated data")
-    parser.add_argument('--preprocess_all', type=bool, default=False, help='run through all data inside yahoo_data')
-    parser.add_argument('--process_all', type=bool, default=False, help='run through all data inside yahoo_data')
-    parser.add_argument('--train_all', type=bool, default=False, help='train a model with the csv files in training_data/')
-    parser.add_argument('--score', type=bool, default=False, help='train a model with the csv files in training_data/')
+
+    parser.add_argument('--model_name', action='store_true', default=False, help="define the machine learning model")
+    parser.add_argument('--preprocess_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--combine_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--train_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--test_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     return vars(parser.parse_args())
+
+
+def get_absolute_file_paths(data_dir):
+    file_paths = []
+    for filename in os.listdir(data_dir):
+        if os.path.isfile(os.path.join(data_dir, filename)) and filename.endswith('.csv') and not filename.startswith('00_'):
+            file_paths.append(os.path.join(data_dir, filename))
+        return file_paths
 
 
 if __name__ == "__main__":
     args = build_args()
-    if args['logger'] not in LOGGER_LEVELS:
-        exit('idk your wack ass log level')
-    elif args['model_name'] not in NAME_TO_MODEL:
-        exit('must enter a valid model from {}'.format(NAME_TO_MODEL.keys()))
-    trading_logger.setlevel(LOGGER_LEVELS[args['logger']])
-    args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
-    if args['spy']:
-        spy_file_name = os.path.join(constants.YAHOO_DATA_DIR, 'SPY.csv')
-        data_frame_from_spyfile = get_df_from_file(spy_file_name)
-        analyzer.get_spy(data_frame_from_spyfile, args)
-        exit()
-    elif args['preprocess_all']:
-        files = os.listdir(constants.YAHOO_DATA_DIR)
-        # Filter files that do not start with '00-'
-        filtered_files = [file for file in files if not file.startswith('00_')]
+    # args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
+    args["indicators"] = TECHNICAL_INDICATORS
+    if args['preprocess_all']:
+        list_of_files_in_yahoo_dir = get_absolute_file_paths(constants.YAHOO_DATA_DIR)
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            pool.map(parallel_data_splitter, filtered_files)
+            pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
     elif args['process_all']:
         process_data(TRAINING_DATA_DIR)
         process_data(TESTING_DATA_DIR)
@@ -285,13 +275,4 @@ if __name__ == "__main__":
         y_pred = pd.read_csv(os.path.join(TESTING_DATA_DIR, constants.PREDICTION_FILE), index_col='Date', parse_dates=['Date'])
         y_test = pd.read_csv(os.path.join(TESTING_DATA_DIR, constants.CONCATENATED_BUY_SELL_SIGNALS_FILE), index_col='Date', parse_dates=['Date'])
         print(f'Testing accuracy: {accuracy_score(y_test, y_pred)}')
-    elif args['file_name']:
-        file_path = os.path.join(constants.YAHOO_DATA_DIR, args['file_name'])
-        df_from_ticker = get_df_from_file(file_path)
-        if args['find_best_combination']:
-            find_best_combination(args, df_from_ticker)
-            exit()
-        else:
-            run_models(args, df_from_ticker)
-    else:
-        print(f'not sure what to do given {args}')
+
