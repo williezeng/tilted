@@ -35,6 +35,15 @@ logger = trading_logger.getlogger()
 MIN_REQUIRED_TRADING_INDICATORS = 5
 
 
+def get_absolute_file_paths(data_dir):
+    file_paths = []
+
+    for filename in os.listdir(data_dir):
+        if os.path.isfile(os.path.join(data_dir, filename)) and filename.endswith('.csv') and not filename.startswith('00_'):
+            file_paths.append(os.path.join(data_dir, filename))
+    return file_paths
+
+
 def parallel_trainer_evaluater(tuple_of_data):
     arguments, random_seed, df_from_ticker = tuple_of_data
     arguments['random_seed'] = random_seed
@@ -179,14 +188,14 @@ def parallel_data_splitter(file_path):
     stock_df.name = file_name
     try:
         normalized_indicators_df, bs_df, df_for_predictions = setup_data(stock_df, args['indicators'], args['length'], args['lookahead_days'])
-        x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.15, shuffle=True)
+        x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.15, shuffle=False)
         pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(TRAINING_DATA_DIR_PATH, f'training_{file_name}'))
         pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(TESTING_DATA_DIR_PATH, f'testing_{file_name}'))
     except Exception as e:
         print(f"Failed to process {file_name}: {e}")
 
 
-def get_technical_indcators_and_buy_sell_dfs(file_path):
+def get_technical_indicators_and_buy_sell_dfs(file_path):
     technical_indicators_df = pd.read_csv(file_path, index_col='Date', parse_dates=['Date'])
     buy_sell_signal_df = technical_indicators_df.pop('bs_signal')
     return technical_indicators_df, buy_sell_signal_df
@@ -205,7 +214,7 @@ def combine_data(data_files_map):
         print(f'the map is unexpected {data_files_map}')
         return
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-        results = pool.map(get_technical_indcators_and_buy_sell_dfs, list_of_data_files)
+        results = pool.map(get_technical_indicators_and_buy_sell_dfs, list_of_data_files)
     # TODO: ignore_index=True is this necessary?
     all_technical_indicators = pd.concat([technical_indicators_df[0] for technical_indicators_df in results])
     all_buy_sell_signals = pd.concat([buy_sell_signal_df[1] for buy_sell_signal_df in results])
@@ -242,18 +251,58 @@ def build_args():
     parser.add_argument('--preprocess_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--combine_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--train_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
-    parser.add_argument('--test_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--predict_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     return vars(parser.parse_args())
 
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+from tech_indicators import BUY, SELL, HOLD
 
-def get_absolute_file_paths(data_dir):
-    file_paths = []
 
-    for filename in os.listdir(data_dir):
-        if os.path.isfile(os.path.join(data_dir, filename)) and filename.endswith('.csv') and not filename.startswith('00_'):
-            file_paths.append(os.path.join(data_dir, filename))
-    return file_paths
+def create_graph(close_data, bs_series):
+    sell_markers_date = [bs_series.index[x] for x in range(len(bs_series)) if bs_series[x] == SELL]
+    sell_markers_price = [close_data[x] for x in bs_series.index if bs_series[x] == SELL]
+    buy_markers_date = [bs_series.index[x] for x in range(len(bs_series)) if bs_series[x] == BUY]
+    buy_markers_price = [close_data[x] for x in bs_series.index if bs_series[x] == BUY]
+    plt.plot(list(close_data.index), close_data, label='price')
+    plt.plot(sell_markers_date, sell_markers_price, 's', label='sell')
+    plt.plot(buy_markers_date, buy_markers_price, 's', label='buy')
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
+    plt.xticks(rotation=90, fontweight='light', fontsize='x-small')
+    plt.tight_layout()
+    plt.xlabel('Date')
+    plt.ylabel('Close')
+    plt.legend()
+    figure = plt.gcf()
+    figure.set_size_inches(20, 13)
+    return plt
+
+
+def visualize(params):
+    data_file, dir_path = params
+    title = data_file.split("/")[-1].split(".")[0]
+    technical_indicators_df, bs_signal_df = get_technical_indicators_and_buy_sell_dfs(data_file)
+    plot_instance = create_graph(technical_indicators_df['Close'], bs_signal_df)
+    plot_instance.title(title)
+    plot_instance.savefig(os.path.join(dir_path, f'{title}.png'), dpi=300)
+    plot_instance.clear()
+    plot_instance.close()
+
+
+def visualize_data(data_files_map):
+    if len(data_files_map.get('training', [])) > 0:
+        params = [(training_file, constants.TRAINING_GRAPHS_DIR_PATH) for training_file in data_files_map.get('training', [])]
+    elif len(data_files_map.get('testing', [])) > 0:
+        params = [(testing_file, constants.TESTING_GRAPHS_DIR_PATH) for testing_file in data_files_map.get('testing', [])]
+    else:
+        print(f'the map is unexpected {data_files_map}')
+        return
+    visualize(params[0])
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        results = pool.map(visualize, params)
 
 
 if __name__ == "__main__":
@@ -296,5 +345,8 @@ if __name__ == "__main__":
         print("stage 4: Testing Model Done")
     elif args['visualize_all']:
         print("Visualizing Data")
-        visualize_data()
+        data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
+        visualize_data(data_map)
+        data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
+        visualize_data(data_map)
         print("Visualizing Data Done")

@@ -192,25 +192,4 @@ def graph_order_book(order_book, close_data, model_name, file_name, list_of_indi
     plt.figure().clear()
 
 
-def graph_series(bs_series, close_data, name):
-    sell_markers_date = [bs_series.index[x] for x in range(len(bs_series)) if bs_series['bs_signal'][x] == SELL]
-    sell_markers_price = [close_data['Close'][x] for x in bs_series.index if bs_series['bs_signal'][x] == SELL]
 
-    buy_markers_date = [bs_series.index[x] for x in range(len(bs_series)) if bs_series['bs_signal'][x] == BUY]
-    buy_markers_price = [close_data['Close'][x] for x in bs_series.index if bs_series['bs_signal'][x] == BUY]
-
-    plt.plot(list(close_data.index), close_data['Close'], label='price')
-    plt.plot(sell_markers_date, sell_markers_price, 's', label='sell')
-    plt.plot(buy_markers_date, buy_markers_price, 's', label='buy')
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
-    plt.xticks(rotation=90, fontweight='light', fontsize='x-small')
-    plt.tight_layout()
-    plt.xlabel('Date')
-    plt.ylabel('Close')
-    plt.legend()
-    title = f'{name}'
-    plt.title(title)
-    figure = plt.gcf()
-    figure.set_size_inches(20, 13)
-    plt.show()
-    plt.figure().clear()
