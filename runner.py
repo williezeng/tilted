@@ -17,7 +17,12 @@ from sklearn.ensemble import RandomForestClassifier
 from tech_indicators import TECHNICAL_INDICATORS, setup_data
 from sklearn.model_selection import train_test_split
 import joblib
-
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+from tech_indicators import BUY, SELL, HOLD
+from sklearn.utils import shuffle
 from utils.constants import TRAINING_DATA_DIR_PATH, TESTING_DATA_DIR_PATH
 
 NAME_TO_MODEL = {
@@ -255,11 +260,6 @@ def build_args():
     parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     return vars(parser.parse_args())
 
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
-from tech_indicators import BUY, SELL, HOLD
 
 
 def create_graph(close_data, bs_series):
@@ -277,7 +277,7 @@ def create_graph(close_data, bs_series):
     plt.ylabel('Close')
     plt.legend()
     figure = plt.gcf()
-    figure.set_size_inches(20, 13)
+    figure.set_size_inches(18, 10)
     return plt
 
 
@@ -288,7 +288,7 @@ def visualize(params):
     plot_instance = create_graph(technical_indicators_df['Close'], bs_signal_df)
     plot_instance.title(title)
     plot_instance.savefig(os.path.join(dir_path, f'{title}.png'), dpi=300)
-    plot_instance.clear()
+    plot_instance.clf()
     plot_instance.close()
 
 
@@ -300,7 +300,6 @@ def visualize_data(data_files_map):
     else:
         print(f'the map is unexpected {data_files_map}')
         return
-    visualize(params[0])
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         results = pool.map(visualize, params)
 
@@ -328,6 +327,7 @@ if __name__ == "__main__":
         x_train = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         y_train = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
         rf = RandomForestClassifier(n_estimators=100, n_jobs=-1)
+        x_train, y_train = shuffle(x_train, y_train, random_state=42)
         rf.fit(x_train, y_train['bs_signal'])
         # save
         joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)
@@ -343,7 +343,7 @@ if __name__ == "__main__":
         model_predictions.to_csv(constants.PREDICTION_FILE)
         print(f'Testing accuracy: {accuracy_score(y_test, model_predictions)}')
         print("stage 4: Testing Model Done")
-    elif args['visualize_all']:
+    if args['visualize_all']:
         print("Visualizing Data")
         data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
         visualize_data(data_map)
