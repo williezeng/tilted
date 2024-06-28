@@ -18,7 +18,7 @@ from tech_indicators import TECHNICAL_INDICATORS, setup_data
 from sklearn.model_selection import train_test_split
 import joblib
 
-from utils.constants import TRAINING_DATA_DIR_PATH, TESTING_DATA_DIR
+from utils.constants import TRAINING_DATA_DIR_PATH, TESTING_DATA_DIR_PATH
 
 NAME_TO_MODEL = {
     'knn': KNN,
@@ -173,36 +173,50 @@ def run_models(arguments, df_ticker):
     print(counts_df)
 
 
-
-def parallel_data_splitter(file_name):
-    stock_df = pd.read_csv(file_name, index_col=[0], header=[0], skipinitialspace=True)
+def parallel_data_splitter(file_path):
+    file_name = file_path.split("/")[-1]
+    stock_df = pd.read_csv(file_path, index_col=[0], header=[0], skipinitialspace=True)
     stock_df.name = file_name
     try:
         normalized_indicators_df, bs_df, df_for_predictions = setup_data(stock_df, args['indicators'], args['length'], args['lookahead_days'])
         x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.15, shuffle=True)
         pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(TRAINING_DATA_DIR_PATH, f'training_{file_name}'))
-        pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(TESTING_DATA_DIR, f'testing_{file_name}'))
+        pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(TESTING_DATA_DIR_PATH, f'testing_{file_name}'))
     except Exception as e:
         print(f"Failed to process {file_name}: {e}")
 
 
-def process_data(data_dir):
-    files = os.listdir(data_dir)
-    x_list = []
-    y_list = []
-    for file in files:
-        if not file.endswith('.csv') or file.startswith('00_'):
-            continue
-        df = pd.read_csv(os.path.join(data_dir, file), index_col='Date', parse_dates=['Date'])
+def get_technical_indcators_and_buy_sell_dfs(file_path):
+    technical_indicators_df = pd.read_csv(file_path, index_col='Date', parse_dates=['Date'])
+    buy_sell_signal_df = technical_indicators_df.pop('bs_signal')
+    return technical_indicators_df, buy_sell_signal_df
 
-        # Extract the 'bs_signal' column and remove it from the df
-        y_train = df.pop('bs_signal')
-        x_list.append(df)
-        y_list.append(y_train)
-    x_indicators = pd.concat(x_list)
-    y_bs_signals = pd.concat(y_list)
-    x_indicators.to_csv(os.path.join(data_dir, '00_concatenated_indicators.csv'))
-    y_bs_signals.to_csv(os.path.join(data_dir, '00_concatenated_buy_sell_signals.csv'))
+
+def combine_data(data_files_map):
+    if len(data_files_map.get('training', [])) > 0:
+        indicator_file_path = constants.TRAINING_CONCATENATED_INDICATORS_FILE
+        buy_sell_file_path = constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE
+        list_of_data_files = data_files_map.get('training', [])
+    elif len(data_files_map.get('testing', [])) > 0:
+        indicator_file_path = constants.TESTING_CONCATENATED_INDICATORS_FILE
+        buy_sell_file_path = constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE
+        list_of_data_files = data_files_map.get('testing', [])
+    else:
+        print(f'the map is unexpected {data_files_map}')
+        return
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        results = pool.map(get_technical_indcators_and_buy_sell_dfs, list_of_data_files)
+    dfs = [technical_indicators_df[0] for technical_indicators_df in results]
+    df2s = [buy_sell_signal_df[1] for buy_sell_signal_df in results]
+
+    # all_technical_indicators = pd.concat(dfs, ignore_index=True)
+    # all_buy_sell_signals = pd.concat(df2s, ignore_index=True)
+
+    all_technical_indicators = pd.concat(dfs)
+    all_buy_sell_signals = pd.concat(df2s)
+
+    all_technical_indicators.to_csv(indicator_file_path)
+    all_buy_sell_signals.to_csv(buy_sell_file_path)
 
 
 def build_args():
@@ -240,25 +254,31 @@ def build_args():
 
 def get_absolute_file_paths(data_dir):
     file_paths = []
+
     for filename in os.listdir(data_dir):
         if os.path.isfile(os.path.join(data_dir, filename)) and filename.endswith('.csv') and not filename.startswith('00_'):
             file_paths.append(os.path.join(data_dir, filename))
-        return file_paths
+    return file_paths
 
 
 if __name__ == "__main__":
     args = build_args()
     # args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
     args["indicators"] = TECHNICAL_INDICATORS
+    print(args["indicators"])
     if args['preprocess_all']:
         print("stage 1: Preprocessing Data")
         list_of_files_in_yahoo_dir = get_absolute_file_paths(constants.YAHOO_DATA_DIR)
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
-    elif args['combine_all']:
+        print("stage 1: Preprocessing Data Done")
+    if args['combine_all']:
         print("stage 2: Combining Data")
-        process_data(TRAINING_DATA_DIR_PATH)
-        process_data(TESTING_DATA_DIR)
+        data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
+        combine_data(data_map)
+        data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
+        combine_data(data_map)
+        print("stage 2: Combining Data Done")
     elif args['train_all']:
         print("stage 3: Training Model")
         files = os.listdir(TRAINING_DATA_DIR_PATH)
