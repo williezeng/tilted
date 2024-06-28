@@ -18,7 +18,7 @@ from tech_indicators import TECHNICAL_INDICATORS, setup_data
 from sklearn.model_selection import train_test_split
 import joblib
 
-from utils.constants import TRAINING_DATA_DIR, TESTING_DATA_DIR
+from utils.constants import TRAINING_DATA_DIR_PATH, TESTING_DATA_DIR
 
 NAME_TO_MODEL = {
     'knn': KNN,
@@ -180,7 +180,7 @@ def parallel_data_splitter(file_name):
     try:
         normalized_indicators_df, bs_df, df_for_predictions = setup_data(stock_df, args['indicators'], args['length'], args['lookahead_days'])
         x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.15, shuffle=True)
-        pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(TRAINING_DATA_DIR, f'training_{file_name}'))
+        pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(TRAINING_DATA_DIR_PATH, f'training_{file_name}'))
         pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(TESTING_DATA_DIR, f'testing_{file_name}'))
     except Exception as e:
         print(f"Failed to process {file_name}: {e}")
@@ -251,28 +251,36 @@ if __name__ == "__main__":
     # args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
     args["indicators"] = TECHNICAL_INDICATORS
     if args['preprocess_all']:
+        print("stage 1: Preprocessing Data")
         list_of_files_in_yahoo_dir = get_absolute_file_paths(constants.YAHOO_DATA_DIR)
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
-    elif args['process_all']:
-        process_data(TRAINING_DATA_DIR)
+    elif args['combine_all']:
+        print("stage 2: Combining Data")
+        process_data(TRAINING_DATA_DIR_PATH)
         process_data(TESTING_DATA_DIR)
     elif args['train_all']:
-        files = os.listdir(TRAINING_DATA_DIR)
-        x_train = pd.read_csv(os.path.join(TRAINING_DATA_DIR, constants.CONCATENATED_INDICATORS_FILE), index_col='Date', parse_dates=['Date'])
-        y_train = pd.read_csv(os.path.join(TRAINING_DATA_DIR, constants.CONCATENATED_BUY_SELL_SIGNALS_FILE), index_col='Date', parse_dates=['Date'])
+        print("stage 3: Training Model")
+        files = os.listdir(TRAINING_DATA_DIR_PATH)
+        x_train = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
+        y_train = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
         rf = RandomForestClassifier(n_estimators=100, n_jobs=-1)
         rf.fit(x_train, y_train['bs_signal'])
         # save
-        joblib.dump(rf, os.path.join(TESTING_DATA_DIR, constants.SAVED_MODEL_FILE))
+        joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)
         print(f'Training accuracy: {rf.score(x_train, y_train)}')
+        print("Stage 3: Training Model Done")
     elif args['predict_all']:
-        x_test = pd.read_csv(os.path.join(TESTING_DATA_DIR, constants.CONCATENATED_INDICATORS_FILE), index_col='Date', parse_dates=['Date'])
-        # load
-        loaded_rf = joblib.load(os.path.join(TESTING_DATA_DIR, constants.SAVED_MODEL_FILE))
-        ypred = pd.DataFrame(loaded_rf.predict(x_test), index=x_test.index, columns=['bs_signal'])
-        ypred.to_csv(os.path.join(TESTING_DATA_DIR, constants.PREDICTION_FILE))
-        y_pred = pd.read_csv(os.path.join(TESTING_DATA_DIR, constants.PREDICTION_FILE), index_col='Date', parse_dates=['Date'])
-        y_test = pd.read_csv(os.path.join(TESTING_DATA_DIR, constants.CONCATENATED_BUY_SELL_SIGNALS_FILE), index_col='Date', parse_dates=['Date'])
-        print(f'Testing accuracy: {accuracy_score(y_test, y_pred)}')
+        print("stage 4: Testing Model")
+        loaded_rf = joblib.load(constants.SAVED_MODEL_FILE_PATH)
+        x_test = pd.read_csv(constants.TESTING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
+        y_test = pd.read_csv(constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
 
+        model_predictions = pd.DataFrame(loaded_rf.predict(x_test), index=x_test.index, columns=['bs_signal'])
+        model_predictions.to_csv(constants.PREDICTION_FILE)
+        print(f'Testing accuracy: {accuracy_score(y_test, model_predictions)}')
+        print("stage 4: Testing Model Done")
+    elif args['visualize_all']:
+        print("Visualizing Data")
+        visualize_data()
+        print("Visualizing Data Done")
