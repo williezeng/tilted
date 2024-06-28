@@ -277,7 +277,7 @@ def create_graph(close_data, bs_series):
     plt.ylabel('Close')
     plt.legend()
     figure = plt.gcf()
-    figure.set_size_inches(18, 10)
+    figure.set_size_inches(20, 10)
     return plt
 
 
@@ -300,7 +300,7 @@ def visualize_data(data_files_map):
     else:
         print(f'the map is unexpected {data_files_map}')
         return
-    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+    with multiprocessing.Pool(processes=4) as pool:
         results = pool.map(visualize, params)
 
 
@@ -324,10 +324,10 @@ if __name__ == "__main__":
         print("stage 2: Combining Data Done")
     if args['train_all']:
         print("stage 3: Training Model")
-        x_train = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
-        y_train = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
+        combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
+        combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
         rf = RandomForestClassifier(n_estimators=100, n_jobs=-1)
-        x_train, y_train = shuffle(x_train, y_train, random_state=42)
+        x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=42)
         rf.fit(x_train, y_train['bs_signal'])
         # save
         joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)
@@ -336,12 +336,12 @@ if __name__ == "__main__":
     if args['predict_all']:
         print("stage 4: Testing Model")
         loaded_rf = joblib.load(constants.SAVED_MODEL_FILE_PATH)
-        x_test = pd.read_csv(constants.TESTING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
-        y_test = pd.read_csv(constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
+        combined_indicators = pd.read_csv(constants.TESTING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
+        combined_buy_sell_signals = pd.read_csv(constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
 
-        model_predictions = pd.DataFrame(loaded_rf.predict(x_test), index=x_test.index, columns=['bs_signal'])
+        model_predictions = pd.DataFrame(loaded_rf.predict(combined_indicators), index=combined_indicators.index, columns=['bs_signal'])
         model_predictions.to_csv(constants.PREDICTION_FILE)
-        print(f'Testing accuracy: {accuracy_score(y_test, model_predictions)}')
+        print(f'Testing accuracy: {accuracy_score(combined_buy_sell_signals, model_predictions)}')
         print("stage 4: Testing Model Done")
     if args['visualize_all']:
         print("Visualizing Data")

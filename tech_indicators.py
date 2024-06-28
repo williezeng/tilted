@@ -6,9 +6,9 @@ import pandas as pd
 import matplotlib
 
 matplotlib.use('TkAgg')
-TECHNICAL_INDICATORS = ['sma', 'ema', 'bb', 'high', 'low', 'volume', 'close', ]
+TECHNICAL_INDICATORS = ['sma', 'ema', 'bb', 'high', 'low', 'volume', 'close', 'cmf', 'obv', 'rsi']
 # 'bb_signal' is faulty
-# 'cmf', 'obv', 'rsi' ]
+#
 BUY = 1
 SELL = -1
 HOLD = 0
@@ -34,6 +34,7 @@ def get_cmf_vol(data_frame, length):
     dataframe_copy = data_frame.copy()
     cmf = dataframe_copy.ta.cmf(length=length).dropna()
     return cmf
+
 
 def get_rsi(data_frame, length):
     # It oscillates between 0 and 100,
