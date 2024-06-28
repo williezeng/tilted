@@ -206,14 +206,9 @@ def combine_data(data_files_map):
         return
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         results = pool.map(get_technical_indcators_and_buy_sell_dfs, list_of_data_files)
-    dfs = [technical_indicators_df[0] for technical_indicators_df in results]
-    df2s = [buy_sell_signal_df[1] for buy_sell_signal_df in results]
-
-    # all_technical_indicators = pd.concat(dfs, ignore_index=True)
-    # all_buy_sell_signals = pd.concat(df2s, ignore_index=True)
-
-    all_technical_indicators = pd.concat(dfs)
-    all_buy_sell_signals = pd.concat(df2s)
+    # TODO: ignore_index=True is this necessary?
+    all_technical_indicators = pd.concat([technical_indicators_df[0] for technical_indicators_df in results])
+    all_buy_sell_signals = pd.concat([buy_sell_signal_df[1] for buy_sell_signal_df in results])
 
     all_technical_indicators.to_csv(indicator_file_path)
     all_buy_sell_signals.to_csv(buy_sell_file_path)
@@ -279,9 +274,8 @@ if __name__ == "__main__":
         data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
         combine_data(data_map)
         print("stage 2: Combining Data Done")
-    elif args['train_all']:
+    if args['train_all']:
         print("stage 3: Training Model")
-        files = os.listdir(TRAINING_DATA_DIR_PATH)
         x_train = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         y_train = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
         rf = RandomForestClassifier(n_estimators=100, n_jobs=-1)
@@ -290,7 +284,7 @@ if __name__ == "__main__":
         joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)
         print(f'Training accuracy: {rf.score(x_train, y_train)}')
         print("Stage 3: Training Model Done")
-    elif args['predict_all']:
+    if args['predict_all']:
         print("stage 4: Testing Model")
         loaded_rf = joblib.load(constants.SAVED_MODEL_FILE_PATH)
         x_test = pd.read_csv(constants.TESTING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
