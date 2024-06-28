@@ -261,7 +261,7 @@ def build_args():
     return vars(parser.parse_args())
 
 
-def create_graph(close_data, bs_series):
+def create_stock_graph(close_data, bs_series):
     sell_markers_date = [bs_series.index[x] for x in range(len(bs_series)) if bs_series[x] == SELL]
     sell_markers_price = [close_data[x] for x in bs_series.index if bs_series[x] == SELL]
     buy_markers_date = [bs_series.index[x] for x in range(len(bs_series)) if bs_series[x] == BUY]
@@ -280,15 +280,47 @@ def create_graph(close_data, bs_series):
     return plt
 
 
-def visualize(params):
+def create_bar_graph(bs_series):
+    buy_counter = 0
+    sell_counter = 0
+    hold_counter = 0
+    for x in range(len(bs_series)):
+        if bs_series[x] == SELL:
+            sell_counter += 1
+        elif bs_series[x] == BUY:
+            buy_counter += 1
+        else:
+            hold_counter += 1
+    plt.figure(figsize=(10, 6))
+    plt.bar(['buy', 'sell', 'hold'], [buy_counter, sell_counter, hold_counter], color='skyblue')
+    plt.title('Buy/Sell/Hold Count')
+    plt.xlabel('Actions')
+    plt.ylabel('Count')
+    plt.xticks(rotation=45)
+    return plt
+
+
+def visualize(params, save=True):
     data_file, dir_path = params
     title = data_file.split("/")[-1].split(".")[0]
     technical_indicators_df, bs_signal_df = get_technical_indicators_and_buy_sell_dfs(data_file)
-    plot_instance = create_graph(technical_indicators_df['Close'], bs_signal_df)
+    plot_instance = create_stock_graph(technical_indicators_df['Close'], bs_signal_df)
     plot_instance.title(title)
-    plot_instance.savefig(os.path.join(dir_path, f'{title}.png'), dpi=300)
-    plot_instance.clf()
-    plot_instance.close()
+    if save:
+        plot_instance.savefig(os.path.join(dir_path, f'{title}_stock.png'), dpi=300)
+    else:
+        plt.show()
+    plt.clf()
+    plt.close()
+
+    plot_instance = create_bar_graph(bs_signal_df)
+    plot_instance.title(title)
+    if save:
+        plt.savefig(os.path.join(dir_path, f'{title}_count.png'))
+    else:
+        plt.show()
+    plt.clf()
+    plt.close()
 
 
 def visualize_data(data_files_map):
@@ -314,6 +346,13 @@ if __name__ == "__main__":
         with multiprocessing.Pool(processes=4) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
         print("stage 1: Preprocessing Data Done")
+    if args['visualize_all']:
+        print("Visualizing Data")
+        data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
+        visualize_data(data_map)
+        data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
+        visualize_data(data_map)
+        print("Visualizing Data Done")
     if args['combine_all']:
         print("stage 2: Combining Data")
         data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
@@ -342,10 +381,4 @@ if __name__ == "__main__":
         model_predictions.to_csv(constants.PREDICTION_FILE)
         print(f'Testing accuracy: {accuracy_score(combined_buy_sell_signals, model_predictions)}')
         print("stage 4: Testing Model Done")
-    if args['visualize_all']:
-        print("Visualizing Data")
-        data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
-        visualize_data(data_map)
-        data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
-        visualize_data(data_map)
-        print("Visualizing Data Done")
+
