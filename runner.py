@@ -2,28 +2,25 @@ import logging
 import os
 import argparse
 import statistics
-import pandas
 import pandas as pd
-from utils import constants, trading_logger
-from sklearn.metrics import accuracy_score
 import analyzer
+import multiprocessing
+from tqdm import tqdm
+import joblib
+import graphs
+from sklearn.metrics import accuracy_score
+from itertools import combinations
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.utils import shuffle
+from utils.constants import TRAINING_DATA_DIR_PATH, TESTING_DATA_DIR_PATH
+from tech_indicators import TECHNICAL_INDICATORS, setup_data
+from utils import constants, trading_logger
+
 from knn import KNN
 from dt import DecisionTree
 from rf import RandomForest
-import multiprocessing
-from tqdm import tqdm
-from itertools import combinations
-from sklearn.ensemble import RandomForestClassifier
-from tech_indicators import TECHNICAL_INDICATORS, setup_data
-from sklearn.model_selection import train_test_split
-import joblib
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
-from tech_indicators import BUY, SELL, HOLD
-from sklearn.utils import shuffle
-from utils.constants import TRAINING_DATA_DIR_PATH, TESTING_DATA_DIR_PATH
+
 
 NAME_TO_MODEL = {
     'knn': KNN,
@@ -150,7 +147,7 @@ def find_best_combination(arguments, df_ticker):
 
 
 def run_models(arguments, df_ticker):
-    live_predictions_average_df = pandas.DataFrame()
+    live_predictions_average_df = pd.DataFrame()
     result_buy_sell_total_percent_gain_runs = []
     # result_long_short_total_percent_gain_runs = []
     result_test_accuracies_runs = []
@@ -188,6 +185,8 @@ def run_models(arguments, df_ticker):
 
 
 def parallel_data_splitter(file_path):
+    # The data concatenated and saved is not shuffled for bookkeeping purposes
+    # The data is shuffled right before training
     file_name = file_path.split("/")[-1]
     stock_df = pd.read_csv(file_path, index_col=[0], header=[0], skipinitialspace=True)
     stock_df.name = file_name
@@ -200,31 +199,29 @@ def parallel_data_splitter(file_path):
         print(f"Failed to process {file_name}: {e}")
 
 
-def get_technical_indicators_and_buy_sell_dfs(file_path):
-    technical_indicators_df = pd.read_csv(file_path, index_col='Date', parse_dates=['Date'])
-    buy_sell_signal_df = technical_indicators_df.pop('bs_signal')
-    return technical_indicators_df, buy_sell_signal_df
-
-
-def combine_data(data_files_map):
+def parallel_get_technical_indicators_and_buy_sell_dfs(data_files_map):
     if len(data_files_map.get('training', [])) > 0:
-        indicator_file_path = constants.TRAINING_CONCATENATED_INDICATORS_FILE
+        technical_indicator_file_path = constants.TRAINING_CONCATENATED_INDICATORS_FILE
         buy_sell_file_path = constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE
         list_of_data_files = data_files_map.get('training', [])
-    elif len(data_files_map.get('testing', [])) > 0:
-        indicator_file_path = constants.TESTING_CONCATENATED_INDICATORS_FILE
-        buy_sell_file_path = constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE
-        list_of_data_files = data_files_map.get('testing', [])
+    # elif len(data_files_map.get('testing', [])) > 0:
+    #     technical_indicator_file_path = constants.TESTING_CONCATENATED_INDICATORS_FILE
+    #     buy_sell_file_path = constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE
+    #     list_of_data_files = data_files_map.get('testing', [])
     else:
         print(f'the map is unexpected {data_files_map}')
         return
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-        results = pool.map(get_technical_indicators_and_buy_sell_dfs, list_of_data_files)
-    # TODO: ignore_index=True is this necessary?
-    all_technical_indicators = pd.concat([technical_indicators_df[0] for technical_indicators_df in results])
-    all_buy_sell_signals = pd.concat([buy_sell_signal_df[1] for buy_sell_signal_df in results])
+        results = pool.map(shared_get_technical_indicators_and_buy_sell_dfs, list_of_data_files)
+    return results, technical_indicator_file_path, buy_sell_file_path
 
-    all_technical_indicators.to_csv(indicator_file_path)
+
+def combine_data(data_files_map):
+    technical_indicators_and_buy_sell_signals, technical_indicator_file_path, buy_sell_file_path = parallel_get_technical_indicators_and_buy_sell_dfs(data_files_map)
+    # TODO: ignore_index=True is this necessary?
+    all_technical_indicators = pd.concat([technical_indicators_df[0] for technical_indicators_df in technical_indicators_and_buy_sell_signals])
+    all_buy_sell_signals = pd.concat([buy_sell_signal_df[1] for buy_sell_signal_df in technical_indicators_and_buy_sell_signals])
+    all_technical_indicators.to_csv(technical_indicator_file_path)
     all_buy_sell_signals.to_csv(buy_sell_file_path)
 
 
@@ -261,78 +258,6 @@ def build_args():
     return vars(parser.parse_args())
 
 
-def create_stock_graph(close_data, bs_series):
-    sell_markers_date = [bs_series.index[x] for x in range(len(bs_series)) if bs_series[x] == SELL]
-    sell_markers_price = [close_data[x] for x in bs_series.index if bs_series[x] == SELL]
-    buy_markers_date = [bs_series.index[x] for x in range(len(bs_series)) if bs_series[x] == BUY]
-    buy_markers_price = [close_data[x] for x in bs_series.index if bs_series[x] == BUY]
-    plt.plot(list(close_data.index), close_data, label='price')
-    plt.plot(sell_markers_date, sell_markers_price, 's', label='sell')
-    plt.plot(buy_markers_date, buy_markers_price, 's', label='buy')
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
-    plt.xticks(rotation=90, fontweight='light', fontsize='x-small')
-    plt.tight_layout()
-    plt.xlabel('Date')
-    plt.ylabel('Close')
-    plt.legend()
-    figure = plt.gcf()
-    figure.set_size_inches(20, 10)
-    return plt
-
-
-def create_bar_graph(bs_series):
-    buy_counter = 0
-    sell_counter = 0
-    hold_counter = 0
-    for x in range(len(bs_series)):
-        if bs_series[x] == SELL:
-            sell_counter += 1
-        elif bs_series[x] == BUY:
-            buy_counter += 1
-        else:
-            hold_counter += 1
-    plt.figure(figsize=(10, 6))
-    plt.bar(['buy', 'sell', 'hold'], [buy_counter, sell_counter, hold_counter], color='skyblue')
-    plt.title('Buy/Sell/Hold Count')
-    plt.xlabel('Actions')
-    plt.ylabel('Count')
-    plt.xticks(rotation=45)
-    return plt
-
-
-def visualize(params, save=True):
-    data_file, dir_path = params
-    title = data_file.split("/")[-1].split(".")[0]
-    technical_indicators_df, bs_signal_df = get_technical_indicators_and_buy_sell_dfs(data_file)
-    plot_instance = create_stock_graph(technical_indicators_df['Close'], bs_signal_df)
-    plot_instance.title(title)
-    if save:
-        plot_instance.savefig(os.path.join(dir_path, f'{title}_stock.png'), dpi=300)
-    else:
-        plt.show()
-    plt.clf()
-    plt.close()
-
-    plot_instance = create_bar_graph(bs_signal_df)
-    plot_instance.title(title)
-    if save:
-        plt.savefig(os.path.join(dir_path, f'{title}_count.png'))
-    else:
-        plt.show()
-    plt.clf()
-    plt.close()
-
-
-def visualize_data(data_files_map):
-    if len(data_files_map.get('training', [])) > 0:
-        params = [(training_file, constants.TRAINING_GRAPHS_DIR_PATH) for training_file in data_files_map.get('training', [])]
-    elif len(data_files_map.get('testing', [])) > 0:
-        params = [(testing_file, constants.TESTING_GRAPHS_DIR_PATH) for testing_file in data_files_map.get('testing', [])]
-    else:
-        print(f'the map is unexpected {data_files_map}')
-        return
-    with multiprocessing.Pool(processes=6) as pool:
-        results = pool.map(visualize, params)
 
 
 if __name__ == "__main__":
@@ -346,18 +271,9 @@ if __name__ == "__main__":
         with multiprocessing.Pool(processes=4) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
         print("stage 1: Preprocessing Data Done")
-    if args['visualize_all']:
-        print("Visualizing Data")
-        data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
-        visualize_data(data_map)
-        data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
-        visualize_data(data_map)
-        print("Visualizing Data Done")
     if args['combine_all']:
         print("stage 2: Combining Data")
         data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
-        combine_data(data_map)
-        data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
         combine_data(data_map)
         print("stage 2: Combining Data Done")
     if args['train_all']:
@@ -374,11 +290,19 @@ if __name__ == "__main__":
     if args['predict_all']:
         print("stage 4: Testing Model")
         loaded_rf = joblib.load(constants.SAVED_MODEL_FILE_PATH)
-        combined_indicators = pd.read_csv(constants.TESTING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
-        combined_buy_sell_signals = pd.read_csv(constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
+        # combined_indicators = pd.read_csv(constants.TESTING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
+        # combined_buy_sell_signals = pd.read_csv(constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
+        data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
+
 
         model_predictions = pd.DataFrame(loaded_rf.predict(combined_indicators), index=combined_indicators.index, columns=['bs_signal'])
         model_predictions.to_csv(constants.PREDICTION_FILE)
         print(f'Testing accuracy: {accuracy_score(combined_buy_sell_signals, model_predictions)}')
         print("stage 4: Testing Model Done")
-
+    if args['visualize_all']:
+        print("Visualizing Data")
+        data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
+        graphs.visualize_data(data_map)
+        data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
+        graphs.visualize_data(data_map)
+        print("Visualizing Data Done")
