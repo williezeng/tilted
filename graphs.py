@@ -50,7 +50,7 @@ def create_bar_graph(bs_series):
 def visualize(params, save=True):
     data_file, dir_path = params
     title = data_file.split("/")[-1].split(".")[0]
-    technical_indicators_df, bs_signal_df = shared_methods.get_technical_indicators_and_buy_sell_dfs(data_file)
+    technical_indicators_df, bs_signal_df, __ = shared_methods.get_technical_indicators_and_buy_sell_dfs(data_file)
     plot_instance = create_stock_graph(technical_indicators_df['Close'], bs_signal_df)
     plot_instance.title(title)
     if save:

@@ -15,8 +15,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import shuffle
 from utils.constants import TRAINING_DATA_DIR_PATH, TESTING_DATA_DIR_PATH
 from tech_indicators import TECHNICAL_INDICATORS, setup_data
-from utils import constants, trading_logger
-
+from utils import constants, trading_logger, shared_methods
 from knn import KNN
 from dt import DecisionTree
 from rf import RandomForest
@@ -199,25 +198,15 @@ def parallel_data_splitter(file_path):
         print(f"Failed to process {file_name}: {e}")
 
 
-def parallel_get_technical_indicators_and_buy_sell_dfs(data_files_map):
-    if len(data_files_map.get('training', [])) > 0:
-        technical_indicator_file_path = constants.TRAINING_CONCATENATED_INDICATORS_FILE
-        buy_sell_file_path = constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE
-        list_of_data_files = data_files_map.get('training', [])
-    # elif len(data_files_map.get('testing', [])) > 0:
-    #     technical_indicator_file_path = constants.TESTING_CONCATENATED_INDICATORS_FILE
-    #     buy_sell_file_path = constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE
-    #     list_of_data_files = data_files_map.get('testing', [])
-    else:
-        print(f'the map is unexpected {data_files_map}')
-        return
-    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-        results = pool.map(shared_get_technical_indicators_and_buy_sell_dfs, list_of_data_files)
-    return results, technical_indicator_file_path, buy_sell_file_path
+
 
 
 def combine_data(data_files_map):
-    technical_indicators_and_buy_sell_signals, technical_indicator_file_path, buy_sell_file_path = parallel_get_technical_indicators_and_buy_sell_dfs(data_files_map)
+    # Read all training technical_indicators and buy sell dfs and concatenate all of them
+    technical_indicator_file_path = constants.TRAINING_CONCATENATED_INDICATORS_FILE
+    buy_sell_file_path = constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE
+
+    technical_indicators_and_buy_sell_signals = shared_methods.parallel_get_technical_indicators_and_buy_sell_dfs(data_files_map)
     # TODO: ignore_index=True is this necessary?
     all_technical_indicators = pd.concat([technical_indicators_df[0] for technical_indicators_df in technical_indicators_and_buy_sell_signals])
     all_buy_sell_signals = pd.concat([buy_sell_signal_df[1] for buy_sell_signal_df in technical_indicators_and_buy_sell_signals])
@@ -258,8 +247,6 @@ def build_args():
     return vars(parser.parse_args())
 
 
-
-
 if __name__ == "__main__":
     args = build_args()
     # args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
@@ -273,36 +260,40 @@ if __name__ == "__main__":
         print("stage 1: Preprocessing Data Done")
     if args['combine_all']:
         print("stage 2: Combining Data")
-        data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
-        combine_data(data_map)
+        combine_data(get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH))
         print("stage 2: Combining Data Done")
     if args['train_all']:
+        # shuffle and train on concatenated df
+        # save model
         print("stage 3: Training Model")
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
         rf = RandomForestClassifier(n_estimators=100, n_jobs=-1)
         x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         rf.fit(x_train, y_train['bs_signal'])
-        # save
         joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)
         print(f'Training accuracy: {rf.score(x_train, y_train)}')
         print("Stage 3: Training Model Done")
     if args['predict_all']:
+        # Load and Predict on each Test technical indicator DF
+        # Save predictions and compare with correct test buy_sell df
         print("stage 4: Testing Model")
         loaded_rf = joblib.load(constants.SAVED_MODEL_FILE_PATH)
         # combined_indicators = pd.read_csv(constants.TESTING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         # combined_buy_sell_signals = pd.read_csv(constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
-        data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
-
-
-        model_predictions = pd.DataFrame(loaded_rf.predict(combined_indicators), index=combined_indicators.index, columns=['bs_signal'])
-        model_predictions.to_csv(constants.PREDICTION_FILE)
-        print(f'Testing accuracy: {accuracy_score(combined_buy_sell_signals, model_predictions)}')
+        full_dfs = shared_methods.parallel_get_technical_indicators_and_buy_sell_dfs(get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH))
+        for index, full_df in enumerate(full_dfs):
+            TESTING_PREDICTION_GRAPHS_DIR_PATH
+            import pdb
+            pdb.set_trace()
+        # model_predictions = pd.DataFrame(loaded_rf.predict(combined_indicators), index=combined_indicators.index, columns=['bs_signal'])
+        # model_predictions.to_csv(constants.PREDICTION_FILE)
+        # print(f'Testing accuracy: {accuracy_score(combined_buy_sell_signals, model_predictions)}')
         print("stage 4: Testing Model Done")
-    if args['visualize_all']:
-        print("Visualizing Data")
-        data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
-        graphs.visualize_data(data_map)
-        data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
-        graphs.visualize_data(data_map)
-        print("Visualizing Data Done")
+    # if args['visualize_all']:
+    #     print("Visualizing Data")
+    #     data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
+    #     graphs.visualize_data(data_map)
+    #     data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
+    #     graphs.visualize_data(data_map)
+    #     print("Visualizing Data Done")

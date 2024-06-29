@@ -2,23 +2,26 @@
 venv
 __pycache__
 __pycache__/*
-testing/*
-testing/combined_data/*
-testing/data/*
-testing/graphs/*
-!testing/
-!testing/combined_data/
-!testing/data/
-!testing/graphs/
-
 yahoo_data/*
 !yahoo_data/
+
+testing/*
+testing/data/*
+testing/graphs/*
+testing/predictions/*
+testing/predictions/data/*
+testing/predictions/graphs/*
+!testing/
+!testing/data/
+!testing/graphs/
+!testing/predictions/
+!testing/predictions/data
+!testing/predictions/graphs
 
 training/*
 training/combined_data/*
 training/data/*
 training/graphs/*
-
 
 !training/
 !training/combined_data/
