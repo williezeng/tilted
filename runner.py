@@ -36,15 +36,6 @@ logger = trading_logger.getlogger()
 MIN_REQUIRED_TRADING_INDICATORS = 5
 
 
-def get_absolute_file_paths(data_dir):
-    file_paths = []
-
-    for filename in os.listdir(data_dir):
-        if os.path.isfile(os.path.join(data_dir, filename)) and filename.endswith('.csv') and not filename.startswith('00_'):
-            file_paths.append(os.path.join(data_dir, filename))
-    return file_paths
-
-
 def parallel_trainer_evaluater(tuple_of_data):
     arguments, random_seed, df_from_ticker = tuple_of_data
     arguments['random_seed'] = random_seed
@@ -198,9 +189,6 @@ def parallel_data_splitter(file_path):
         print(f"Failed to process {file_name}: {e}")
 
 
-
-
-
 def combine_data(data_files_map):
     # Read all training technical_indicators and buy sell dfs and concatenate all of them
     technical_indicator_file_path = constants.TRAINING_CONCATENATED_INDICATORS_FILE
@@ -221,7 +209,7 @@ def build_args():
     parser.add_argument('--optimize_params', help='find best model parameters', type=bool, required=False,
                         default=False)
     parser.add_argument('--share_amount', help='the amount of share you want to buy/sell', type=int, required=False,
-                        default=10)
+                        default=5)
     parser.add_argument('--starting_value', help='the starting value', type=int, required=False, default=1000)
     parser.add_argument('--save_recent', help='save the long/short and buy/sell portfolios', type=bool, required=False,
                         default=False)
@@ -254,13 +242,13 @@ if __name__ == "__main__":
     print(args["indicators"])
     if args['preprocess_all']:
         print("stage 1: Preprocessing Data")
-        list_of_files_in_yahoo_dir = get_absolute_file_paths(constants.YAHOO_DATA_DIR)
+        list_of_files_in_yahoo_dir = shared_methods.get_absolute_file_paths(constants.YAHOO_DATA_DIR)
         with multiprocessing.Pool(processes=4) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
         print("stage 1: Preprocessing Data Done")
     if args['combine_all']:
         print("stage 2: Combining Data")
-        combine_data(get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH))
+        combine_data(shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH))
         print("stage 2: Combining Data Done")
     if args['train_all']:
         # shuffle and train on concatenated df
@@ -278,17 +266,7 @@ if __name__ == "__main__":
         # Load and Predict on each Test technical indicator DF
         # Save predictions and compare with correct test buy_sell df
         print("stage 4: Testing Model")
-        loaded_rf = joblib.load(constants.SAVED_MODEL_FILE_PATH)
-        # combined_indicators = pd.read_csv(constants.TESTING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
-        # combined_buy_sell_signals = pd.read_csv(constants.TESTING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
-        full_dfs = shared_methods.parallel_get_technical_indicators_and_buy_sell_dfs(get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH))
-        for index, full_df in enumerate(full_dfs):
-            TESTING_PREDICTION_GRAPHS_DIR_PATH
-            import pdb
-            pdb.set_trace()
-        # model_predictions = pd.DataFrame(loaded_rf.predict(combined_indicators), index=combined_indicators.index, columns=['bs_signal'])
-        # model_predictions.to_csv(constants.PREDICTION_FILE)
-        # print(f'Testing accuracy: {accuracy_score(combined_buy_sell_signals, model_predictions)}')
+        shared_methods.save_predictions_and_accuracy()
         print("stage 4: Testing Model Done")
     # if args['visualize_all']:
     #     print("Visualizing Data")

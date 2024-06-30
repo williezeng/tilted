@@ -9,12 +9,14 @@ testing/*
 testing/data/*
 testing/graphs/*
 testing/predictions/*
+testing/predictions/accuracy/*
 testing/predictions/data/*
 testing/predictions/graphs/*
 !testing/
 !testing/data/
 !testing/graphs/
 !testing/predictions/
+!testing/predictions/accuracy
 !testing/predictions/data
 !testing/predictions/graphs
 
