@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import multiprocessing
 from tech_indicators import BUY, SELL, HOLD
 from utils import constants, shared_methods
+import pandas as pd
 
 
 def create_stock_graph(close_data, bs_series):
@@ -48,9 +49,7 @@ def create_bar_graph(bs_series):
 
 
 def visualize(params, save=True):
-    data_file, dir_path = params
-    title = data_file.split("/")[-1].split(".")[0]
-    technical_indicators_df, bs_signal_df, __ = shared_methods.get_technical_indicators_and_buy_sell_dfs(data_file)
+    technical_indicators_df, bs_signal_df, title, dir_path = params
     plot_instance = create_stock_graph(technical_indicators_df['Close'], bs_signal_df)
     plot_instance.title(title)
     if save:
@@ -71,12 +70,34 @@ def visualize(params, save=True):
 
 
 def visualize_data(data_files_map):
+    params = []
     if len(data_files_map.get('training', [])) > 0:
-        params = [(training_file, constants.TRAINING_GRAPHS_DIR_PATH) for training_file in data_files_map.get('training', [])]
+        print('creating training data graphs')
+        for training_file in data_files_map.get('training', []):
+            dir_path = constants.TRAINING_GRAPHS_DIR_PATH
+            technical_indicators_df, bs_signal_df, __ = shared_methods.get_technical_indicators_and_buy_sell_dfs(training_file)
+            title = training_file.split("/")[-1].split(".")[0]
+            params.append((technical_indicators_df, bs_signal_df, title, dir_path))
     elif len(data_files_map.get('testing', [])) > 0:
-        params = [(testing_file, constants.TESTING_GRAPHS_DIR_PATH) for testing_file in data_files_map.get('testing', [])]
+        print('creating testing data graphs')
+        for testing_file in data_files_map.get('testing', []):
+            dir_path = constants.TESTING_GRAPHS_DIR_PATH
+            technical_indicators_df, bs_signal_df, __ = shared_methods.get_technical_indicators_and_buy_sell_dfs(testing_file)
+            title = testing_file.split("/")[-1].split(".")[0]
+            params.append((technical_indicators_df, bs_signal_df, title, dir_path))
+    elif len(data_files_map.get('predictions_buy_sell_files', [])) > 0:
+        print('creating prediction graphs')
+        for prediction_file in data_files_map.get('predictions_buy_sell_files', []):
+            dir_path = constants.TESTING_PREDICTION_GRAPHS_DIR_PATH
+            bs_signal_df = pd.read_csv(prediction_file, index_col='Date', parse_dates=['Date'])['bs_signal']
+            title = prediction_file.split("/")[-1].split(".")[0]
+            for testing_file in data_files_map.get('predictions_technical_indicator_files', []):
+                if title == testing_file.split("/")[-1].split(".")[0]:
+                    technical_indicators_df, _, __ = shared_methods.get_technical_indicators_and_buy_sell_dfs(testing_file)
+                    params.append((technical_indicators_df, bs_signal_df, title, dir_path))
+                    break
     else:
         print(f'the map is unexpected {data_files_map}')
         return
-    with multiprocessing.Pool(processes=6) as pool:
+    with multiprocessing.Pool(processes=constants.MULTIPROCESS_CPU_NUMBER) as pool:
         results = pool.map(visualize, params)

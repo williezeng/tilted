@@ -243,7 +243,7 @@ if __name__ == "__main__":
     if args['preprocess_all']:
         print("stage 1: Preprocessing Data")
         list_of_files_in_yahoo_dir = shared_methods.get_absolute_file_paths(constants.YAHOO_DATA_DIR)
-        with multiprocessing.Pool(processes=4) as pool:
+        with multiprocessing.Pool(processes=constants.MULTIPROCESS_CPU_NUMBER) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
         print("stage 1: Preprocessing Data Done")
     if args['combine_all']:
@@ -268,10 +268,17 @@ if __name__ == "__main__":
         print("stage 4: Testing Model")
         shared_methods.save_predictions_and_accuracy()
         print("stage 4: Testing Model Done")
-    # if args['visualize_all']:
-    #     print("Visualizing Data")
-    #     data_map = {'training': get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
-    #     graphs.visualize_data(data_map)
-    #     data_map = {'testing': get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
-    #     graphs.visualize_data(data_map)
-    #     print("Visualizing Data Done")
+    if args['visualize_all']:
+        print("Visualizing Data")
+        data_map = {'training': shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
+        graphs.visualize_data(data_map)
+        data_map = {'testing': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
+        graphs.visualize_data(data_map)
+        # Todo: guarantee that the file names are equivalently in the same order in the two below data sets
+        # Todo: then we can do one index for loop instead of O(n^2)
+        data_map = {
+            'predictions_buy_sell_files': shared_methods.get_absolute_file_paths(constants.TESTING_PREDICTION_DATA_DIR_PATH),
+            'predictions_technical_indicator_files': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)
+        }
+        graphs.visualize_data(data_map)
+        print("Visualizing Data Done")
