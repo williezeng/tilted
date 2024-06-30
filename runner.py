@@ -253,10 +253,10 @@ if __name__ == "__main__":
     if args['train_all']:
         # shuffle and train on concatenated df
         # save model
-        print("stage 3: Training Model")
+        print("Stage 3: Training Model")
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
-        rf = RandomForestClassifier(n_estimators=100, n_jobs=-1)
+        rf = RandomForestClassifier(n_estimators=15, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, n_jobs=-1, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
         x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         rf.fit(x_train, y_train['bs_signal'])
         joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)
@@ -265,9 +265,9 @@ if __name__ == "__main__":
     if args['predict_all']:
         # Load and Predict on each Test technical indicator DF
         # Save predictions and compare with correct test buy_sell df
-        print("stage 4: Testing Model")
+        print("Stage 4: Testing Model")
         shared_methods.save_predictions_and_accuracy()
-        print("stage 4: Testing Model Done")
+        print("Stage 4: Testing Model Done")
     if args['visualize_all']:
         print("Visualizing Data")
         data_map = {'training': shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
