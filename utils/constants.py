@@ -40,3 +40,9 @@ RANDOM_FOREST_CLASS_WEIGHT = {0: 1, -1: 7, 1: 7}
 # Threshold needs to be higher than trade impact + commission
 BUY_THRESHOLD = 0.05
 SELL_THRESHOLD = -BUY_THRESHOLD
+
+
+LONG_TERM_PERIOD = 10
+BUY = 1
+SELL = -1
+HOLD = 0

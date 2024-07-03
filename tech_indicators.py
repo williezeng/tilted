@@ -1,26 +1,112 @@
 import numpy as np
 from datetime import datetime
+
+import pandas
 import pandas as pd
 import matplotlib
 from utils import constants
+from utils.constants import BUY, SELL, HOLD
 
 matplotlib.use('TkAgg')
 TECHNICAL_INDICATORS = ['sma', 'ema', 'bb', 'high', 'low', 'volume', 'close', 'cmf']
 # 'bb_signal,  'obv', 'rsi'' is faulty
 #
-BUY = 1
-SELL = -1
-HOLD = 0
 
 
 # TODO:  correlation, relative strength index (RSI), the difference between the open price of yesterday and today, difference close price of yesterday
 
+# TODO: CREATE STRATEGY: SMA + BOELI + MACD:
+# # Create a new DataFrame 'data' with the 'Close' column from 'data_frame'
+# data = pd.DataFrame()
+# data['Close'] = data_frame['Close']
+#
+# # Calculate technical indicators
+# data['EMA50'] = data['Close'].ta.ema(length=50).dropna()
+# data['EMA200'] = data['Close'].ta.ema(length=200).dropna()
+# data['MACD'] = data['Close'].ta.macd().dropna()['MACD_12_26_9']
+# data['RSI'] = data['Close'].ta.rsi(length=14).dropna()
+#
+# # Drop NaN values that result from indicator calculation
+# data = data.dropna()
+#
+# # Signal generation based on combined indicators
+# data['Signal'] = 0
+#
+# # Buy signal: EMA50 > EMA200, MACD > 0, RSI < 70
+# data.loc[(data['EMA50'] > data['EMA200']) & (data['MACD'] > 0) & (data['RSI'] < 70), 'Signal'] = 1
+#
+# # Sell signal: EMA50 < EMA200, MACD < 0, RSI > 30
+# data.loc[(data['EMA50'] < data['EMA200']) & (data['MACD'] < 0) & (data['RSI'] > 30), 'Signal'] = -1
+#
+# # Generate Position column to reflect holding periods
+# data['Position'] = data['Signal']
+#
+# # Print the DataFrame with signals
+# print(data.tail())
+#
+# # Plotting
+# plt.figure(figsize=(14, 7))
+# plt.plot(data['Close'], label='Close Price', alpha=0.35)
+# plt.plot(data['EMA50'], label='50-Day EMA', alpha=0.75)
+# plt.plot(data['EMA200'], label='200-Day EMA', alpha=0.75)
+#
+# # Plot buy signals
+# plt.scatter(data.index, data['Close'], c=np.where(data['Position'] == 1, 'green', np.nan), label='Buy Signal', marker='^', alpha=1.0)
+#
+# # Plot sell signals
+# plt.scatter(data.index, data['Close'], c=np.where(data['Position'] == -1, 'orange', np.nan), label='Sell Signal', marker='v', alpha=1.0)
+#
+# plt.title('Entry and Exit Signals using EMA, MACD, and RSI')
+# plt.legend()
+# plt.show()
 
-def moving_average(data_frame, length):
+def moving_sma(data_frame):
+    data = pandas.DataFrame()
     dataframe_copy = data_frame.copy()
-    ema = dataframe_copy.ta.ema(length=length).dropna()
-    sma = dataframe_copy.ta.sma(length=length).dropna()
-    return ema, sma
+    data['Close'] = data_frame['Close']
+    data['Long_SMA'] = dataframe_copy.ta.ema(length=constants.LONG_TERM_PERIOD).dropna()
+
+    # Drop NaN values that result from SMA calculation
+    data = data.dropna()
+
+    data['Signal'] = 0
+
+    # Generate signals for crossovers
+    data['Signal'] = np.where(
+        (data['Close'] > data['Long_SMA']) & (data['Close'].shift(1) <= data['Long_SMA'].shift(1)), 1,
+        np.where((data['Close'] < data['Long_SMA']) & (data['Close'].shift(1) >= data['Long_SMA'].shift(1)), -1,
+                 0)
+    )
+
+    # plt = create_stock_graph(data['Close'], data['Signal'])
+    # plt.plot(list(data.index), data['Long_SMA'], label='long_sma')
+    # plt.legend()
+    # plt.show()
+    return data['Signal']
+
+
+def moving_ema(data_frame):
+    data = pandas.DataFrame()
+    dataframe_copy = data_frame.copy()
+    data['Close'] = data_frame['Close']
+    data['Long_EMA'] = dataframe_copy.ta.ema(length=constants.LONG_TERM_PERIOD).dropna()
+
+    data = data.dropna()
+
+    data['Signal'] = 0
+
+    # Generate signals for crossovers
+    data['Signal'] = np.where(
+        (data['Close'] > data['Long_EMA']) & (data['Close'].shift(1) <= data['Long_EMA'].shift(1)), 1,
+        np.where((data['Close'] < data['Long_EMA']) & (data['Close'].shift(1) >= data['Long_EMA'].shift(1)), -1,
+                 0)
+    )
+    #
+    # plt = create_stock_graph(data['Close'], data['Signal'])
+    # plt.plot(list(data.index), data['Long_EMA'], label='Long_EMA')
+    # plt.legend()
+    # plt.show()
+    return data['Signal']
 
 
 def get_obv_vol(data_frame):
@@ -104,7 +190,8 @@ def index_len_resolver(df1, df2):
 def get_indicators(df, options, length, y_test_lookahead):
 
     list_of_dfs = []
-    ema, sma = moving_average(df[['Close']], length)
+    sma = moving_sma(df[['Close']])
+    ema = moving_ema(df[['Close']])
     obv_vol = get_obv_vol(df)
     cmf_vol = get_cmf_vol(df, length)
     lower_bb_sma, upper_bb_sma = bbands_calculation(df[['Close']], sma, length)
@@ -119,15 +206,15 @@ def get_indicators(df, options, length, y_test_lookahead):
     bb_signal = bbands_classification(df_close, lower_bb_ema, upper_bb_ema)
     OPTION_MAP = {'sma': pd.DataFrame({'SMA_{}'.format(length): sma}),
                   'ema': pd.DataFrame({'EMA_{}'.format(length): ema}),
-                  'bb': bb,
-                  'high': df[['High']],
-                  'low': df[['Low']],
+                  # 'bb': bb,
+                  # 'high': df[['High']],
+                  # 'low': df[['Low']],
                   'volume': df[['Volume']],
                   'close': df_close[['Close']],
-                  'bb_signal': bb_signal,
-                  'cmf': cmf_vol,
-                  'obv': obv_vol,
-                  'rsi': get_rsi(df, length),
+                  # 'bb_signal': bb_signal,
+                  # 'cmf': cmf_vol,
+                  # 'obv': obv_vol,
+                  # 'rsi': get_rsi(df, length),
                   }
     for option in options:
         if option in OPTION_MAP:

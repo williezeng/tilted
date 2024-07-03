@@ -35,7 +35,7 @@ def write_prediction_to_csv(predictions_and_file_path):
 def save_predictions_and_accuracy():
     # get all test data csv data frames
     # sort based on ticker name
-    # predict and calculate accuracy
+    # remove 'close' price and predict and calculate accuracy
     # save model
     # save accuracy
 
@@ -49,6 +49,7 @@ def save_predictions_and_accuracy():
         model = joblib.load(constants.SAVED_MODEL_FILE_PATH)
         reference_technical_indicator_df, reference_buy_sell_df, test_data_file_path = result
         file_name = test_data_file_path.split("/")[-1]
+        reference_technical_indicator_df.pop('Close')
         model_predictions = pd.DataFrame(model.predict(reference_technical_indicator_df),
                                          index=reference_technical_indicator_df.index, columns=['bs_signal'])
         predictions_and_file_path.append((model_predictions, os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, file_name)))

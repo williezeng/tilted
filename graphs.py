@@ -4,12 +4,12 @@ matplotlib.use('TkAgg')
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import multiprocessing
-from tech_indicators import BUY, SELL, HOLD
+from utils.constants import BUY, SELL, HOLD
 from utils import constants, shared_methods
 import pandas as pd
 
 
-def create_stock_graph(close_data, bs_series):
+def create_stock_graph(close_data, bs_series, show=False):
     sell_markers_date = [bs_series.index[x] for x in range(len(bs_series)) if bs_series[x] == SELL]
     sell_markers_price = [close_data[x] for x in bs_series.index if bs_series[x] == SELL]
     buy_markers_date = [bs_series.index[x] for x in range(len(bs_series)) if bs_series[x] == BUY]
@@ -25,6 +25,8 @@ def create_stock_graph(close_data, bs_series):
     plt.legend()
     figure = plt.gcf()
     figure.set_size_inches(20, 10)
+    if show:
+        plt.show()
     return plt
 
 

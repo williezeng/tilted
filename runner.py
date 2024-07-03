@@ -232,6 +232,9 @@ def build_args():
     parser.add_argument('--train_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--predict_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--skip_training_graphs', help='skip training graphs', type=bool, required=False, default=False)
+    parser.add_argument('--skip_testing_graphs', help='skip testing graphs', type=bool, required=False, default=False)
+
     return vars(parser.parse_args())
 
 
@@ -243,6 +246,7 @@ if __name__ == "__main__":
     if args['preprocess_all']:
         print("stage 1: Preprocessing Data")
         list_of_files_in_yahoo_dir = shared_methods.get_absolute_file_paths(constants.YAHOO_DATA_DIR)
+        # parallel_data_splitter(list_of_files_in_yahoo_dir[0])
         with multiprocessing.Pool(processes=constants.MULTIPROCESS_CPU_NUMBER) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
         print("stage 1: Preprocessing Data Done")
@@ -258,6 +262,7 @@ if __name__ == "__main__":
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
         rf = RandomForestClassifier(n_estimators=15, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, n_jobs=-1, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
         x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
+        x_train.pop('Close')
         rf.fit(x_train, y_train['bs_signal'])
         joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)
         print(f'Training accuracy: {rf.score(x_train, y_train)}')
@@ -270,10 +275,12 @@ if __name__ == "__main__":
         print("Stage 4: Testing Model Done")
     if args['visualize_all']:
         print("Visualizing Data")
-        data_map = {'training': shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
-        graphs.visualize_data(data_map)
-        data_map = {'testing': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
-        graphs.visualize_data(data_map)
+        if not args['skip_training_graphs']:
+            data_map = {'training': shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
+            graphs.visualize_data(data_map)
+        if not args['skip_testing_graphs']:
+            data_map = {'testing': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
+            graphs.visualize_data(data_map)
         # Todo: guarantee that the file names are equivalently in the same order in the two below data sets
         # Todo: then we can do one index for loop instead of O(n^2)
         data_map = {
