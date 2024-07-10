@@ -273,6 +273,7 @@ if __name__ == "__main__":
         print("Stage 4: Testing Model")
         shared_methods.save_predictions_and_accuracy()
         print("Stage 4: Testing Model Done")
+
     if args['visualize_all']:
         print("Visualizing Data")
         if not args['skip_training_graphs']:

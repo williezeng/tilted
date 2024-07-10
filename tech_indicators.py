@@ -8,7 +8,7 @@ from utils import constants
 from utils.constants import BUY, SELL, HOLD
 
 matplotlib.use('TkAgg')
-TECHNICAL_INDICATORS = ['sma', 'ema', 'bb', 'high', 'low', 'volume', 'close', 'cmf']
+TECHNICAL_INDICATORS = ['SMA_10', 'EMA_10', 'bb_upper', 'bb_lower', 'bb_width', 'close']
 # 'bb_signal,  'obv', 'rsi'' is faulty
 #
 
@@ -61,52 +61,26 @@ TECHNICAL_INDICATORS = ['sma', 'ema', 'bb', 'high', 'low', 'volume', 'close', 'c
 # plt.show()
 
 def moving_sma(data_frame):
-    data = pandas.DataFrame()
-    dataframe_copy = data_frame.copy()
-    data['Close'] = data_frame['Close']
-    data['Long_SMA'] = dataframe_copy.ta.ema(length=constants.LONG_TERM_PERIOD).dropna()
-
-    # Drop NaN values that result from SMA calculation
-    data = data.dropna()
-
-    data['Signal'] = 0
-
-    # Generate signals for crossovers
-    data['Signal'] = np.where(
-        (data['Close'] > data['Long_SMA']) & (data['Close'].shift(1) <= data['Long_SMA'].shift(1)), 1,
-        np.where((data['Close'] < data['Long_SMA']) & (data['Close'].shift(1) >= data['Long_SMA'].shift(1)), -1,
-                 0)
-    )
-
-    # plt = create_stock_graph(data['Close'], data['Signal'])
-    # plt.plot(list(data.index), data['Long_SMA'], label='long_sma')
-    # plt.legend()
-    # plt.show()
-    return data['Signal']
+    return data_frame
 
 
 def moving_ema(data_frame):
-    data = pandas.DataFrame()
-    dataframe_copy = data_frame.copy()
-    data['Close'] = data_frame['Close']
-    data['Long_EMA'] = dataframe_copy.ta.ema(length=constants.LONG_TERM_PERIOD).dropna()
 
-    data = data.dropna()
-
-    data['Signal'] = 0
-
-    # Generate signals for crossovers
-    data['Signal'] = np.where(
-        (data['Close'] > data['Long_EMA']) & (data['Close'].shift(1) <= data['Long_EMA'].shift(1)), 1,
-        np.where((data['Close'] < data['Long_EMA']) & (data['Close'].shift(1) >= data['Long_EMA'].shift(1)), -1,
-                 0)
-    )
+    #
+    # data['Signal'] = 0
+    #
+    # # Generate signals for crossovers
+    # data['Signal'] = np.where(
+    #     (data['Close'] > data['Long_EMA']) & (data['Close'].shift(1) <= data['Long_EMA'].shift(1)), 1,
+    #     np.where((data['Close'] < data['Long_EMA']) & (data['Close'].shift(1) >= data['Long_EMA'].shift(1)), -1,
+    #              0)
+    # )
     #
     # plt = create_stock_graph(data['Close'], data['Signal'])
     # plt.plot(list(data.index), data['Long_EMA'], label='Long_EMA')
     # plt.legend()
     # plt.show()
-    return data['Signal']
+    return data_frame['Long_EMA']
 
 
 def get_obv_vol(data_frame):
@@ -133,12 +107,14 @@ def get_rsi(data_frame, length):
 def bbands_calculation(data_frame, moving_average, length):
     # imported pandasta bbands calculations are broken, lingering na's in their sma implementation
     # input should be some sort of moving average, df
-    standard_deviation = data_frame.ta.stdev(length=length).dropna()
-    bbstd = 2
-    deviations = bbstd * standard_deviation
-    lower_bb = moving_average - deviations
-    upper_bb = moving_average + deviations
-    return lower_bb, upper_bb
+    # standard_deviation = data_frame.ta.stdev(length=length).dropna()
+    # bbstd = 2
+    # deviations = bbstd * standard_deviation
+    # lower_bb = moving_average - deviations
+    # upper_bb = moving_average + deviations
+    dataframe_copy = data_frame.copy()
+    return
+
 
 
 def bbands_classification(close_prices_data_frame, lower_bb, upper_bb):
@@ -188,37 +164,39 @@ def index_len_resolver(df1, df2):
 
 
 def get_indicators(df, options, length, y_test_lookahead):
-
+    df_copy = df.copy()
+    df_copy['SMA_10'] = (df_copy['Close'] - df_copy.ta.ema(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['Close']
+    df_copy['EMA_10'] = (df_copy['Close'] - df_copy.ta.ema(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['Close']
+    bb_results = df_copy.ta.bbands(length=constants.LONG_TERM_PERIOD).dropna()
+    #     lower=BBL_{length}_{std},  mid = BBM_{length}_{std}, upper = BBU_{length}_{std}
+    #     bandwidth = BBB_{length}_{std}, percent = BBP_{length}_{std}
+    df_copy = df_copy.join(bb_results, how='inner')
+    df_copy['bb_upper'] = (df_copy['BBU_10_2.0'] - df_copy['Close']) / df_copy['Close']
+    df_copy['bb_lower'] = (df_copy['BBL_10_2.0'] - df_copy['Close']) / df_copy['Close']
+    df_copy['bb_width'] = (df_copy['BBU_10_2.0'] - df_copy['BBL_10_2.0']) / df_copy['Close']
     list_of_dfs = []
-    sma = moving_sma(df[['Close']])
-    ema = moving_ema(df[['Close']])
-    obv_vol = get_obv_vol(df)
-    cmf_vol = get_cmf_vol(df, length)
-    lower_bb_sma, upper_bb_sma = bbands_calculation(df[['Close']], sma, length)
-    lower_bb_ema, upper_bb_ema = bbands_calculation(df[['Close']], ema, length)
     # averages are calculated given n previous days of information, drop the NAs
-    df_close = df[['Close']].dropna()
-    bb = pd.DataFrame({'lower_bb_sma': lower_bb_sma, 'upper_bb_sma': upper_bb_sma, 'lower_bb_ema': lower_bb_ema,
-                       'upper_bb_ema': upper_bb_ema})
-
-    y_label_df = create_ylabels(df_close[['Close']].astype(float), y_test_lookahead)
-
-    bb_signal = bbands_classification(df_close, lower_bb_ema, upper_bb_ema)
-    OPTION_MAP = {'sma': pd.DataFrame({'SMA_{}'.format(length): sma}),
-                  'ema': pd.DataFrame({'EMA_{}'.format(length): ema}),
-                  # 'bb': bb,
+    y_label_df = create_ylabels(df[['Close']].astype(float), y_test_lookahead)
+    OPTION_MAP = {'SMA_10': df_copy['SMA_10'],
+                  'EMA_10': df_copy['EMA_10'],
+                  'bb_upper': df_copy['bb_upper'],
+                  'bb_lower': df_copy['bb_lower'],
+                  'bb_width': df_copy['bb_width'],
                   # 'high': df[['High']],
                   # 'low': df[['Low']],
-                  'volume': df[['Volume']],
-                  'close': df_close[['Close']],
+                  'close': df_copy['Close'],
+                  'volume': df_copy['Volume'],
                   # 'bb_signal': bb_signal,
                   # 'cmf': cmf_vol,
                   # 'obv': obv_vol,
                   # 'rsi': get_rsi(df, length),
                   }
+
+
     for option in options:
         if option in OPTION_MAP:
             list_of_dfs.append(OPTION_MAP[option])
+
     x = pd.concat(list_of_dfs, axis=1)
     x = x.dropna()
     return x, y_label_df

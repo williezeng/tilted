@@ -29,7 +29,7 @@ def parallel_get_technical_indicators_and_buy_sell_dfs(list_of_data_files):
 
 def write_prediction_to_csv(predictions_and_file_path):
     prediction_df, prediction_file_path = predictions_and_file_path
-    prediction_df.to_csv(prediction_file_path)
+    prediction_df.to_parq(prediction_file_path)
 
 
 def save_predictions_and_accuracy():
@@ -52,6 +52,9 @@ def save_predictions_and_accuracy():
         reference_technical_indicator_df.pop('Close')
         model_predictions = pd.DataFrame(model.predict(reference_technical_indicator_df),
                                          index=reference_technical_indicator_df.index, columns=['bs_signal'])
+        import pdb
+        pdb.set_trace()
+
         predictions_and_file_path.append((model_predictions, os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, file_name)))
         accuracy = accuracy_score(reference_buy_sell_df, model_predictions)
         accuracy_list.append(accuracy)
@@ -61,13 +64,13 @@ def save_predictions_and_accuracy():
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         __ = pool.map(write_prediction_to_csv, predictions_and_file_path)
 
-    print('Saving Accuracy')
-    total = sum(accuracy_list)
-    average = total / len(accuracy_list) if accuracy_list else 0
-    print("The average test accuracy is:", average)
-    with open(constants.TESTING_PREDICTION_ACCURACY_FILE, 'w') as file:
-        for accuracy_line in report:
-            file.write(accuracy_line + '\n')
-        file.write(f'average test score {average} \n')
+    # print('Saving Accuracy')
+    # total = sum(accuracy_list)
+    # average = total / len(accuracy_list) if accuracy_list else 0
+    # print("The average test accuracy is:", average)
+    # with open(constants.TESTING_PREDICTION_ACCURACY_FILE, 'w') as file:
+    #     for accuracy_line in report:
+    #         file.write(accuracy_line + '\n')
+    #     file.write(f'average test score {average} \n')
 
     return accuracy_list, report
