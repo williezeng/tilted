@@ -256,11 +256,12 @@ if __name__ == "__main__":
         print("stage 2: Combining Data Done")
     if args['train_all']:
         # shuffle and train on concatenated df
+        # Drop 'close' price before training
         # save model
         print("Stage 3: Training Model")
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
-        rf = RandomForestClassifier(n_estimators=15, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, n_jobs=-1, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
+        rf = RandomForestClassifier(n_estimators=15, max_depth=30, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, n_jobs=-1, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
         x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         x_train.pop('Close')
         rf.fit(x_train, y_train['bs_signal'])

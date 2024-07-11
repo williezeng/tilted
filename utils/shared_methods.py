@@ -52,6 +52,10 @@ def save_predictions_and_accuracy():
         reference_technical_indicator_df.pop('Close')
         model_predictions = pd.DataFrame(model.predict(reference_technical_indicator_df),
                                          index=reference_technical_indicator_df.index, columns=['bs_signal'])
+
+        # we want to add predicted  column to our dataframe
+        # Create classes
+        # instanciate and add strategy and let it rip
         import pdb
         pdb.set_trace()
 
