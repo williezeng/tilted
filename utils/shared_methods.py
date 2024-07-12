@@ -31,7 +31,8 @@ def write_prediction_to_csv(predictions_and_file_path):
     prediction_df, prediction_file_path = predictions_and_file_path
     prediction_df.to_parq(prediction_file_path)
 
-
+import backtrader as bt
+from strategy import AlphaStrategy
 def save_predictions_and_accuracy():
     # get all test data csv data frames
     # sort based on ticker name
@@ -43,16 +44,29 @@ def save_predictions_and_accuracy():
     accuracy_list = []
     report = []
     predictions_and_file_path = []
+    # for a sorted accuracy list
     sorted_results = sorted(results, key=lambda x: x[2])
+    from collections import defaultdict
+    suffix_to_yahoo_data_files = defaultdict()
+    for x in get_absolute_file_paths(constants.YAHOO_DATA_DIR):
+        suffix_to_yahoo_data_files[x.split('/')[-1]] = pd.read_csv(x, index_col=[0], header=[0], skipinitialspace=True)
+
     print('Predicting and calculating accuracy')
     for result in sorted_results:
         model = joblib.load(constants.SAVED_MODEL_FILE_PATH)
         reference_technical_indicator_df, reference_buy_sell_df, test_data_file_path = result
         file_name = test_data_file_path.split("/")[-1]
+        prefix, suffix = file_name.split('_')
         reference_technical_indicator_df.pop('Close')
         model_predictions = pd.DataFrame(model.predict(reference_technical_indicator_df),
                                          index=reference_technical_indicator_df.index, columns=['bs_signal'])
-
+        if suffix in suffix_to_yahoo_data_files:
+            suffix_to_yahoo_data_files[suffix]['bs_signal'] = model_predictions
+            suffix_to_yahoo_data_files[suffix].dropna()
+        else:
+            print(f'suffix {suffix} does not match any filenames in {suffix_to_yahoo_data_files.keys()}')
+        cerebro = bt.Cerebro()
+        cerebro.addstrategy(AlphaStrategy)
         # we want to add predicted  column to our dataframe
         # Create classes
         # instanciate and add strategy and let it rip
