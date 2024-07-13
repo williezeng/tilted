@@ -227,6 +227,7 @@ def build_args():
                         help="specify to see plots of the ytrain ytest ypred generated data")
 
     parser.add_argument('--model_name', action='store_true', default=False, help="define the machine learning model")
+    parser.add_argument('--all', action='store_true', default=False, help='DO ALL STAGES')
     parser.add_argument('--preprocess_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--combine_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--train_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
@@ -243,6 +244,12 @@ if __name__ == "__main__":
     # args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
     args["indicators"] = TECHNICAL_INDICATORS
     print(args["indicators"])
+    if args['all']:
+        args['preprocess_all'] = True
+        args['combine_all'] = True
+        args['train_all'] = True
+        args['predict_all'] = True
+        args['visualize_all'] = True
     if args['preprocess_all']:
         print("stage 1: Preprocessing Data")
         list_of_files_in_yahoo_dir = shared_methods.get_absolute_file_paths(constants.YAHOO_DATA_DIR)

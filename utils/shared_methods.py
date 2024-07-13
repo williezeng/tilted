@@ -37,13 +37,15 @@ def write_prediction_to_csv(predictions_and_file_path):
 
 def report_generator(cerebro_instance, strat_result, total_trades, stock_name_csv):
     backtesting_report = [f"The following transactions show the backtesting results of {stock_name_csv}'s stock:",
-                          'Starting Portfolio Value: %.2f' % cerebro_instance.broker.getvalue(), '',
+                          'Starting Portfolio Value: %.2f' % constants.INITIAL_CAP, '',
                           'Final Portfolio Value: %.2f' % cerebro_instance.broker.getvalue(),
                           'Total number of trades: %s' % total_trades.get('total'),
                           'Total number of closed trades: %s' % total_trades.get('closed'),
                           'Total number of opening trades: %s' % total_trades.get('open'), '']
 
     pnl = strat_result.analyzers.trade_analysis.get_analysis().get('pnl')
+    if not pnl:
+        return backtesting_report
     backtesting_report.append('Gross profit/loss: USD %s' % pnl.get('gross').get('total'))
     backtesting_report.append('Net profit/loss: USD %s' % pnl.get('net').get('total'))
     backtesting_report.append('Paper gain/loss: USD %s' % (
