@@ -1,21 +1,28 @@
 import backtrader as bt
+from backtrader.feeds import PandasData
 
 
 class AlphaStrategy(bt.Strategy):
-    def log(self, txt, dt=None):
-        """ Logging function for this strategy"""
-        dt = dt or self.datas[0].datetime.date(0)
-        print('%s, %s' % (dt.isoformat(), txt))
+    params = (
+        ('equity_pct', 0.9),
+        ('printlog', False),
+    )
 
     def __init__(self):
         # Keep a reference to the "close" line in the data[0] dataseries
         self.dataclose = self.datas[0].close
-        self.datasignal = self.datas[0].openinterest
+        self.bs_signal = self.datas[0].openinterest
 
         # To keep track of pending orders and buy price/commission
         self.order = None
         self.buyprice = None
         self.buycomm = None
+
+    def log(self, txt, dt=None):
+        """ Logging function for this strategy"""
+        if self.params.printlog:
+            dt = dt or self.datas[0].datetime.date(0)
+            print('%s, %s' % (dt.isoformat(), txt))
 
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
@@ -44,12 +51,11 @@ class AlphaStrategy(bt.Strategy):
             return
         available_cash = self.broker.get_cash()
         # buy
-        if self.datasignal[0] == 1:
+        if self.bs_signal[0] == 1:
             position_size = available_cash * self.params.equity_pct
             if not self.position:  # buy if we are not in the market
                 self.order = self.buy(size=position_size / self.data.close[0])
         # sell
-        elif self.datasignal[0] == -1:
+        elif self.bs_signal[0] == -1:
             if self.position:  # sell if we are in the market
                 self.order = self.sell(size=self.position.size)
-

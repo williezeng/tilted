@@ -232,8 +232,8 @@ def build_args():
     parser.add_argument('--train_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--predict_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
-    parser.add_argument('--skip_training_graphs', help='skip training graphs', type=bool, required=False, default=False)
-    parser.add_argument('--skip_testing_graphs', help='skip testing graphs', type=bool, required=False, default=False)
+    parser.add_argument('--skip_training_graphs', help='skip training graphs', action='store_true', default=False)
+    parser.add_argument('--skip_testing_graphs', help='skip testing graphs', action='store_true', default=False)
 
     return vars(parser.parse_args())
 
@@ -262,11 +262,11 @@ if __name__ == "__main__":
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
         rf = RandomForestClassifier(n_estimators=15, max_depth=30, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, n_jobs=-1, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
-        x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
-        x_train.pop('Close')
-        rf.fit(x_train, y_train['bs_signal'])
+        # x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
+        combined_indicators.pop('Close')
+        rf.fit(combined_indicators, combined_buy_sell_signals['bs_signal'])
         joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)
-        print(f'Training accuracy: {rf.score(x_train, y_train)}')
+        print(f'Training accuracy: {rf.score(combined_indicators, combined_buy_sell_signals)}')
         print("Stage 3: Training Model Done")
     if args['predict_all']:
         # Load and Predict on each Test technical indicator DF

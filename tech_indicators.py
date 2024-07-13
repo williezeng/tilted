@@ -116,33 +116,6 @@ def bbands_calculation(data_frame, moving_average, length):
     return
 
 
-
-def bbands_classification(close_prices_data_frame, lower_bb, upper_bb):
-    close_prices_data_frame = close_prices_data_frame.iloc[1:]  # base buy/sell off previous prices -1 len
-    upper_bb, close_prices_data_frame = index_len_resolver(upper_bb, close_prices_data_frame)
-    upper_bb, lower_bb = index_len_resolver(upper_bb, lower_bb)
-    close_prices_df_copy = close_prices_data_frame.copy()
-    bb_signal = pd.DataFrame(index=close_prices_df_copy.index, columns=['bb_signal'])
-    for i in range(1, len(close_prices_df_copy['Close'])):
-        # BUY if dips lower than lower BB
-        if close_prices_df_copy['Close'][i - 1] >= lower_bb[i - 1] and close_prices_df_copy['Close'][i] <= lower_bb[i]:
-            bb_signal['bb_signal'][i] = 1
-        # BUY if rises past lower BB
-        elif close_prices_df_copy['Close'][i - 1] <= lower_bb[i - 1] and close_prices_df_copy['Close'][i] >= lower_bb[i]:
-            bb_signal['bb_signal'][i] = 1
-
-        # SELL if rises above higher BB
-        elif close_prices_df_copy['Close'][i - 1] <= upper_bb[i - 1] and close_prices_df_copy['Close'][i] >= upper_bb[i]:
-            bb_signal['bb_signal'][i] = -1
-        # SELL if dips below higher BB
-        elif close_prices_df_copy['Close'][i - 1] >= upper_bb[i - 1] and close_prices_df_copy['Close'][i] <= upper_bb[i]:
-            bb_signal['bb_signal'][i] = -1
-        else:
-            bb_signal['bb_signal'][i] = 0
-    return bb_signal[1:]
-
-
-
 def index_len_resolver(df1, df2):
     df1_start = datetime.strptime(df1.index[0], '%Y-%m-%d')
     df2_start = datetime.strptime(df2.index[0], '%Y-%m-%d')
@@ -165,7 +138,7 @@ def index_len_resolver(df1, df2):
 
 def get_indicators(df, options, length, y_test_lookahead):
     df_copy = df.copy()
-    df_copy['SMA_10'] = (df_copy['Close'] - df_copy.ta.ema(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['Close']
+    df_copy['SMA_10'] = (df_copy['Close'] - df_copy.ta.sma(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['Close']
     df_copy['EMA_10'] = (df_copy['Close'] - df_copy.ta.ema(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['Close']
     bb_results = df_copy.ta.bbands(length=constants.LONG_TERM_PERIOD).dropna()
     #     lower=BBL_{length}_{std},  mid = BBM_{length}_{std}, upper = BBU_{length}_{std}
