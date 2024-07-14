@@ -1,9 +1,14 @@
-Buy/Sell Threshold 0.0066 within a look ahead day count: 1
+Buy/Sell Threshold 0.005 within a look ahead day count: 1
 Technical Indicators: ['SMA_10', 'EMA_10', 'bb_upper', 'bb_lower', 'bb_width', 'close']
+Model Class Weight: {0: 1, -1: 1, 1: 1}
+--------------------------------------------------
+Highest % gain: ('SMCI.csv', {'final_portfolio_value': 66439.39199852772, 'Percent gain': 564.3939199852772, 'total_trades': 127})
+Lowest % gain: ('EL.csv', {'final_portfolio_value': 3585.2373826554017, 'Percent gain': -64.14762617344599, 'total_trades': 117})
 Number of stocks with a positive gain 255
 Number of stocks with a negative gain 245
-Sum of the Top 100 portfolios: 1666989.8702003155
-Sum of the Bottom 100 portfolios: 677697.0637406347
+Sum of the Top 100 portfolios: 1,666,989.87
+Sum of the Bottom 100 portfolios: 677,697.06
+--------------------------------------------------
 SMCI.csv: {'final_portfolio_value': 66439.39199852772, 'Percent gain': 564.3939199852772, 'total_trades': 127}
 NVDA.csv: {'final_portfolio_value': 42934.0639630182, 'Percent gain': 329.340639630182, 'total_trades': 122}
 FICO.csv: {'final_portfolio_value': 30020.25991070627, 'Percent gain': 200.2025991070627, 'total_trades': 106}

@@ -39,30 +39,29 @@ def write_prediction_to_csv(predictions_and_file_path):
 
 def report_generator(cerebro_instance, strat_result, total_trades, stock_name_csv):
     backtesting_report = [f"The following transactions show the backtesting results of {stock_name_csv}'s stock:",
-                          'Starting Portfolio Value: %.2f' % constants.INITIAL_CAP, '',
-                          'Final Portfolio Value: %.2f' % cerebro_instance.broker.getvalue(),
-                          'Total number of trades: %s' % total_trades.get('total'),
-                          'Total number of closed trades: %s' % total_trades.get('closed'),
-                          'Total number of opening trades: %s' % total_trades.get('open'), '']
-
-    pnl = strat_result.analyzers.trade_analysis.get_analysis().get('pnl')
-    if not pnl:
-        return backtesting_report
-    backtesting_report.append('Gross profit/loss: USD %s' % pnl.get('gross').get('total'))
-    backtesting_report.append('Net profit/loss: USD %s' % pnl.get('net').get('total'))
-    backtesting_report.append('Paper gain/loss: USD %s' % (
-            cerebro_instance.broker.getvalue() - constants.INITIAL_CAP - pnl.get('net').get('total')))
-    backtesting_report.append('Total gain/loss: USD %s' % (cerebro_instance.broker.getvalue() - constants.INITIAL_CAP))
-    backtesting_report.append('')
+                          f'Starting Portfolio Value: {constants.INITIAL_CAP:,.2f}',
+                          f'Final Portfolio Value: {cerebro_instance.broker.getvalue():,.2f}',
+                          f'Total number of trades: {total_trades.get("total"):,}',
+                          f'Total number of closed trades: {total_trades.get("closed")}',
+                          f'Total number of opening trades: {total_trades.get("open")}']
 
     won = strat_result.analyzers.trade_analysis.get_analysis().get('won')
+    if not won:
+        return backtesting_report
     backtesting_report.append(
         "Total winning trades: %s (Amount: USD %s)" % (won.get('total'), won.get('pnl').get('total')))
-
     lost = strat_result.analyzers.trade_analysis.get_analysis().get('lost')
     backtesting_report.append(
         "Total losing trades: %s (Amount: USD %s)" % (lost.get('total'), lost.get('pnl').get('total')))
 
+    pnl = strat_result.analyzers.trade_analysis.get_analysis().get('pnl')
+    if not pnl:
+        return backtesting_report
+    backtesting_report.append(f'Gross profit/loss: USD {pnl.get("gross").get("total"):,.2f}')
+    backtesting_report.append(f'Net profit/loss: USD {pnl.get("net").get("total"):,.2f}')
+    backtesting_report.append(f'Unrealized gain/loss: USD {cerebro_instance.broker.getvalue() - constants.INITIAL_CAP - pnl.get("net").get("total"):,.2f}')
+    backtesting_report.append(f'Total gain/loss: USD {cerebro_instance.broker.getvalue() - constants.INITIAL_CAP:,.2f}')
+    backtesting_report.append('')
     backtesting_report.append('Sharpe Ratio: %s' % strat_result.analyzers.mysharpe.get_analysis().get('sharperatio', ''))
 
     pyfoliozer = strat_result.analyzers.getbyname('pyfolio')
@@ -78,7 +77,7 @@ def report_generator(cerebro_instance, strat_result, total_trades, stock_name_cs
     return backtesting_report
 
 
-def save_predictions_and_accuracy():
+def save_predictions_and_accuracy(dir_name):
     # get all test data csv data frames
     # sort based on ticker name
     # remove 'close' price and predict and calculate accuracy
@@ -137,41 +136,30 @@ def save_predictions_and_accuracy():
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         __ = pool.map(write_prediction_to_csv, predictions_and_file_path)
 
-    count = 1
-    output_file_path = constants.BACKTESTING_RESULT_FILE_NAME.format(count)
-    # Check if the file already exists and increment the count if it does
-    while os.path.exists(output_file_path):
-        count += 1
-        output_file_path = constants.BACKTESTING_RESULT_FILE_NAME.format(count)
-
-    # Join the list into a single string and write to the file
-    with open(output_file_path, 'w') as file:
+    with open(os.path.join(dir_name, constants.BACKTESTING_RESULT_FILE_NAME), 'w') as file:
         file.write('\n'.join(backtesting_results))
 
     return stock_name_to_portfolio_information
 
 
-def summary_report(stock_portfolio_information, tag):
+def summary_report(stock_portfolio_information, dir_name):
     sorted_portfolio_info = sorted(stock_portfolio_information.items(),
                                    key=lambda item: item[1]['final_portfolio_value'],
                                    reverse=True)
     report_list = [
         f"Buy/Sell Threshold {constants.BUY_THRESHOLD} within a look ahead day count: {constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL}",
         f"Technical Indicators: {constants.TECHNICAL_INDICATORS}",
+        f"Model Class Weight: {constants.RANDOM_FOREST_CLASS_WEIGHT}",
+        f"{'-' * 50}",
         f"Highest % gain: {sorted_portfolio_info[0]}",
         f"Lowest % gain: {sorted_portfolio_info[-1]}",
         f"Number of stocks with a positive gain {sum(1 for name, info in sorted_portfolio_info if info['final_portfolio_value'] > constants.INITIAL_CAP)}",
         f"Number of stocks with a negative gain {sum(1 for name, info in sorted_portfolio_info if info['final_portfolio_value'] < constants.INITIAL_CAP)}",
-        f"Sum of the Top 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_portfolio_info[0:100])}",
-        f"Sum of the Bottom 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_portfolio_info[-100:])}",
+        f"Sum of the Top 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_portfolio_info[0:100]):,.2f}",
+        f"Sum of the Bottom 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_portfolio_info[-100:]):,.2f}",
         f"{'-' * 50}"
     ]
     print("\n".join(report_list))
     report_list.extend([f"{name}: {info}" for name, info in sorted_portfolio_info])
-    count = 1
-    output_file_path = constants.SUMMARY_REPORT_FILE_NAME.format(tag)
-    if os.path.exists(output_file_path):
-        count += 1
-        output_file_path = constants.SUMMARY_REPORT_FILE_NAME.format(tag)
-    with open(output_file_path, 'w') as file:
+    with open(os.path.join(dir_name, constants.SUMMARY_REPORT_FILE_NAME), 'w') as file:
         file.write('\n'.join(report_list))

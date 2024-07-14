@@ -241,13 +241,22 @@ def build_args():
     return vars(parser.parse_args())
 
 
+def create_directory_with_tag(name_of_directory):
+    try:
+        os.makedirs(name_of_directory)
+        print(f"Directory '{name_of_directory}' created successfully.")
+    except FileExistsError:
+        raise FileExistsError(f"Directory '{name_of_directory}' already exists.")
+    except Exception as e:
+        raise e
+
+
 if __name__ == "__main__":
     args = build_args()
-    # args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
     args["indicators"] = TECHNICAL_INDICATORS
     print(args["indicators"])
-    if any(os.path.exists(file.format(args['tag'])) for file in constants.GENERATED_REPORTS):
-        raise Exception(f"Files with tag: {args['tag']} already exist.")
+    directory_name = constants.FULL_REPORT_DIR.format(args['tag'])
+    create_directory_with_tag(directory_name)
     if args['all']:
         args['preprocess_all'] = True
         args['combine_all'] = True
@@ -269,7 +278,7 @@ if __name__ == "__main__":
         print("Stage 2: Training Model")
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
-        rf = RandomForestClassifier(n_estimators=15, max_depth=30, n_jobs=-1, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
+        rf = RandomForestClassifier(n_estimators=15, max_depth=30, n_jobs=-1, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
         # x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         combined_indicators.pop('Close')
         rf.fit(combined_indicators, combined_buy_sell_signals['bs_signal'])
@@ -280,7 +289,7 @@ if __name__ == "__main__":
         # Load and Predict on each Test technical indicator DF
         # Save predictions and compare with correct test buy_sell df
         print("Stage 3: Testing Model")
-        shared_methods.summary_report(shared_methods.save_predictions_and_accuracy())
+        shared_methods.summary_report(shared_methods.save_predictions_and_accuracy(directory_name), directory_name)
         print("Stage 3: Testing Model Done")
 
     if args['visualize_all']:
