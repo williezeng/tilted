@@ -1,14 +1,13 @@
 import numpy as np
 from datetime import datetime
 
-import pandas
 import pandas as pd
 import matplotlib
 from utils import constants
 from utils.constants import BUY, SELL, HOLD
 
 matplotlib.use('TkAgg')
-TECHNICAL_INDICATORS = ['SMA_10', 'EMA_10', 'bb_upper', 'bb_lower', 'bb_width', 'close']
+
 # 'bb_signal,  'obv', 'rsi'' is faulty
 #
 
@@ -149,7 +148,7 @@ def get_indicators(df, options, length, y_test_lookahead):
     df_copy['bb_width'] = (df_copy['BBU_10_2.0'] - df_copy['BBL_10_2.0']) / df_copy['Close']
     list_of_dfs = []
     # averages are calculated given n previous days of information, drop the NAs
-    y_label_df = create_ylabels(df[['Close']].astype(float), y_test_lookahead)
+    y_label_df = create_ylabels(df[['Close']].astype(float))
     OPTION_MAP = {'SMA_10': df_copy['SMA_10'],
                   'EMA_10': df_copy['EMA_10'],
                   'bb_upper': df_copy['bb_upper'],
@@ -185,7 +184,7 @@ def normalize_indicators(dfs):
     return pd.concat(normalized_df, axis=1)
 
 
-def create_ylabels(df, lookahead_days):
+def create_ylabels(df):
     """
     Creates the Y labels (Buy/Sell/Hold) for training
     :param df:
@@ -198,8 +197,8 @@ def create_ylabels(df, lookahead_days):
     trainY = []
     df_copy = df.copy()
     closed_price_series = df_copy['Close']
-    for i in range(closed_price_series.shape[0] - lookahead_days):
-        ratio = (closed_price_series[i + lookahead_days] - closed_price_series[i]) / closed_price_series[i]
+    for i in range(closed_price_series.shape[0] - constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL):
+        ratio = (closed_price_series[i + constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL] - closed_price_series[i]) / closed_price_series[i]
         # a larger buy threshold will result to fewer trades.
         if ratio > constants.BUY_THRESHOLD:
             trainY.append(BUY)
@@ -207,7 +206,7 @@ def create_ylabels(df, lookahead_days):
             trainY.append(SELL)
         else:
             trainY.append(HOLD)
-    df_copy = df_copy[:-lookahead_days]
+    df_copy = df_copy[:-constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL]
     df_copy['bs_signal'] = trainY
     return df_copy[['bs_signal']]
 

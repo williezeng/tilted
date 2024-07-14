@@ -9,6 +9,8 @@ import backtrader as bt
 from strategy import AlphaStrategy
 import pyfolio as pf
 import matplotlib.pyplot as plt
+from collections import defaultdict
+
 
 def get_absolute_file_paths(data_dir):
     file_paths = []
@@ -82,18 +84,14 @@ def save_predictions_and_accuracy():
     # remove 'close' price and predict and calculate accuracy
     # save model
     # save accuracy
-
     results = parallel_get_technical_indicators_and_buy_sell_dfs(get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH))
-    accuracy_list = []
-    report = []
     predictions_and_file_path = []
     # for a sorted accuracy list
     sorted_results = sorted(results, key=lambda x: x[2])
-    from collections import defaultdict
     suffix_to_yahoo_data_files = defaultdict()
     for x in get_absolute_file_paths(constants.YAHOO_DATA_DIR):
         suffix_to_yahoo_data_files[x.split('/')[-1]] = pd.read_csv(x, index_col=[0], header=[0], skipinitialspace=True, parse_dates=True)
-
+    stock_name_to_portfolio_information = {}
     backtesting_results = []
     for result in tqdm(sorted_results, desc="Predicting and Running Simulation"):
         model = joblib.load(constants.SAVED_MODEL_FILE_PATH)
@@ -128,30 +126,52 @@ def save_predictions_and_accuracy():
         total = strat.analyzers.trade_analysis.get_analysis().get('total')
         if total.get('total') == 0:
             continue
+        final_portfolio_value = strat.broker.getvalue()
+        stock_name_to_portfolio_information[suffix] = {'final_portfolio_value': final_portfolio_value,
+                                                       'Percent gain': 100 * (final_portfolio_value - constants.INITIAL_CAP)/constants.INITIAL_CAP,
+                                                       'total_trades': total.get('total')}
         backtesting_results.extend(report_generator(cerebro, strat, total, suffix))
-
         predictions_and_file_path.append((model_predictions, os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, file_name)))
-        # accuracy = accuracy_score(reference_buy_sell_df, model_predictions)
-        # accuracy_list.append(accuracy)
-        # report.append(f"{accuracy} for {file_name}")
     print('Saving model')
 
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         __ = pool.map(write_prediction_to_csv, predictions_and_file_path)
 
-    output_file_path = 'backtesting_results.txt'
+    count = 1
+    output_file_path = constants.BACKTESTING_RESULT_FILE_NAME.format(count)
+    # Check if the file already exists and increment the count if it does
+    while os.path.exists(output_file_path):
+        count += 1
+        output_file_path = constants.BACKTESTING_RESULT_FILE_NAME.format(count)
 
     # Join the list into a single string and write to the file
     with open(output_file_path, 'w') as file:
         file.write('\n'.join(backtesting_results))
 
-    # print('Saving Accuracy')
-    # total = sum(accuracy_list)
-    # average = total / len(accuracy_list) if accuracy_list else 0
-    # print("The average test accuracy is:", average)
-    # with open(constants.TESTING_PREDICTION_ACCURACY_FILE, 'w') as file:
-    #     for accuracy_line in report:
-    #         file.write(accuracy_line + '\n')
-    #     file.write(f'average test score {average} \n')
+    return stock_name_to_portfolio_information
 
-    return accuracy_list, report
+
+def summary_report(stock_portfolio_information, tag):
+    sorted_portfolio_info = sorted(stock_portfolio_information.items(),
+                                   key=lambda item: item[1]['final_portfolio_value'],
+                                   reverse=True)
+    report_list = [
+        f"Buy/Sell Threshold {constants.BUY_THRESHOLD} within a look ahead day count: {constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL}",
+        f"Technical Indicators: {constants.TECHNICAL_INDICATORS}",
+        f"Highest % gain: {sorted_portfolio_info[0]}",
+        f"Lowest % gain: {sorted_portfolio_info[-1]}",
+        f"Number of stocks with a positive gain {sum(1 for name, info in sorted_portfolio_info if info['final_portfolio_value'] > constants.INITIAL_CAP)}",
+        f"Number of stocks with a negative gain {sum(1 for name, info in sorted_portfolio_info if info['final_portfolio_value'] < constants.INITIAL_CAP)}",
+        f"Sum of the Top 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_portfolio_info[0:100])}",
+        f"Sum of the Bottom 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_portfolio_info[-100:])}",
+        f"{'-' * 50}"
+    ]
+    print("\n".join(report_list))
+    report_list.extend([f"{name}: {info}" for name, info in sorted_portfolio_info])
+    count = 1
+    output_file_path = constants.SUMMARY_REPORT_FILE_NAME.format(tag)
+    if os.path.exists(output_file_path):
+        count += 1
+        output_file_path = constants.SUMMARY_REPORT_FILE_NAME.format(tag)
+    with open(output_file_path, 'w') as file:
+        file.write('\n'.join(report_list))

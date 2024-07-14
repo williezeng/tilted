@@ -13,8 +13,8 @@ from itertools import combinations
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import shuffle
-from utils.constants import TRAINING_DATA_DIR_PATH, TESTING_DATA_DIR_PATH
-from tech_indicators import TECHNICAL_INDICATORS, setup_data
+from utils.constants import TRAINING_DATA_DIR_PATH, TESTING_DATA_DIR_PATH, TECHNICAL_INDICATORS
+from tech_indicators import setup_data
 from utils import constants, trading_logger, shared_methods
 from knn import KNN
 from dt import DecisionTree
@@ -227,6 +227,7 @@ def build_args():
                         help="specify to see plots of the ytrain ytest ypred generated data")
 
     parser.add_argument('--model_name', action='store_true', default=False, help="define the machine learning model")
+    parser.add_argument('--tag', required=True, type=str, help='tag this run with a string')
     parser.add_argument('--all', action='store_true', default=False, help='DO ALL STAGES')
     parser.add_argument('--preprocess_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--combine_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
@@ -235,6 +236,7 @@ def build_args():
     parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--skip_training_graphs', help='skip training graphs', action='store_true', default=False)
     parser.add_argument('--skip_testing_graphs', help='skip testing graphs', action='store_true', default=False)
+    parser.add_argument('--skip_prediction_graphs', help='skip prediction graphs', action='store_true', default=False)
 
     return vars(parser.parse_args())
 
@@ -244,6 +246,8 @@ if __name__ == "__main__":
     # args["indicators"] = [s.strip() for s in args["indicators"].split(",")]
     args["indicators"] = TECHNICAL_INDICATORS
     print(args["indicators"])
+    if any(os.path.exists(file.format(args['tag'])) for file in constants.GENERATED_REPORTS):
+        raise Exception(f"Files with tag: {args['tag']} already exist.")
     if args['all']:
         args['preprocess_all'] = True
         args['combine_all'] = True
@@ -256,31 +260,28 @@ if __name__ == "__main__":
         # parallel_data_splitter(list_of_files_in_yahoo_dir[0])
         with multiprocessing.Pool(processes=constants.MULTIPROCESS_CPU_NUMBER) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
-        print("stage 1: Preprocessing Data Done")
-    if args['combine_all']:
-        print("stage 2: Combining Data")
         combine_data(shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH))
-        print("stage 2: Combining Data Done")
+        print("stage 1: Preprocessing Data Done")
     if args['train_all']:
         # shuffle and train on concatenated df
         # Drop 'close' price before training
         # save model
-        print("Stage 3: Training Model")
+        print("Stage 2: Training Model")
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
-        rf = RandomForestClassifier(n_estimators=15, max_depth=30, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, n_jobs=-1, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
+        rf = RandomForestClassifier(n_estimators=15, max_depth=30, n_jobs=-1, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
         # x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         combined_indicators.pop('Close')
         rf.fit(combined_indicators, combined_buy_sell_signals['bs_signal'])
         joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)
         print(f'Training accuracy: {rf.score(combined_indicators, combined_buy_sell_signals)}')
-        print("Stage 3: Training Model Done")
+        print("Stage 2: Training Model Done")
     if args['predict_all']:
         # Load and Predict on each Test technical indicator DF
         # Save predictions and compare with correct test buy_sell df
-        print("Stage 4: Testing Model")
-        shared_methods.save_predictions_and_accuracy()
-        print("Stage 4: Testing Model Done")
+        print("Stage 3: Testing Model")
+        shared_methods.summary_report(shared_methods.save_predictions_and_accuracy())
+        print("Stage 3: Testing Model Done")
 
     if args['visualize_all']:
         print("Visualizing Data")
@@ -292,9 +293,10 @@ if __name__ == "__main__":
             graphs.visualize_data(data_map)
         # Todo: guarantee that the file names are equivalently in the same order in the two below data sets
         # Todo: then we can do one index for loop instead of O(n^2)
-        data_map = {
-            'predictions_buy_sell_files': shared_methods.get_absolute_file_paths(constants.TESTING_PREDICTION_DATA_DIR_PATH),
-            'predictions_technical_indicator_files': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)
-        }
-        graphs.visualize_data(data_map)
+        if not args['skip_prediction_graphs']:
+            data_map = {
+                'predictions_buy_sell_files': shared_methods.get_absolute_file_paths(constants.TESTING_PREDICTION_DATA_DIR_PATH),
+                'predictions_technical_indicator_files': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)
+            }
+            graphs.visualize_data(data_map)
         print("Visualizing Data Done")

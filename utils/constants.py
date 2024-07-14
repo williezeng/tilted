@@ -4,6 +4,9 @@ ETHEREUM_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', 'ETH-USD')
 STOCK_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', '{string_name}')]
 BANNED_TICKERS = ['CEG', 'AMCR', 'HWM'] # These companies did not exist on the starting date, therefore their data is shorter
 
+TECHNICAL_INDICATORS = ['SMA_10', 'EMA_10', 'bb_upper', 'bb_lower', 'bb_width', 'close']
+
+
 YAHOO_DATA_DIR = 'yahoo_data'
 STOCK_DATA_DIR = 'data'
 
@@ -30,6 +33,10 @@ TESTING_PREDICTION_GRAPHS_DIR_PATH = os.path.join(TESTING_PREDICTION_DIR_PATH, '
 
 TESTING_PREDICTION_ACCURACY_FILE = os.path.join(TESTING_PREDICTION_ACCURACY_DIR_PATH, f'accuracy.txt')
 
+BACKTESTING_RESULT_FILE_NAME = 'backtesting_results_{}.txt'
+SUMMARY_REPORT_FILE_NAME = "summary_report_{}.txt"
+GENERATED_REPORTS = [BACKTESTING_RESULT_FILE_NAME, SUMMARY_REPORT_FILE_NAME]
+
 MULTIPROCESS_CPU_NUMBER = 4
 
 SHUFFLE_RANDOM_STATE = 63
@@ -38,9 +45,10 @@ RANDOM_FOREST_RANDOM_STATE = 63
 RANDOM_FOREST_CLASS_WEIGHT = {0: 1, -1: 7, 1: 7}
 
 # Threshold needs to be higher than trade impact + commission
-BUY_THRESHOLD = 0.05
+# threshold to days = 0.01:2
+BUY_THRESHOLD = 0.0066
 SELL_THRESHOLD = -BUY_THRESHOLD
-
+LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL = 1
 
 LONG_TERM_PERIOD = 10
 BUY = 1
