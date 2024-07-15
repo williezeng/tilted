@@ -8,79 +8,9 @@ from utils.constants import BUY, SELL, HOLD
 
 matplotlib.use('TkAgg')
 
-# 'bb_signal,  'obv', 'rsi'' is faulty
-#
-
-
 # TODO:  correlation, relative strength index (RSI), the difference between the open price of yesterday and today, difference close price of yesterday
 
 # TODO: CREATE STRATEGY: SMA + BOELI + MACD:
-# # Create a new DataFrame 'data' with the 'Close' column from 'data_frame'
-# data = pd.DataFrame()
-# data['Close'] = data_frame['Close']
-#
-# # Calculate technical indicators
-# data['EMA50'] = data['Close'].ta.ema(length=50).dropna()
-# data['EMA200'] = data['Close'].ta.ema(length=200).dropna()
-# data['MACD'] = data['Close'].ta.macd().dropna()['MACD_12_26_9']
-# data['RSI'] = data['Close'].ta.rsi(length=14).dropna()
-#
-# # Drop NaN values that result from indicator calculation
-# data = data.dropna()
-#
-# # Signal generation based on combined indicators
-# data['Signal'] = 0
-#
-# # Buy signal: EMA50 > EMA200, MACD > 0, RSI < 70
-# data.loc[(data['EMA50'] > data['EMA200']) & (data['MACD'] > 0) & (data['RSI'] < 70), 'Signal'] = 1
-#
-# # Sell signal: EMA50 < EMA200, MACD < 0, RSI > 30
-# data.loc[(data['EMA50'] < data['EMA200']) & (data['MACD'] < 0) & (data['RSI'] > 30), 'Signal'] = -1
-#
-# # Generate Position column to reflect holding periods
-# data['Position'] = data['Signal']
-#
-# # Print the DataFrame with signals
-# print(data.tail())
-#
-# # Plotting
-# plt.figure(figsize=(14, 7))
-# plt.plot(data['Close'], label='Close Price', alpha=0.35)
-# plt.plot(data['EMA50'], label='50-Day EMA', alpha=0.75)
-# plt.plot(data['EMA200'], label='200-Day EMA', alpha=0.75)
-#
-# # Plot buy signals
-# plt.scatter(data.index, data['Close'], c=np.where(data['Position'] == 1, 'green', np.nan), label='Buy Signal', marker='^', alpha=1.0)
-#
-# # Plot sell signals
-# plt.scatter(data.index, data['Close'], c=np.where(data['Position'] == -1, 'orange', np.nan), label='Sell Signal', marker='v', alpha=1.0)
-#
-# plt.title('Entry and Exit Signals using EMA, MACD, and RSI')
-# plt.legend()
-# plt.show()
-
-def moving_sma(data_frame):
-    return data_frame
-
-
-def moving_ema(data_frame):
-
-    #
-    # data['Signal'] = 0
-    #
-    # # Generate signals for crossovers
-    # data['Signal'] = np.where(
-    #     (data['Close'] > data['Long_EMA']) & (data['Close'].shift(1) <= data['Long_EMA'].shift(1)), 1,
-    #     np.where((data['Close'] < data['Long_EMA']) & (data['Close'].shift(1) >= data['Long_EMA'].shift(1)), -1,
-    #              0)
-    # )
-    #
-    # plt = create_stock_graph(data['Close'], data['Signal'])
-    # plt.plot(list(data.index), data['Long_EMA'], label='Long_EMA')
-    # plt.legend()
-    # plt.show()
-    return data_frame['Long_EMA']
-
 
 def get_obv_vol(data_frame):
     dataframe_copy = data_frame.copy()
@@ -116,23 +46,53 @@ def bbands_calculation(data_frame, moving_average, length):
 
 
 def index_len_resolver(df1, df2):
-    df1_start = datetime.strptime(df1.index[0], '%Y-%m-%d')
-    df2_start = datetime.strptime(df2.index[0], '%Y-%m-%d')
-    diff = (df2_start - df1_start).days
-    if diff > 0:
-        df1 = df1[df2.index[0]:]
-    elif diff < 0:
-        df2 = df2[df1.index[0]:]
+    # Ensure the indices are datetime
+    if not isinstance(df1.index, pd.DatetimeIndex):
+        df1.index = pd.to_datetime(df1.index, format='%Y-%m-%d')
+    if not isinstance(df2.index, pd.DatetimeIndex):
+        df2.index = pd.to_datetime(df2.index, format='%Y-%m-%d')
 
-    df1_end = datetime.strptime(df1.index[-1], '%Y-%m-%d')
-    df2_end = datetime.strptime(df2.index[-1], '%Y-%m-%d')
-    diff = (df2_end - df1_end).days
+    # Find the overlapping date range
+    start_date = max(df1.index[0], df2.index[0])
+    end_date = min(df1.index[-1], df2.index[-1])
 
-    if diff > 0:
-        df2 = df2[:df1.index[-1]]
-    elif diff < 0:
-        df1 = df1[:df2.index[-1]]
+    # Slice the dataframes to the overlapping date range
+    df1 = df1[start_date:end_date]
+    df2 = df2[start_date:end_date]
     return df1, df2
+
+
+def calculate_vwap(df, window=10):
+    """
+    Calculate the VWAP for a given window.
+
+    Parameters:
+    df (pd.DataFrame): Dataframe containing 'close', 'volume', and optionally 'high' and 'low' columns.
+    window (int): Number of days for the VWAP calculation.
+
+    Returns:
+    pd.Series: VWAP values.
+    """
+    # Ensure the dataframe contains the required columns
+    if not {'Close', 'Volume'}.issubset(df.columns):
+        raise ValueError("DataFrame must contain 'close' and 'volume' columns.")
+
+    # Calculate the typical price
+    if {'High', 'Low'}.issubset(df.columns):
+        typical_price = (df['High'] + df['Low'] + df['Close']) / 3
+    else:
+        typical_price = df['Close']
+
+    # Calculate the cumulative typical price * volume
+    cumulative_tpv = (typical_price * df['Volume']).cumsum()
+
+    # Calculate the cumulative volume
+    cumulative_volume = df['Volume'].cumsum()
+
+    # Calculate VWAP
+    vwap = cumulative_tpv / cumulative_volume
+
+    return vwap
 
 
 def get_indicators(df, options, length, y_test_lookahead):
@@ -146,6 +106,9 @@ def get_indicators(df, options, length, y_test_lookahead):
     df_copy['bb_upper'] = (df_copy['BBU_10_2.0'] - df_copy['Close']) / df_copy['Close']
     df_copy['bb_lower'] = (df_copy['BBL_10_2.0'] - df_copy['Close']) / df_copy['Close']
     df_copy['bb_width'] = (df_copy['BBU_10_2.0'] - df_copy['BBL_10_2.0']) / df_copy['Close']
+    df_copy['VWAP'] = calculate_vwap(df_copy)
+    df_copy['VWMA_10'] = (df_copy['VWAP'] - df_copy.ta.vwma(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['VWAP']
+    df_copy['VWAP_signal'] = df_copy.apply(lambda row: constants.BUY if row['Close'] < row['VWAP'] else constants.SELL if row['Close'] > row['VWAP'] else constants.HOLD, axis=1)
     list_of_dfs = []
     # averages are calculated given n previous days of information, drop the NAs
     y_label_df = create_ylabels(df[['Close']].astype(float))
@@ -154,17 +117,16 @@ def get_indicators(df, options, length, y_test_lookahead):
                   'bb_upper': df_copy['bb_upper'],
                   'bb_lower': df_copy['bb_lower'],
                   'bb_width': df_copy['bb_width'],
-                  # 'high': df[['High']],
-                  # 'low': df[['Low']],
-                  'close': df_copy['Close'],
-                  'volume': df_copy['Volume'],
+                  'VWMA_10': df_copy['VWMA_10'],
+                  'VWAP': df_copy['VWAP'],
+                  'VWAP_signal': df_copy['VWAP_signal'],
+                  'Close': df_copy['Close'],
+                  # 'volume': df_copy['Volume'],
                   # 'bb_signal': bb_signal,
                   # 'cmf': cmf_vol,
                   # 'obv': obv_vol,
                   # 'rsi': get_rsi(df, length),
                   }
-
-
     for option in options:
         if option in OPTION_MAP:
             list_of_dfs.append(OPTION_MAP[option])

@@ -19,7 +19,7 @@ from utils import constants, trading_logger, shared_methods
 from knn import KNN
 from dt import DecisionTree
 from rf import RandomForest
-
+from datetime import datetime
 
 NAME_TO_MODEL = {
     'knn': KNN,
@@ -174,9 +174,10 @@ def run_models(arguments, df_ticker):
     print(counts_df)
 
 
-def parallel_data_splitter(file_path):
+def parallel_data_splitter(tuple_arg):
     # The data concatenated and saved is not shuffled for bookkeeping purposes
     # The data is shuffled right before training
+    index, file_path = tuple_arg
     file_name = file_path.split("/")[-1]
     stock_df = pd.read_csv(file_path, index_col=[0], header=[0], skipinitialspace=True)
     stock_df.name = file_name
@@ -186,7 +187,7 @@ def parallel_data_splitter(file_path):
         pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(TRAINING_DATA_DIR_PATH, f'training_{file_name}'))
         pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(TESTING_DATA_DIR_PATH, f'testing_{file_name}'))
     except Exception as e:
-        print(f"Failed to process {file_name}: {e}")
+        print(f"Failed to process {index}_{file_name}: {e}")
 
 
 def combine_data(data_files_map):
@@ -255,8 +256,6 @@ if __name__ == "__main__":
     args = build_args()
     args["indicators"] = TECHNICAL_INDICATORS
     print(args["indicators"])
-    directory_name = constants.FULL_REPORT_DIR.format(args['tag'])
-    create_directory_with_tag(directory_name)
     if args['all']:
         args['preprocess_all'] = True
         args['combine_all'] = True
@@ -265,8 +264,7 @@ if __name__ == "__main__":
         args['visualize_all'] = True
     if args['preprocess_all']:
         print("stage 1: Preprocessing Data")
-        list_of_files_in_yahoo_dir = shared_methods.get_absolute_file_paths(constants.YAHOO_DATA_DIR)
-        # parallel_data_splitter(list_of_files_in_yahoo_dir[0])
+        list_of_files_in_yahoo_dir = [(index, file_path) for index, file_path in enumerate(shared_methods.get_absolute_file_paths(constants.YAHOO_DATA_DIR))]
         with multiprocessing.Pool(processes=constants.MULTIPROCESS_CPU_NUMBER) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
         combine_data(shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH))
@@ -289,9 +287,13 @@ if __name__ == "__main__":
         # Load and Predict on each Test technical indicator DF
         # Save predictions and compare with correct test buy_sell df
         print("Stage 3: Testing Model")
+        # Get current date and time
+        now = datetime.now()
+        short_date_time = now.strftime('%y%m%d_%H%M')
+        directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
+        create_directory_with_tag(directory_name)
         shared_methods.summary_report(shared_methods.save_predictions_and_accuracy(directory_name), directory_name)
         print("Stage 3: Testing Model Done")
-
     if args['visualize_all']:
         print("Visualizing Data")
         if not args['skip_training_graphs']:
