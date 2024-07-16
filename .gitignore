@@ -29,3 +29,5 @@ training/graphs/*
 !training/combined_data/
 !training/data/
 !training/graphs/
+
+reports/*/*.png

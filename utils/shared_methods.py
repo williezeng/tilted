@@ -10,6 +10,7 @@ from strategy import AlphaStrategy
 import pyfolio as pf
 import matplotlib.pyplot as plt
 from collections import defaultdict
+import yfinance as yf
 
 
 def get_absolute_file_paths(data_dir):
@@ -37,8 +38,8 @@ def write_prediction_to_csv(predictions_and_file_path):
     prediction_df.to_csv(prediction_file_path)
 
 
-def report_generator(cerebro_instance, strat_result, total_trades, stock_name_csv):
-    backtesting_report = [f"The following transactions show the backtesting results of {stock_name_csv}'s stock:",
+def report_generator(cerebro_instance, strat_result, total_trades, stock_name):
+    backtesting_report = [f"The following transactions show the backtesting results of {stock_name}'s stock:",
                           f'Starting Portfolio Value: {constants.INITIAL_CAP:,.2f}',
                           f'Final Portfolio Value: {cerebro_instance.broker.getvalue():,.2f}',
                           f'Total number of trades: {total_trades.get("total"):,}',
@@ -64,11 +65,7 @@ def report_generator(cerebro_instance, strat_result, total_trades, stock_name_cs
     backtesting_report.append('')
     backtesting_report.append('Sharpe Ratio: %s' % strat_result.analyzers.mysharpe.get_analysis().get('sharperatio', ''))
 
-    pyfoliozer = strat_result.analyzers.getbyname('pyfolio')
 
-    returns, positions, transactions, gross_lev = pyfoliozer.get_pf_items()
-    # returns.index = returns.index.tz_convert('UTC')  # Convert to timezone-naive
-    returns.name = 'Strategy'
     # backtesting_report.append(pf.show_perf_stats(returns, positions=positions, transactions=transactions, return_df=True))
     # pf.create_position_tear_sheet(returns, positions)
     # plt.savefig('position_tear_sheet.png')
@@ -106,6 +103,7 @@ def save_predictions_and_accuracy(dir_name):
         else:
             print(f'suffix {suffix} does not match any filenames in {suffix_to_yahoo_data_files.keys()}')
             continue
+        ticker_name = suffix.split('.csv')[0]
         cerebro = bt.Cerebro()
         clean_target_df.pop('Adj Close')
         data = bt.feeds.PandasDirectData(dataname=clean_target_df)
@@ -121,24 +119,32 @@ def save_predictions_and_accuracy(dir_name):
 
         results = cerebro.run()
         strat = results[0]
-
         total = strat.analyzers.trade_analysis.get_analysis().get('total')
         if total.get('total') == 0:
             continue
         final_portfolio_value = strat.broker.getvalue()
-        stock_name_to_portfolio_information[suffix] = {'final_portfolio_value': final_portfolio_value,
-                                                       'Percent gain': 100 * (final_portfolio_value - constants.INITIAL_CAP)/constants.INITIAL_CAP,
-                                                       'total_trades': total.get('total')}
-        backtesting_results.extend(report_generator(cerebro, strat, total, suffix))
-        predictions_and_file_path.append((model_predictions, os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, file_name)))
-    print('Saving model')
+        stock_name_to_portfolio_information[ticker_name] = {'final_portfolio_value': final_portfolio_value, 'Percent gain': 100 * (final_portfolio_value - constants.INITIAL_CAP)/constants.INITIAL_CAP, 'total_trades': total.get('total')}
+        backtesting_results.extend(report_generator(cerebro, strat, total, ticker_name))
 
+        # compare with benchmark
+        benchmark = yf.download('^GSPC', start=model_predictions.index[0], end=model_predictions.index[-1])['Close']
+        benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
+        pyfoliozer = strat.analyzers.getbyname('pyfolio')
+        returns, positions, transactions, gross_lev = pyfoliozer.get_pf_items()
+        returns.index = returns.index.tz_convert('UTC')  # Convert to timezone-naive
+        df = returns.to_frame('Strategy').join(benchmark.to_frame('Benchmark (S&P 500)'))
+        fig = plt.figure(figsize=(15, 5))
+        pf.plot_rolling_returns(df['Strategy'], factor_returns=df['Benchmark (S&P 500)'])
+        plt.title(f'{ticker_name} Cumulative Returns: Strategy vs. Benchmark')
+        fig.savefig(os.path.join(dir_name, f'{ticker_name}_graphs.png'))
+        plt.close('all')
+        predictions_and_file_path.append((model_predictions, os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, file_name)))
+
+    print('Saving model')
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         __ = pool.map(write_prediction_to_csv, predictions_and_file_path)
-
     with open(os.path.join(dir_name, constants.BACKTESTING_RESULT_FILE_NAME), 'w') as file:
         file.write('\n'.join(backtesting_results))
-
     return stock_name_to_portfolio_information
 
 
