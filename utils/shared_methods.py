@@ -94,7 +94,7 @@ def save_predictions_and_accuracy(dir_name):
         reference_technical_indicator_df, reference_buy_sell_df, test_data_file_path = result
         file_name = test_data_file_path.split("/")[-1]
         prefix, suffix = file_name.split('_')
-        reference_technical_indicator_df.pop('Close')
+        stock_close_prices = reference_technical_indicator_df.pop('Close')
         model_predictions = pd.DataFrame(model.predict(reference_technical_indicator_df),
                                          index=reference_technical_indicator_df.index, columns=['bs_signal'])
         if suffix in suffix_to_yahoo_data_files:
@@ -104,40 +104,33 @@ def save_predictions_and_accuracy(dir_name):
             print(f'suffix {suffix} does not match any filenames in {suffix_to_yahoo_data_files.keys()}')
             continue
         ticker_name = suffix.split('.csv')[0]
-        cerebro = bt.Cerebro()
+        alpha_strategy = bt.Cerebro()
         clean_target_df.pop('Adj Close')
         data = bt.feeds.PandasDirectData(dataname=clean_target_df)
-        cerebro.adddata(data)
-        cerebro.broker.setcash(constants.INITIAL_CAP)
-        cerebro.addstrategy(AlphaStrategy, printlog=False, equity_pct=0.9)
-        cerebro.broker.setcommission(commission=0.00)
-        # Analyzer
-        cerebro.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
-        cerebro.addanalyzer(bt.analyzers.DrawDown, _name='draw_down')
-        cerebro.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-        cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name='trade_analysis')
+        alpha_strategy.adddata(data)
+        alpha_strategy.broker.setcash(constants.INITIAL_CAP)
+        alpha_strategy.addstrategy(AlphaStrategy, printlog=False, equity_pct=0.9)
+        alpha_strategy.broker.setcommission(commission=0.00)
+        alpha_strategy.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
+        alpha_strategy.addanalyzer(bt.analyzers.DrawDown, _name='draw_down')
+        alpha_strategy.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
+        alpha_strategy.addanalyzer(bt.analyzers.TradeAnalyzer, _name='trade_analysis')
+        results = alpha_strategy.run()
+        alpha_strat_results = results[0]
 
-        results = cerebro.run()
-        strat = results[0]
-        total = strat.analyzers.trade_analysis.get_analysis().get('total')
+        total = alpha_strat_results.analyzers.trade_analysis.get_analysis().get('total')
         if total.get('total') == 0:
             continue
-        final_portfolio_value = strat.broker.getvalue()
-        stock_name_to_portfolio_information[ticker_name] = {'final_portfolio_value': final_portfolio_value, 'Percent gain': 100 * (final_portfolio_value - constants.INITIAL_CAP)/constants.INITIAL_CAP, 'total_trades': total.get('total')}
-        backtesting_results.extend(report_generator(cerebro, strat, total, ticker_name))
+        alpha_final_portfolio_value = alpha_strat_results.broker.getvalue()
 
-        # compare with benchmark
-        benchmark = yf.download('^GSPC', start=model_predictions.index[0], end=model_predictions.index[-1])['Close']
-        benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
-        pyfoliozer = strat.analyzers.getbyname('pyfolio')
-        returns, positions, transactions, gross_lev = pyfoliozer.get_pf_items()
-        returns.index = returns.index.tz_convert('UTC')  # Convert to timezone-naive
-        df = returns.to_frame('Strategy').join(benchmark.to_frame('Benchmark (S&P 500)'))
-        fig = plt.figure(figsize=(15, 5))
-        pf.plot_rolling_returns(df['Strategy'], factor_returns=df['Benchmark (S&P 500)'])
-        plt.title(f'{ticker_name} Cumulative Returns: Strategy vs. Benchmark')
-        fig.savefig(os.path.join(dir_name, f'{ticker_name}_graphs.png'))
-        plt.close('all')
+        stock_name_to_portfolio_information[ticker_name] = {
+                                                            'final_portfolio_value': alpha_final_portfolio_value,
+                                                            'Portfolio cumulative percent gain': 100 * (alpha_final_portfolio_value - constants.INITIAL_CAP)/constants.INITIAL_CAP,
+                                                            'Stock percent gain': 100 * (stock_close_prices[-1] - stock_close_prices[0]) / stock_close_prices[0],
+                                                            'total_trades': total.get('total')
+                                                            }
+        backtesting_results.extend(report_generator(alpha_strategy, alpha_strat_results, total, ticker_name))
+        # create_benchmark_graphs(alpha_strat_results, model_predictions, stock_close_prices, ticker_name, dir_name)
         predictions_and_file_path.append((model_predictions, os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, file_name)))
 
     print('Saving model')
@@ -148,24 +141,54 @@ def save_predictions_and_accuracy(dir_name):
     return stock_name_to_portfolio_information
 
 
+def create_benchmark_graphs(strat_results, model_predictions, stock_close_prices, ticker_name, dir_name):
+    # compare with benchmark
+    benchmark = yf.download('^GSPC', start=model_predictions.index[0], end=model_predictions.index[-1])['Close']
+    benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
+
+    pyfoliozer = strat_results.analyzers.getbyname('pyfolio')
+    a_returns, a_positions, a_transactions, a_gross_lev = pyfoliozer.get_pf_items()
+    a_returns.index = a_returns.index.tz_convert('UTC')
+
+    stock_close_prices = stock_close_prices.pct_change().dropna().tz_localize('UTC')
+
+    df = a_returns.to_frame('Strategy').join(benchmark.to_frame('Benchmark (S&P 500)')).join(stock_close_prices.to_frame('Buy and Hold')).dropna()
+    fig = plt.figure(figsize=(15, 5))
+    df['Strategy'] = (1 + df['Strategy']).cumprod() - 1
+    df['Benchmark (S&P 500)'] = (1 + df['Benchmark (S&P 500)']).cumprod() - 1
+    df['Buy and Hold'] = (1 + df['Buy and Hold']).cumprod() - 1
+    plt.plot(df.index, df['Strategy'], label='Strategy')
+    plt.plot(df.index, df['Benchmark (S&P 500)'], label='Benchmark (S&P 500)')
+    plt.plot(df.index, df['Buy and Hold'], label='Buy and Hold')
+    plt.xlabel('Date')
+    plt.ylabel('Cumulative Returns')
+    plt.legend()
+    plt.grid(True)
+    plt.title(f'{ticker_name} Cumulative Returns: Strategy vs. Benchmark vs Buy and Hold')
+    fig.savefig(os.path.join(dir_name, f'{ticker_name}_graphs.png'))
+    plt.close('all')
+
+
 def summary_report(stock_portfolio_information, dir_name):
-    sorted_portfolio_info = sorted(stock_portfolio_information.items(),
-                                   key=lambda item: item[1]['final_portfolio_value'],
-                                   reverse=True)
+    sorted_by_portfolio_value = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['final_portfolio_value'], reverse=True)
+    sorted_by_portfolio_vs_stock = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['Portfolio cumulative percent gain']-item[1]['Stock percent gain'], reverse=True)
     report_list = [
         f"Buy/Sell Threshold {constants.BUY_THRESHOLD} within a look ahead day count: {constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL}",
         f"Technical Indicators: {constants.TECHNICAL_INDICATORS}",
         f"Model Class Weight: {constants.RANDOM_FOREST_CLASS_WEIGHT}",
         f"{'-' * 50}",
-        f"Highest % gain: {sorted_portfolio_info[0]}",
-        f"Lowest % gain: {sorted_portfolio_info[-1]}",
-        f"Number of stocks with a positive gain {sum(1 for name, info in sorted_portfolio_info if info['final_portfolio_value'] > constants.INITIAL_CAP)}",
-        f"Number of stocks with a negative gain {sum(1 for name, info in sorted_portfolio_info if info['final_portfolio_value'] < constants.INITIAL_CAP)}",
-        f"Sum of the Top 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_portfolio_info[0:100]):,.2f}",
-        f"Sum of the Bottom 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_portfolio_info[-100:]):,.2f}",
-        f"{'-' * 50}"
+        f"Highest % gain: {sorted_by_portfolio_value[0]}",
+        f"Lowest % gain: {sorted_by_portfolio_value[-1]}",
+        f"Number of stocks with a positive gain {sum(1 for name, info in sorted_by_portfolio_value if info['final_portfolio_value'] > constants.INITIAL_CAP)}",
+        f"Number of stocks with a negative gain {sum(1 for name, info in sorted_by_portfolio_value if info['final_portfolio_value'] < constants.INITIAL_CAP)}",
+        f"Sum of the Top 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_by_portfolio_value[0:100]):,.2f}",
+        f"Sum of the Bottom 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_by_portfolio_value[-100:]):,.2f}",
+        f"{'-' * 50}",
     ]
     print("\n".join(report_list))
-    report_list.extend([f"{name}: {info}" for name, info in sorted_portfolio_info])
+    report_list.extend([f"Top 100 Portfolios that perform better than their stock"])
+    report_list.extend([f"{name}: {info}" for name, info in sorted_by_portfolio_vs_stock[:100]])
+    report_list.extend([f"{'-' * 50}", f"All 500 portfolios sorted from Highest portfolio value to least", f"{'-' * 50}"])
+    report_list.extend([f"{name}: {info}" for name, info in sorted_by_portfolio_value])
     with open(os.path.join(dir_name, constants.SUMMARY_REPORT_FILE_NAME), 'w') as file:
         file.write('\n'.join(report_list))
