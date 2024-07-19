@@ -228,13 +228,16 @@ def build_args():
                         help="specify to see plots of the ytrain ytest ypred generated data")
 
     parser.add_argument('--model_name', action='store_true', default=False, help="define the machine learning model")
-    parser.add_argument('--tag', required=True, type=str, help='tag this run with a string')
+    parser.add_argument('--tag', required=False, type=str, help='tag this run with a string')
     parser.add_argument('--all', action='store_true', default=False, help='DO ALL STAGES')
     parser.add_argument('--preprocess_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--combine_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--train_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--predict_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+
     parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--simulation_ticker_name', type=str, required=False, help='create the simulation graphs for the specified ticker')
+
     parser.add_argument('--skip_training_graphs', help='skip training graphs', action='store_true', default=False)
     parser.add_argument('--skip_testing_graphs', help='skip testing graphs', action='store_true', default=False)
     parser.add_argument('--skip_prediction_graphs', help='skip prediction graphs', action='store_true', default=False)
@@ -254,6 +257,7 @@ def create_directory_with_tag(name_of_directory):
 
 if __name__ == "__main__":
     args = build_args()
+    now = datetime.now()
     args["indicators"] = TECHNICAL_INDICATORS
     print(args["indicators"])
     if args['all']:
@@ -288,12 +292,17 @@ if __name__ == "__main__":
         # Save predictions and compare with correct test buy_sell df
         print("Stage 3: Testing Model")
         # Get current date and time
-        now = datetime.now()
         short_date_time = now.strftime('%y%m%d_%H%M')
         directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
         create_directory_with_tag(directory_name)
-        shared_methods.summary_report(shared_methods.save_predictions_and_accuracy(directory_name), directory_name)
+        predictions_data_structure = shared_methods.save_predictions()
         print("Stage 3: Testing Model Done")
+    if args['market_sim']:
+        print("Stage 4: Simulating Predictions")
+        # TODO: READ PREDICTIONS FROM FILE AND SAVE MARKET SIM
+        stock_name_to_portfolio_information = shared_methods.market_sim(predictions_data_structure, directory_name)
+        print("Stage 4: Simulating Predictions Done")
+
     if args['visualize_all']:
         print("Visualizing Data")
         if not args['skip_training_graphs']:
@@ -310,4 +319,10 @@ if __name__ == "__main__":
                 'predictions_technical_indicator_files': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)
             }
             graphs.visualize_data(data_map)
+        if args['simulation_ticker_name']:
+            short_date_time = now.strftime('%y%m%d_%H%M')
+            directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
+            # TODO: WRITE MARKET SIM TO STORAGE
+            # TODO: READ MARKET SIM DATA AND GENERATE GRAPHS
+            shared_methods.visualize_stock_in_simulation(stock_name_to_portfolio_information, directory_name)
         print("Visualizing Data Done")

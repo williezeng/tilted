@@ -11,6 +11,7 @@ import pyfolio as pf
 import matplotlib.pyplot as plt
 from collections import defaultdict
 import yfinance as yf
+from io import BytesIO
 
 
 def get_absolute_file_paths(data_dir):
@@ -38,10 +39,10 @@ def write_prediction_to_csv(predictions_and_file_path):
     prediction_df.to_csv(prediction_file_path)
 
 
-def report_generator(cerebro_instance, strat_result, total_trades, stock_name):
+def report_generator(final_portfolio_value, strat_result, total_trades, stock_name):
     backtesting_report = [f"The following transactions show the backtesting results of {stock_name}'s stock:",
                           f'Starting Portfolio Value: {constants.INITIAL_CAP:,.2f}',
-                          f'Final Portfolio Value: {cerebro_instance.broker.getvalue():,.2f}',
+                          f'Final Portfolio Value: {final_portfolio_value:,.2f}',
                           f'Total number of trades: {total_trades.get("total"):,}',
                           f'Total number of closed trades: {total_trades.get("closed")}',
                           f'Total number of opening trades: {total_trades.get("open")}']
@@ -60,8 +61,8 @@ def report_generator(cerebro_instance, strat_result, total_trades, stock_name):
         return backtesting_report
     backtesting_report.append(f'Gross profit/loss: USD {pnl.get("gross").get("total"):,.2f}')
     backtesting_report.append(f'Net profit/loss: USD {pnl.get("net").get("total"):,.2f}')
-    backtesting_report.append(f'Unrealized gain/loss: USD {cerebro_instance.broker.getvalue() - constants.INITIAL_CAP - pnl.get("net").get("total"):,.2f}')
-    backtesting_report.append(f'Total gain/loss: USD {cerebro_instance.broker.getvalue() - constants.INITIAL_CAP:,.2f}')
+    backtesting_report.append(f'Unrealized gain/loss: USD {final_portfolio_value - constants.INITIAL_CAP - pnl.get("net").get("total"):,.2f}')
+    backtesting_report.append(f'Total gain/loss: USD {final_portfolio_value - constants.INITIAL_CAP:,.2f}')
     backtesting_report.append('')
     backtesting_report.append('Sharpe Ratio: %s' % strat_result.analyzers.mysharpe.get_analysis().get('sharperatio', ''))
 
@@ -74,76 +75,115 @@ def report_generator(cerebro_instance, strat_result, total_trades, stock_name):
     return backtesting_report
 
 
-def save_predictions_and_accuracy(dir_name):
+def save_predictions():
     # get all test data csv data frames
     # sort based on ticker name
     # remove 'close' price and predict and calculate accuracy
     # save model
-    # save accuracy
     results = parallel_get_technical_indicators_and_buy_sell_dfs(get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH))
-    predictions_and_file_path = []
-    # for a sorted accuracy list
-    sorted_results = sorted(results, key=lambda x: x[2])
-    suffix_to_yahoo_data_files = defaultdict()
+    predictions_structure = {}
+    ticker_name_to_yahoo_data = defaultdict()
     for x in get_absolute_file_paths(constants.YAHOO_DATA_DIR):
-        suffix_to_yahoo_data_files[x.split('/')[-1]] = pd.read_csv(x, index_col=[0], header=[0], skipinitialspace=True, parse_dates=True)
-    stock_name_to_portfolio_information = {}
-    backtesting_results = []
-    for result in tqdm(sorted_results, desc="Predicting and Running Simulation"):
+        ticker_name_to_yahoo_data[x.split('/')[-1].split('.csv')] = pd.read_csv(x, index_col=[0], header=[0], skipinitialspace=True, parse_dates=True)
+
+    for result in tqdm(results, desc="Predicting and Running Simulation"):
         model = joblib.load(constants.SAVED_MODEL_FILE_PATH)
         reference_technical_indicator_df, reference_buy_sell_df, test_data_file_path = result
         file_name = test_data_file_path.split("/")[-1]
-        prefix, suffix = file_name.split('_')
+        ticker_name = file_name.split('.csv')
         stock_close_prices = reference_technical_indicator_df.pop('Close')
-        model_predictions = pd.DataFrame(model.predict(reference_technical_indicator_df),
-                                         index=reference_technical_indicator_df.index, columns=['bs_signal'])
-        if suffix in suffix_to_yahoo_data_files:
-            suffix_to_yahoo_data_files[suffix]['openinterest'] = model_predictions
-            clean_target_df = suffix_to_yahoo_data_files[suffix].dropna()
+        model_predictions = pd.DataFrame(model.predict(reference_technical_indicator_df), index=reference_technical_indicator_df.index, columns=['bs_signal'])
+        if ticker_name in ticker_name_to_yahoo_data:
+            ticker_name_to_yahoo_data[ticker_name]['openinterest'] = model_predictions
+            yahoo_stock_df_with_predictions = ticker_name_to_yahoo_data[ticker_name].dropna()
         else:
-            print(f'suffix {suffix} does not match any filenames in {suffix_to_yahoo_data_files.keys()}')
+            print(f'{ticker_name} does not match any stock names found in {ticker_name_to_yahoo_data.keys()}')
             continue
-        ticker_name = suffix.split('.csv')[0]
-        alpha_strategy = bt.Cerebro()
-        clean_target_df.pop('Adj Close')
-        data = bt.feeds.PandasDirectData(dataname=clean_target_df)
-        alpha_strategy.adddata(data)
-        alpha_strategy.broker.setcash(constants.INITIAL_CAP)
-        alpha_strategy.addstrategy(AlphaStrategy, printlog=False, equity_pct=0.9)
-        alpha_strategy.broker.setcommission(commission=0.00)
-        alpha_strategy.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
-        alpha_strategy.addanalyzer(bt.analyzers.DrawDown, _name='draw_down')
-        alpha_strategy.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
-        alpha_strategy.addanalyzer(bt.analyzers.TradeAnalyzer, _name='trade_analysis')
-        results = alpha_strategy.run()
-        alpha_strat_results = results[0]
 
-        total = alpha_strat_results.analyzers.trade_analysis.get_analysis().get('total')
-        if total.get('total') == 0:
-            continue
-        alpha_final_portfolio_value = alpha_strat_results.broker.getvalue()
+        if ticker_name in predictions_structure:
+            raise Exception(f'A duplicate entry of {ticker_name} has been found. This should be impossible!')
+        predictions_structure[ticker_name] = {'stock_df_with_predictions': yahoo_stock_df_with_predictions, 'stock_close_prices': stock_close_prices,
+                                              'dir_path': os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, file_name)}
 
-        stock_name_to_portfolio_information[ticker_name] = {
-                                                            'final_portfolio_value': alpha_final_portfolio_value,
-                                                            'Portfolio cumulative percent gain': 100 * (alpha_final_portfolio_value - constants.INITIAL_CAP)/constants.INITIAL_CAP,
-                                                            'Stock percent gain': 100 * (stock_close_prices[-1] - stock_close_prices[0]) / stock_close_prices[0],
-                                                            'total_trades': total.get('total')
-                                                            }
-        backtesting_results.extend(report_generator(alpha_strategy, alpha_strat_results, total, ticker_name))
-        # create_benchmark_graphs(alpha_strat_results, model_predictions, stock_close_prices, ticker_name, dir_name)
-        predictions_and_file_path.append((model_predictions, os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, file_name)))
-
-    print('Saving model')
+    print('Saving predictions ')
+    chunks = split_dict(predictions_structure)
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-        __ = pool.map(write_prediction_to_csv, predictions_and_file_path)
+        __ = pool.map(process_chunk, chunks)
+    return predictions_structure
+
+
+def market_sim(predictions, dir_name):
+    stock_name_to_portfolio_information = {}
+    backtesting_results = []
+    for ticker_name, stock_data_map in predictions.items():
+        stock_strat_results, simulation_summary, report_list = simulator(stock_data_map['stock_df_with_predictions'], stock_data_map['stock_close_prices'], ticker_name)
+        stock_name_to_portfolio_information[ticker_name] = {'summary': simulation_summary,
+                                                            'stock_strat_results': stock_strat_results,
+                                                            'stock_close_price': stock_data_map['stock_close_prices'],
+                                                            'ticker_name': ticker_name
+                                                            }
+        backtesting_results.extend(report_list)
+
     with open(os.path.join(dir_name, constants.BACKTESTING_RESULT_FILE_NAME), 'w') as file:
         file.write('\n'.join(backtesting_results))
+
+    generate_summary_report(stock_name_to_portfolio_information, dir_name)
     return stock_name_to_portfolio_information
 
 
-def create_benchmark_graphs(strat_results, model_predictions, stock_close_prices, ticker_name, dir_name):
+
+
+def visualize_stock_in_simulation(stock_name_to_portfolio_information, dir_name):
+    for ticker_name, stock_simulation_map in stock_name_to_portfolio_information.items():
+        create_benchmark_graphs(stock_simulation_map['stock_strat_results'], stock_simulation_map['stock_close_prices'], stock_simulation_map['ticker_name'], dir_name)
+
+
+def process_chunk(chunk):
+    #TODO: k,v wrong
+    for key, prediction in chunk.items():
+        write_prediction_to_csv(prediction)
+
+
+def split_dict(data, num_chunks=5):
+    keys = list(data.keys())
+    chunk_size = len(keys) // num_chunks
+    return [{k: data[k] for k in keys[i:i + chunk_size]} for i in range(0, len(keys), chunk_size)]
+
+
+def simulator(clean_target_df, stock_close_prices, ticker_name):
+    simulation_summary_data = {}
+    alpha_strategy = bt.Cerebro()
+    clean_target_df.pop('Adj Close')
+    data = bt.feeds.PandasDirectData(dataname=clean_target_df)
+    alpha_strategy.adddata(data)
+    alpha_strategy.broker.setcash(constants.INITIAL_CAP)
+    alpha_strategy.addstrategy(AlphaStrategy, printlog=False, equity_pct=0.9)
+    alpha_strategy.broker.setcommission(commission=0.00)
+    alpha_strategy.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
+    alpha_strategy.addanalyzer(bt.analyzers.DrawDown, _name='draw_down')
+    alpha_strategy.addanalyzer(bt.analyzers.PyFolio, _name='pyfolio')
+    alpha_strategy.addanalyzer(bt.analyzers.TradeAnalyzer, _name='trade_analysis')
+    results = alpha_strategy.run()
+    alpha_strat_results = results[0]
+    total = alpha_strat_results.analyzers.trade_analysis.get_analysis().get('total')
+    if total.get('total') == 0:
+        print(f'No trades done for {ticker_name}')
+        return simulation_summary_data
+    alpha_final_portfolio_value = alpha_strat_results.broker.getvalue()
+    simulation_summary_data = {
+        'final_portfolio_value': alpha_final_portfolio_value,
+        'Portfolio cumulative percent gain': 100 * (
+                    alpha_final_portfolio_value - constants.INITIAL_CAP) / constants.INITIAL_CAP,
+        'Stock percent gain': 100 * (stock_close_prices[-1] - stock_close_prices[0]) / stock_close_prices[0],
+        'total_trades': total.get('total')
+    }
+
+    return alpha_strat_results, simulation_summary_data, report_generator(alpha_final_portfolio_value, alpha_strat_results, total, ticker_name)
+
+
+def create_benchmark_graphs(strat_results, stock_close_prices, ticker_name, dir_name):
     # compare with benchmark
-    benchmark = yf.download('^GSPC', start=model_predictions.index[0], end=model_predictions.index[-1])['Close']
+    benchmark = yf.download('^GSPC', start=stock_close_prices.index[0], end=stock_close_prices.index[-1])['Close']
     benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
 
     pyfoliozer = strat_results.analyzers.getbyname('pyfolio')
@@ -165,13 +205,25 @@ def create_benchmark_graphs(strat_results, model_predictions, stock_close_prices
     plt.legend()
     plt.grid(True)
     plt.title(f'{ticker_name} Cumulative Returns: Strategy vs. Benchmark vs Buy and Hold')
-    fig.savefig(os.path.join(dir_name, f'{ticker_name}_graphs.png'))
+    fig.savefig(os.path.join(dir_name, f'{ticker_name}_cumulative_returns.png'))
+
+    fig = plt.figure(figsize=(15, 5))
+    pf.plot_annual_returns(a_returns)
+    plt.title('Annual Returns of Fund')
+    fig.savefig(os.path.join(dir_name, f'{ticker_name}_annual_returns.png'))
+
+    fig = plt.figure(figsize=(15, 5))
+    pf.plot_monthly_returns_heatmap(a_returns)
+    plt.title('Monthly Returns of Fund (%)')
+    fig.savefig(os.path.join(dir_name, f'{ticker_name}_monthly_returns.png'))
+
     plt.close('all')
 
 
-def summary_report(stock_portfolio_information, dir_name):
-    sorted_by_portfolio_value = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['final_portfolio_value'], reverse=True)
-    sorted_by_portfolio_vs_stock = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['Portfolio cumulative percent gain']-item[1]['Stock percent gain'], reverse=True)
+def generate_summary_report(stock_portfolio_information, dir_name):
+    summary = {k: v['summary'] for k, v in stock_portfolio_information.items()}
+    sorted_by_portfolio_value = sorted(summary.items(), key=lambda item: item[1]['final_portfolio_value'], reverse=True)
+    sorted_by_portfolio_vs_stock = sorted(summary.items(), key=lambda item: item[1]['Portfolio cumulative percent gain']-item[1]['Stock percent gain'], reverse=True)
     report_list = [
         f"Buy/Sell Threshold {constants.BUY_THRESHOLD} within a look ahead day count: {constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL}",
         f"Technical Indicators: {constants.TECHNICAL_INDICATORS}",
