@@ -2,7 +2,7 @@ import os
 
 ETHEREUM_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', 'ETH-USD')]
 STOCK_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', '{string_name}')]
-BANNED_TICKERS = ['CEG', 'AMCR', 'HWM'] # These companies did not exist on the starting date, therefore their data is shorter
+BANNED_TICKERS = ['SW', 'CEG', 'AMCR', 'HWM']  # These companies did not exist on the starting date, therefore their data is shorter
 
 TECHNICAL_INDICATORS = ['VWMA_10', 'VWAP', 'VWAP_signal', 'SMA_10', 'EMA_10', 'bb_upper', 'bb_lower', 'bb_width', 'Close']
 
@@ -27,11 +27,8 @@ TRAINING_CONCATENATED_INDICATORS_FILE = os.path.join(TRAINING_COMBINED_DATA_DIR_
 TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE = os.path.join(TRAINING_COMBINED_DATA_DIR_PATH, '00_concatenated_buy_sell_signals.csv')
 
 TESTING_PREDICTION_DIR_PATH = os.path.join(TESTING_BASE_DIRECTORY_NAME, 'predictions')
-TESTING_PREDICTION_ACCURACY_DIR_PATH = os.path.join(TESTING_PREDICTION_DIR_PATH, 'accuracy')
 TESTING_PREDICTION_DATA_DIR_PATH = os.path.join(TESTING_PREDICTION_DIR_PATH, 'data')
 TESTING_PREDICTION_GRAPHS_DIR_PATH = os.path.join(TESTING_PREDICTION_DIR_PATH, 'graphs')
-
-TESTING_PREDICTION_ACCURACY_FILE = os.path.join(TESTING_PREDICTION_ACCURACY_DIR_PATH, f'accuracy.txt')
 
 PARENT_REPORT_DIRECTORY_NAME = 'reports'
 FULL_REPORT_DIR = os.path.join(PARENT_REPORT_DIRECTORY_NAME, '{}_{}')

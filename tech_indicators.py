@@ -2,15 +2,18 @@ import numpy as np
 from datetime import datetime
 
 import pandas as pd
+import pandas_ta as ta
 import matplotlib
 from utils import constants
 from utils.constants import BUY, SELL, HOLD
+import talib
 
 matplotlib.use('TkAgg')
 
 # TODO:  correlation, relative strength index (RSI), the difference between the open price of yesterday and today, difference close price of yesterday
 
 # TODO: CREATE STRATEGY: SMA + BOELI + MACD:
+
 
 def get_obv_vol(data_frame):
     dataframe_copy = data_frame.copy()
@@ -112,24 +115,25 @@ def get_indicators(df, options, length, y_test_lookahead):
     list_of_dfs = []
     # averages are calculated given n previous days of information, drop the NAs
     y_label_df = create_ylabels(df[['Close']].astype(float))
-    OPTION_MAP = {'SMA_10': df_copy['SMA_10'],
-                  'EMA_10': df_copy['EMA_10'],
-                  'bb_upper': df_copy['bb_upper'],
-                  'bb_lower': df_copy['bb_lower'],
-                  'bb_width': df_copy['bb_width'],
-                  'VWMA_10': df_copy['VWMA_10'],
-                  'VWAP': df_copy['VWAP'],
-                  'VWAP_signal': df_copy['VWAP_signal'],
-                  'Close': df_copy['Close'],
-                  # 'volume': df_copy['Volume'],
-                  # 'bb_signal': bb_signal,
+
+    options_map = {'SMA_10': df_copy['SMA_10'],
+                   'EMA_10': df_copy['EMA_10'],
+                   'bb_upper': df_copy['bb_upper'],
+                   'bb_lower': df_copy['bb_lower'],
+                   'bb_width': df_copy['bb_width'],
+                   'VWMA_10': df_copy['VWMA_10'],
+                   'VWAP': df_copy['VWAP'],
+                   'VWAP_signal': df_copy['VWAP_signal'],
+                   'Close': df_copy['Close'],
+                   }
+                   # 'volume': df_copy['Volume'],
+                   # 'bb_signal': bb_signal,
                   # 'cmf': cmf_vol,
                   # 'obv': obv_vol,
                   # 'rsi': get_rsi(df, length),
-                  }
     for option in options:
-        if option in OPTION_MAP:
-            list_of_dfs.append(OPTION_MAP[option])
+        if option in options_map:
+            list_of_dfs.append(options_map[option])
 
     x = pd.concat(list_of_dfs, axis=1)
     x = x.dropna()

@@ -83,8 +83,10 @@ def save_predictions():
     results = parallel_get_technical_indicators_and_buy_sell_dfs(get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH))
     predictions_structure = {}
     ticker_name_to_yahoo_data = defaultdict()
-    for x in get_absolute_file_paths(constants.YAHOO_DATA_DIR):
-        ticker_name_to_yahoo_data[x.split('/')[-1].split('.csv')] = pd.read_csv(x, index_col=[0], header=[0], skipinitialspace=True, parse_dates=True)
+    for file_path in get_absolute_file_paths(constants.YAHOO_DATA_DIR):
+        import pdb
+        pdb.set_trace()
+        ticker_name_to_yahoo_data[file_path.split('/')[-1].split('.csv')] = pd.read_csv(x, index_col=[0], header=[0], skipinitialspace=True, parse_dates=True)
 
     for result in tqdm(results, desc="Predicting and Running Simulation"):
         model = joblib.load(constants.SAVED_MODEL_FILE_PATH)
@@ -131,8 +133,6 @@ def market_sim(predictions, dir_name):
     return stock_name_to_portfolio_information
 
 
-
-
 def visualize_stock_in_simulation(stock_name_to_portfolio_information, dir_name):
     for ticker_name, stock_simulation_map in stock_name_to_portfolio_information.items():
         create_benchmark_graphs(stock_simulation_map['stock_strat_results'], stock_simulation_map['stock_close_prices'], stock_simulation_map['ticker_name'], dir_name)
@@ -177,7 +177,6 @@ def simulator(clean_target_df, stock_close_prices, ticker_name):
         'Stock percent gain': 100 * (stock_close_prices[-1] - stock_close_prices[0]) / stock_close_prices[0],
         'total_trades': total.get('total')
     }
-
     return alpha_strat_results, simulation_summary_data, report_generator(alpha_final_portfolio_value, alpha_strat_results, total, ticker_name)
 
 

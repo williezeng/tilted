@@ -7,7 +7,7 @@ from pandas_datareader import data as pdr
 import multiprocessing
 import yfinance as yf
 import argparse
-from utils.constants import BANNED_TICKERS
+import constants
 yf.pdr_override()
 
 DATA_DIR = os.path.join(os.path.curdir, 'yahoo_data')
@@ -40,7 +40,7 @@ def build_args():
     parser.add_argument('--end', help='the end date of the stock', type=str, default=today.strftime("%Y-%m-%d"))
     parser.add_argument('--name', help='the name of the stock', type=str, required=False)
     parser.add_argument('--top500', help=f'get the top500 tickers', type=bool, required=False, default=False)
-    parser.add_argument('--all', help=f'get all tickers in ', type=bool, required=False, default=False)
+    parser.add_argument('--all', help=f'get all tickers in ', action='store_true', default=False)
 
     return parser.parse_args()
 
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         fortune_500_df = get_fortune_500_tickers()
         fortune_500_df.to_csv(os.path.join(DATA_DIR, '00_fortune_500_tickers.csv'), index=False, header=False)
         converted_tickers = [convert_ticker(ticker) for ticker in get_all_tickers()]
-        params_list = [(ticker, args.start, args.end) for ticker in converted_tickers if ticker not in BANNED_TICKERS]
+        params_list = [(ticker, args.start, args.end) for ticker in converted_tickers if ticker not in constants.BANNED_TICKERS]
         with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
             pool.map(write_to_file, params_list)
     elif args.name:

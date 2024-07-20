@@ -13,17 +13,12 @@ from itertools import combinations
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import shuffle
-from utils.constants import TRAINING_DATA_DIR_PATH, TESTING_DATA_DIR_PATH, TECHNICAL_INDICATORS
 from tech_indicators import setup_data
 from utils import constants, trading_logger, shared_methods
-from knn import KNN
-from dt import DecisionTree
 from rf import RandomForest
 from datetime import datetime
 
 NAME_TO_MODEL = {
-    'knn': KNN,
-    'decision_trees': DecisionTree,
     'random_forest': RandomForest,
 }
 LOGGER_LEVELS = {
@@ -177,15 +172,17 @@ def run_models(arguments, df_ticker):
 def parallel_data_splitter(tuple_arg):
     # The data concatenated and saved is not shuffled for bookkeeping purposes
     # The data is shuffled right before training
-    index, file_path = tuple_arg
-    file_name = file_path.split("/")[-1]
-    stock_df = pd.read_csv(file_path, index_col=[0], header=[0], skipinitialspace=True)
+    index, path_to_file, option_args = tuple_arg
+    file_name = path_to_file.split("/")[-1]
+    stock_df = pd.read_csv(path_to_file, index_col=[0], header=[0], skipinitialspace=True)
+    if len(stock_df.index) == 0:
+        raise Exception(f'{index}{path_to_file} does not have any data')
     stock_df.name = file_name
     try:
-        normalized_indicators_df, bs_df, df_for_predictions = setup_data(stock_df, args['indicators'], args['length'], args['lookahead_days'])
+        normalized_indicators_df, bs_df, df_for_predictions = setup_data(stock_df, option_args['indicators'], option_args['length'], option_args['lookahead_days'])
         x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.15, shuffle=False)
-        pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(TRAINING_DATA_DIR_PATH, f'training_{file_name}'))
-        pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(TESTING_DATA_DIR_PATH, f'testing_{file_name}'))
+        pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(constants.TRAINING_DATA_DIR_PATH, f'training_{file_name}'))
+        pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(constants.TESTING_DATA_DIR_PATH, f'testing_{file_name}'))
     except Exception as e:
         print(f"Failed to process {index}_{file_name}: {e}")
 
@@ -258,7 +255,7 @@ def create_directory_with_tag(name_of_directory):
 if __name__ == "__main__":
     args = build_args()
     now = datetime.now()
-    args["indicators"] = TECHNICAL_INDICATORS
+    args["indicators"] = constants.TECHNICAL_INDICATORS
     print(args["indicators"])
     if args['all']:
         args['preprocess_all'] = True
@@ -268,7 +265,13 @@ if __name__ == "__main__":
         args['visualize_all'] = True
     if args['preprocess_all']:
         print("stage 1: Preprocessing Data")
-        list_of_files_in_yahoo_dir = [(index, file_path) for index, file_path in enumerate(shared_methods.get_absolute_file_paths(constants.YAHOO_DATA_DIR))]
+        for file_path in [constants.TRAINING_BASE_DIRECTORY_NAME, constants.TRAINING_DATA_DIR_PATH, constants.TRAINING_COMBINED_DATA_DIR_PATH,
+                          constants.TESTING_BASE_DIRECTORY_NAME, constants.TESTING_DATA_DIR_PATH, constants.TESTING_GRAPHS_DIR_PATH,
+                          constants.TESTING_PREDICTION_DIR_PATH, constants.TESTING_PREDICTION_DATA_DIR_PATH, constants.TESTING_PREDICTION_GRAPHS_DIR_PATH]:
+            if not os.path.exists(file_path):
+                os.mkdir(file_path)
+        list_of_files_in_yahoo_dir = [(index, file_path, args) for index, file_path in enumerate(shared_methods.get_absolute_file_paths(constants.YAHOO_DATA_DIR))]
+        # parallel_data_splitter(list_of_files_in_yahoo_dir[0])
         with multiprocessing.Pool(processes=constants.MULTIPROCESS_CPU_NUMBER) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
         combine_data(shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH))
@@ -295,14 +298,8 @@ if __name__ == "__main__":
         short_date_time = now.strftime('%y%m%d_%H%M')
         directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
         create_directory_with_tag(directory_name)
-        predictions_data_structure = shared_methods.save_predictions()
+        predictions_data_structure = shared_methods.market_sim(shared_methods.save_predictions(), directory_name)
         print("Stage 3: Testing Model Done")
-    if args['market_sim']:
-        print("Stage 4: Simulating Predictions")
-        # TODO: READ PREDICTIONS FROM FILE AND SAVE MARKET SIM
-        stock_name_to_portfolio_information = shared_methods.market_sim(predictions_data_structure, directory_name)
-        print("Stage 4: Simulating Predictions Done")
-
     if args['visualize_all']:
         print("Visualizing Data")
         if not args['skip_training_graphs']:
@@ -319,10 +316,10 @@ if __name__ == "__main__":
                 'predictions_technical_indicator_files': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)
             }
             graphs.visualize_data(data_map)
-        if args['simulation_ticker_name']:
-            short_date_time = now.strftime('%y%m%d_%H%M')
-            directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
-            # TODO: WRITE MARKET SIM TO STORAGE
-            # TODO: READ MARKET SIM DATA AND GENERATE GRAPHS
-            shared_methods.visualize_stock_in_simulation(stock_name_to_portfolio_information, directory_name)
+        # if args['simulation_ticker_name']:
+        #     short_date_time = now.strftime('%y%m%d_%H%M')
+        #     directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
+        #     # TODO: WRITE MARKET SIM TO STORAGE
+        #     # TODO: READ MARKET SIM DATA AND GENERATE GRAPHS
+        #     shared_methods.visualize_stock_in_simulation(stock_name_to_portfolio_information, directory_name)
         print("Visualizing Data Done")

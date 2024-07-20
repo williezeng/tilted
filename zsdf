@@ -1,0 +1,47 @@
+
+def get_indicators(df, options, length, y_test_lookahead):
+    df_copy = df.copy()
+    # Calculate SMA using pandas_ta and add to DataFrame
+    df_copy['SMA_10'] = ta.sma(df['Close'], length=constants.LONG_TERM_PERIOD)
+    df_copy.dropna(subset=['SMA_10'], inplace=True)
+    df_copy['SMA_10_ratio'] = (df['Close'] - df['SMA_10']) / df['Close']
+
+    df_copy['EMA_10'] = ta.ema(df['Close'], length=constants.LONG_TERM_PERIOD)
+    df_copy.dropna(subset=['EMA_10'], inplace=True)
+    df_copy['EMA_10_ratio'] = (df['Close'] - df['EMA_10']) / df['Close']
+
+    bb_results = ta.bbands(df['Close'], length=constants.LONG_TERM_PERIOD, std=2)
+    bb_results.dropna(inplace=True)
+    df_copy = df_copy.join(bb_results, how='inner')
+    #     lower=BBL_{length}_{std},  mid = BBM_{length}_{std}, upper = BBU_{length}_{std}
+    #     bandwidth = BBB_{length}_{std}, percent = BBP_{length}_{std}
+    df_copy['bb_upper'] = (df_copy['BBU_10_2.0'] - df_copy['Close']) / df_copy['Close']
+    df_copy['bb_lower'] = (df_copy['BBL_10_2.0'] - df_copy['Close']) / df_copy['Close']
+    df_copy['bb_width'] = (df_copy['BBU_10_2.0'] - df_copy['BBL_10_2.0']) / df_copy['Close']
+    import pdb
+    pdb.set_trace()
+    df_copy['VWAP'] = calculate_vwap(df_copy)
+    df_copy['VWMA_10'] = (df_copy['VWAP'] - df_copy.ta.vwma(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['VWAP']
+    df_copy['VWAP_signal'] = df_copy.apply(lambda row: constants.BUY if row['Close'] < row['VWAP'] else constants.SELL if row['Close'] > row['VWAP'] else constants.HOLD, axis=1)
+    list_of_dfs = []
+    # averages are calculated given n previous days of information, drop the NAs
+    y_label_df = create_ylabels(df[['Close']].astype(float))
+
+    options_map = {'SMA_10_ratio': df_copy['SMA_10_ratio'],
+                   'EMA_10_ratio': df_copy['EMA_10_ratio'],
+                   'bb_upper': df_copy['bb_upper'],
+                   'bb_lower': df_copy['bb_lower'],
+                   'bb_width': df_copy['bb_width'],
+                   'VWMA_10': df_copy['VWMA_10'],
+                   'VWAP': df_copy['VWAP'],
+                   'VWAP_signal': df_copy['VWAP_signal'],
+                   'Close': df_copy['Close'],
+                   }
+                   # 'volume': df_copy['Volume'],
+                   # 'bb_signal': bb_signal,
+                  # 'cmf': cmf_vol,
+                  # 'obv': obv_vol,
+                  # 'rsi': get_rsi(df, length),
+    for option in options:
+        if option in options_map:
+            list_of_dfs.append(options_map[option])
