@@ -34,11 +34,6 @@ def parallel_get_technical_indicators_and_buy_sell_dfs(list_of_data_files):
     return results
 
 
-def write_prediction_to_csv(predictions_and_file_path):
-    prediction_df, prediction_file_path = predictions_and_file_path
-    prediction_df.to_csv(prediction_file_path)
-
-
 def report_generator(final_portfolio_value, strat_result, total_trades, stock_name):
     backtesting_report = [f"The following transactions show the backtesting results of {stock_name}'s stock:",
                           f'Starting Portfolio Value: {constants.INITIAL_CAP:,.2f}',
@@ -100,14 +95,30 @@ def save_predictions():
             continue
         if ticker_name in predictions_structure:
             raise Exception(f'A duplicate entry of {ticker_name} has been found. This should be impossible!')
-        predictions_structure[ticker_name] = {'stock_df_with_predictions': yahoo_stock_df_with_predictions, 'stock_close_prices': stock_close_prices,
-                                              'dir_path': os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, file_name)}
+        predictions_structure[ticker_name] = {'stock_df_with_predictions': yahoo_stock_df_with_predictions,
+                                              'stock_close_prices': stock_close_prices, 'bs_signal_df': model_predictions}
+    return predictions_structure
 
-    print('Saving predictions ')
+
+def write_predictions_to_file(predictions_structure):
     chunks = split_dict(predictions_structure)
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
         __ = pool.map(process_chunk, chunks)
-    return predictions_structure
+
+
+def process_chunk(chunk):
+    # make assertions for predictions_structure
+    for ticker_name, prediction_struct in chunk.items():
+        prediction_struct['bs_signal_df'].to_csv(os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, ticker_name))
+
+
+def split_dict(data, num_chunks=5):
+    # Get a list of dictionaries
+    # Each dictionary has a key len of the chunk_size
+    # i.e. if data = 200 entries and num_chunks = 5, each dictionary in the list will have 40 entries
+    keys = list(data.keys())
+    chunk_size = len(keys) // num_chunks
+    return [{k: data[k] for k in keys[i:i + chunk_size]} for i in range(0, len(keys), chunk_size)]
 
 
 def market_sim(predictions, dir_name):
@@ -134,20 +145,6 @@ def visualize_stock_in_simulation(stock_name_to_portfolio_information, dir_name)
         create_benchmark_graphs(stock_simulation_map['stock_strat_results'], stock_simulation_map['stock_close_prices'], stock_simulation_map['ticker_name'], dir_name)
 
 
-def process_chunk(chunk):
-    #TODO: k,v wrong
-    import pdb
-    pdb.set_trace()
-    for key, prediction in chunk.items():
-        write_prediction_to_csv(prediction)
-
-
-def split_dict(data, num_chunks=5):
-    keys = list(data.keys())
-    chunk_size = len(keys) // num_chunks
-    return [{k: data[k] for k in keys[i:i + chunk_size]} for i in range(0, len(keys), chunk_size)]
-
-
 def simulator(clean_target_df, stock_close_prices, ticker_name):
     simulation_summary_data = {}
     alpha_strategy = bt.Cerebro()
@@ -168,6 +165,24 @@ def simulator(clean_target_df, stock_close_prices, ticker_name):
         print(f'No trades done for {ticker_name}')
         return simulation_summary_data
     alpha_final_portfolio_value = alpha_strat_results.broker.getvalue()
+
+    pyfoliozer = alpha_strat_results.analyzers.getbyname('pyfolio')
+    returns, positions, transactions, gross_lev = pyfoliozer.get_pf_items()
+    returns.index = returns.index.tz_convert('UTC')
+    # we need to save as many things from pyfoliozer as possible
+    # Assuming alpha_final_portfolio_value is a scalar value
+    # alpha_final_portfolio_value = alpha_strat_results.broker.getvalue()
+    #
+    # # Convert the scalar value to a DataFrame
+    # portfolio_value_df = pd.DataFrame({'final_portfolio_value': [alpha_final_portfolio_value]})
+    #
+    # # Save the DataFrame to an HDF5 file
+    # portfolio_value_df.to_hdf('alpha_final_portfolio_value.h5', key='zsdf', mode='w')
+    returns.to_hdf('backtrader.h5', 'returns')
+    positions.to_hdf('backtrader.h5', 'positions')
+    transactions.to_hdf('backtrader.h5', 'transactions/')
+    gross_lev.to_hdf('backtrader.h5', 'gross_lev')
+
     simulation_summary_data = {
         'final_portfolio_value': alpha_final_portfolio_value,
         'Portfolio cumulative percent gain': 100 * (
@@ -182,10 +197,6 @@ def create_benchmark_graphs(strat_results, stock_close_prices, ticker_name, dir_
     # compare with benchmark
     benchmark = yf.download('^GSPC', start=stock_close_prices.index[0], end=stock_close_prices.index[-1])['Close']
     benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
-
-    pyfoliozer = strat_results.analyzers.getbyname('pyfolio')
-    a_returns, a_positions, a_transactions, a_gross_lev = pyfoliozer.get_pf_items()
-    a_returns.index = a_returns.index.tz_convert('UTC')
 
     stock_close_prices = stock_close_prices.pct_change().dropna().tz_localize('UTC')
 

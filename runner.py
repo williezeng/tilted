@@ -17,6 +17,7 @@ from tech_indicators import setup_data
 from utils import constants, trading_logger, shared_methods
 from rf import RandomForest
 from datetime import datetime
+import json
 
 NAME_TO_MODEL = {
     'random_forest': RandomForest,
@@ -283,7 +284,7 @@ if __name__ == "__main__":
         print("Stage 2: Training Model")
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
-        rf = RandomForestClassifier(n_estimators=15, max_depth=30, n_jobs=-1, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
+        rf = RandomForestClassifier(n_estimators=15, max_depth=20, n_jobs=-1, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
         # x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         combined_indicators.pop('Close')
         rf.fit(combined_indicators, combined_buy_sell_signals['bs_signal'])
@@ -298,7 +299,16 @@ if __name__ == "__main__":
         short_date_time = now.strftime('%y%m%d_%H%M')
         directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
         create_directory_with_tag(directory_name)
-        predictions_data_structure = shared_methods.market_sim(shared_methods.save_predictions(), directory_name)
+        predictions_structure = shared_methods.save_predictions()
+        print('writing predictions')
+        shared_methods.write_predictions_to_file(predictions_structure)
+        predictions_data_structure = shared_methods.market_sim(predictions_structure, directory_name)
+        # with open('data.json', 'w') as file:
+        #     json.dump(predictions_data_structure, file)
+        # with open('data.json', 'r') as file:
+        #     data = json.load(file)
+        import pdb
+        pdb.set_trace()
         print("Stage 3: Testing Model Done")
     if args['visualize_all']:
         print("Visualizing Data")
@@ -321,5 +331,5 @@ if __name__ == "__main__":
         #     directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
         #     # TODO: WRITE MARKET SIM TO STORAGE
         #     # TODO: READ MARKET SIM DATA AND GENERATE GRAPHS
-        #     shared_methods.visualize_stock_in_simulation(stock_name_to_portfolio_information, directory_name)
+            shared_methods.visualize_stock_in_simulation(stock_name_to_portfolio_information, directory_name)
         print("Visualizing Data Done")
