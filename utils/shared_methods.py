@@ -84,15 +84,12 @@ def save_predictions():
     predictions_structure = {}
     ticker_name_to_yahoo_data = defaultdict()
     for file_path in get_absolute_file_paths(constants.YAHOO_DATA_DIR):
-        import pdb
-        pdb.set_trace()
-        ticker_name_to_yahoo_data[file_path.split('/')[-1].split('.csv')] = pd.read_csv(x, index_col=[0], header=[0], skipinitialspace=True, parse_dates=True)
-
+        ticker_name_to_yahoo_data[file_path.split('/')[-1].split('.csv')[0]] = pd.read_csv(file_path, index_col=[0], header=[0], skipinitialspace=True, parse_dates=True)
     for result in tqdm(results, desc="Predicting and Running Simulation"):
         model = joblib.load(constants.SAVED_MODEL_FILE_PATH)
         reference_technical_indicator_df, reference_buy_sell_df, test_data_file_path = result
         file_name = test_data_file_path.split("/")[-1]
-        ticker_name = file_name.split('.csv')
+        ticker_name = file_name.split('.csv')[0]
         stock_close_prices = reference_technical_indicator_df.pop('Close')
         model_predictions = pd.DataFrame(model.predict(reference_technical_indicator_df), index=reference_technical_indicator_df.index, columns=['bs_signal'])
         if ticker_name in ticker_name_to_yahoo_data:
@@ -101,7 +98,6 @@ def save_predictions():
         else:
             print(f'{ticker_name} does not match any stock names found in {ticker_name_to_yahoo_data.keys()}')
             continue
-
         if ticker_name in predictions_structure:
             raise Exception(f'A duplicate entry of {ticker_name} has been found. This should be impossible!')
         predictions_structure[ticker_name] = {'stock_df_with_predictions': yahoo_stock_df_with_predictions, 'stock_close_prices': stock_close_prices,
@@ -140,6 +136,8 @@ def visualize_stock_in_simulation(stock_name_to_portfolio_information, dir_name)
 
 def process_chunk(chunk):
     #TODO: k,v wrong
+    import pdb
+    pdb.set_trace()
     for key, prediction in chunk.items():
         write_prediction_to_csv(prediction)
 

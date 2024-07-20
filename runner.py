@@ -181,8 +181,8 @@ def parallel_data_splitter(tuple_arg):
     try:
         normalized_indicators_df, bs_df, df_for_predictions = setup_data(stock_df, option_args['indicators'], option_args['length'], option_args['lookahead_days'])
         x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.15, shuffle=False)
-        pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(constants.TRAINING_DATA_DIR_PATH, f'training_{file_name}'))
-        pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(constants.TESTING_DATA_DIR_PATH, f'testing_{file_name}'))
+        pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(constants.TRAINING_DATA_DIR_PATH, f'{file_name}'))
+        pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(constants.TESTING_DATA_DIR_PATH, f'{file_name}'))
     except Exception as e:
         print(f"Failed to process {index}_{file_name}: {e}")
 
