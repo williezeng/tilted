@@ -180,7 +180,7 @@ def parallel_data_splitter(tuple_arg):
         raise Exception(f'{index}{path_to_file} does not have any data')
     stock_df.name = file_name
     try:
-        normalized_indicators_df, bs_df, df_for_predictions = setup_data(stock_df, option_args['indicators'], option_args['length'], option_args['lookahead_days'])
+        normalized_indicators_df, bs_df, df_for_predictions = setup_data(index, stock_df, option_args['indicators'], option_args['length'], option_args['lookahead_days'])
         x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.15, shuffle=False)
         pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(constants.TRAINING_DATA_DIR_PATH, f'{file_name}'))
         pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(constants.TESTING_DATA_DIR_PATH, f'{file_name}'))
@@ -272,7 +272,6 @@ if __name__ == "__main__":
             if not os.path.exists(file_path):
                 os.mkdir(file_path)
         list_of_files_in_yahoo_dir = [(index, file_path, args) for index, file_path in enumerate(shared_methods.get_absolute_file_paths(constants.YAHOO_DATA_DIR))]
-        # parallel_data_splitter(list_of_files_in_yahoo_dir[0])
         with multiprocessing.Pool(processes=constants.MULTIPROCESS_CPU_NUMBER) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
         combine_data(shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH))
@@ -284,7 +283,7 @@ if __name__ == "__main__":
         print("Stage 2: Training Model")
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
-        rf = RandomForestClassifier(n_estimators=15, max_depth=20, n_jobs=-1, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
+        rf = RandomForestClassifier(n_estimators=15, max_depth=25, n_jobs=-1, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
         # x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         combined_indicators.pop('Close')
         rf.fit(combined_indicators, combined_buy_sell_signals['bs_signal'])
@@ -303,12 +302,6 @@ if __name__ == "__main__":
         print('writing predictions')
         shared_methods.write_predictions_to_file(predictions_structure)
         predictions_data_structure = shared_methods.market_sim(predictions_structure, directory_name)
-        # with open('data.json', 'w') as file:
-        #     json.dump(predictions_data_structure, file)
-        # with open('data.json', 'r') as file:
-        #     data = json.load(file)
-        import pdb
-        pdb.set_trace()
         print("Stage 3: Testing Model Done")
     if args['visualize_all']:
         print("Visualizing Data")

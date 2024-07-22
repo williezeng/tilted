@@ -31,4 +31,5 @@ training/graphs/*
 !training/data/
 !training/graphs/
 
-reports/*/*.png
+reports/*/*/*.png
+reports/*/*/*.h5

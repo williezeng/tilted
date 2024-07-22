@@ -125,7 +125,7 @@ def market_sim(predictions, dir_name):
     stock_name_to_portfolio_information = {}
     backtesting_results = []
     for ticker_name, stock_data_map in predictions.items():
-        stock_strat_results, simulation_summary, report_list = simulator(stock_data_map['stock_df_with_predictions'], stock_data_map['stock_close_prices'], ticker_name)
+        simulation_summary, report_list = simulator(dir_name, stock_data_map['stock_df_with_predictions'], stock_data_map['stock_close_prices'], ticker_name)
         stock_name_to_portfolio_information[ticker_name] = {'summary': simulation_summary,
                                                             'stock_strat_results': stock_strat_results,
                                                             'stock_close_price': stock_data_map['stock_close_prices'],
@@ -145,7 +145,9 @@ def visualize_stock_in_simulation(stock_name_to_portfolio_information, dir_name)
         create_benchmark_graphs(stock_simulation_map['stock_strat_results'], stock_simulation_map['stock_close_prices'], stock_simulation_map['ticker_name'], dir_name)
 
 
-def simulator(clean_target_df, stock_close_prices, ticker_name):
+def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
+    simulator_path = os.path.join(dir_name, ticker_name)
+    os.makedirs(simulator_path, exist_ok=True)
     simulation_summary_data = {}
     alpha_strategy = bt.Cerebro()
     clean_target_df.pop('Adj Close')
@@ -171,17 +173,15 @@ def simulator(clean_target_df, stock_close_prices, ticker_name):
     returns.index = returns.index.tz_convert('UTC')
     # we need to save as many things from pyfoliozer as possible
     # Assuming alpha_final_portfolio_value is a scalar value
-    # alpha_final_portfolio_value = alpha_strat_results.broker.getvalue()
-    #
+    alpha_final_portfolio_value = alpha_strat_results.broker.getvalue()
     # # Convert the scalar value to a DataFrame
-    # portfolio_value_df = pd.DataFrame({'final_portfolio_value': [alpha_final_portfolio_value]})
-    #
+    portfolio_value_df = pd.DataFrame({'final_portfolio_value': [alpha_final_portfolio_value]})
     # # Save the DataFrame to an HDF5 file
-    # portfolio_value_df.to_hdf('alpha_final_portfolio_value.h5', key='zsdf', mode='w')
-    returns.to_hdf('backtrader.h5', 'returns')
-    positions.to_hdf('backtrader.h5', 'positions')
-    transactions.to_hdf('backtrader.h5', 'transactions/')
-    gross_lev.to_hdf('backtrader.h5', 'gross_lev')
+    portfolio_value_df.to_hdf(os.path.join(simulator_path, 'alpha_final_portfolio_value.h5'), 'portfolio_value', mode='w')
+    returns.to_hdf(os.path.join(simulator_path,'returns.h5'), 'returns', mode='w')
+    positions.to_hdf(os.path.join(simulator_path,'positions.h5'), 'positions', mode='w')
+    transactions.to_hdf(os.path.join(simulator_path,'transactions.h5'), 'transactions', mode='w')
+    gross_lev.to_hdf(os.path.join(simulator_path, 'gross_lev.h5'), 'gross_lev', mode='w')
 
     simulation_summary_data = {
         'final_portfolio_value': alpha_final_portfolio_value,
@@ -190,7 +190,7 @@ def simulator(clean_target_df, stock_close_prices, ticker_name):
         'Stock percent gain': 100 * (stock_close_prices[-1] - stock_close_prices[0]) / stock_close_prices[0],
         'total_trades': total.get('total')
     }
-    return alpha_strat_results, simulation_summary_data, report_generator(alpha_final_portfolio_value, alpha_strat_results, total, ticker_name)
+    return simulation_summary_data, report_generator(alpha_final_portfolio_value, alpha_strat_results, total, ticker_name)
 
 
 def create_benchmark_graphs(strat_results, stock_close_prices, ticker_name, dir_name):

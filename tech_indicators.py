@@ -98,6 +98,18 @@ def calculate_vwap(df, window=10):
     return vwap
 
 
+def calculate_amo(df,lookback=constants.LOOK_BACK_PERIOD):
+    # Calculate momentum
+    momentum = df['Close'] - df['Close'].shift(lookback)
+    # Calculate the absolute value of momentum
+    abs_momentum = np.abs(momentum)
+    # Calculate the average of the absolute momentum for the long period
+    long_avg = abs_momentum.rolling(window=constants.LONG_TERM_PERIOD).mean()
+    # Calculate the Adaptive Momentum Oscillator
+    amo = momentum / long_avg
+    return amo
+
+
 def get_indicators(df, options, length, y_test_lookahead):
     df_copy = df.copy()
     df_copy['SMA_10'] = (df_copy['Close'] - df_copy.ta.sma(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['Close']
@@ -111,7 +123,11 @@ def get_indicators(df, options, length, y_test_lookahead):
     df_copy['bb_width'] = (df_copy['BBU_10_2.0'] - df_copy['BBL_10_2.0']) / df_copy['Close']
     df_copy['VWAP'] = calculate_vwap(df_copy)
     df_copy['VWMA_10'] = (df_copy['VWAP'] - df_copy.ta.vwma(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['VWAP']
-    df_copy['VWAP_signal'] = df_copy.apply(lambda row: constants.BUY if row['Close'] < row['VWAP'] else constants.SELL if row['Close'] > row['VWAP'] else constants.HOLD, axis=1)
+    df_copy['RSI'] = df_copy.ta.rsi(length=constants.LONG_TERM_PERIOD)
+    df_copy['AMO'] = calculate_amo(df_copy)
+    df_copy = df_copy.dropna()
+    if df_copy['RSI'].isna().any():
+        print('THIS ticker has NaN RSI values')
     list_of_dfs = []
     # averages are calculated given n previous days of information, drop the NAs
     y_label_df = create_ylabels(df[['Close']].astype(float))
@@ -123,7 +139,8 @@ def get_indicators(df, options, length, y_test_lookahead):
                    'bb_width': df_copy['bb_width'],
                    'VWMA_10': df_copy['VWMA_10'],
                    'VWAP': df_copy['VWAP'],
-                   'VWAP_signal': df_copy['VWAP_signal'],
+                   'RSI': df_copy['RSI'],
+                   'AMO': df_copy['AMO'],
                    'Close': df_copy['Close'],
                    }
                    # 'volume': df_copy['Volume'],
@@ -135,18 +152,23 @@ def get_indicators(df, options, length, y_test_lookahead):
         if option in options_map:
             list_of_dfs.append(options_map[option])
 
-    x = pd.concat(list_of_dfs, axis=1)
-    x = x.dropna()
-    return x, y_label_df
+    concat_dfs = pd.concat(list_of_dfs, axis=1)
+    concat_dfs = concat_dfs.dropna()
+    return concat_dfs, y_label_df
 
 
-def normalize_indicators(dfs):
+def normalize_indicators(name, dfs):
     normalized_df = []
     for dataf in dfs:
+        df = dfs[dataf].astype(float)
         if set(dfs[dataf].values) == {0, 1, -1}:
-            normalized_df.append(dfs[dataf].astype(float))
+            normalized_df.append(df)
         else:
-            normalized_df.append(dfs[dataf].astype(float) / dfs[dataf].astype(float).iloc[0])
+            if df.iloc[0] == 0:
+                print(f"Warning: The first value in the DataFrame {name} is zero, normalization skipped.")
+                normalized_df.append(df)
+                continue
+            normalized_df.append(df / df.iloc[0])
     return pd.concat(normalized_df, axis=1)
 
 
@@ -229,10 +251,10 @@ def add_buy_sell_shares(bs_df, close_price, starting_value, offset=0.008, impact
     return entire_book_order
 
 
-def setup_data(df_from_ticker, indicators, length, lookahead_days):
+def setup_data(index, df_from_ticker, indicators, length, lookahead_days):
     indicator_df, buy_sell_hold_df = get_indicators(df_from_ticker, indicators, length, lookahead_days)
     refined_indicators_df, refined_bs_df = index_len_resolver(indicator_df, buy_sell_hold_df)
-    normalized_indicators_df = normalize_indicators(refined_indicators_df)
+    normalized_indicators_df = normalize_indicators(df_from_ticker.name, refined_indicators_df)
     # the buy_sell_hold_df will always END earlier than the indicator_df because of the lookahead days
     # the indicator_df will always START later than the buy_sell_hold_df because of the average_day length
     # bsh       =      [ , , , ]

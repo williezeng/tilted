@@ -4,7 +4,7 @@ ETHEREUM_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', 'ETH-USD')
 STOCK_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', '{string_name}')]
 BANNED_TICKERS = ['SW', 'CEG', 'AMCR', 'HWM']  # These companies did not exist on the starting date, therefore their data is shorter
 
-TECHNICAL_INDICATORS = ['VWMA_10', 'VWAP', 'VWAP_signal', 'SMA_10', 'EMA_10', 'bb_upper', 'bb_lower', 'bb_width', 'Close']
+TECHNICAL_INDICATORS = ['VWMA_10', 'VWAP', 'SMA_10', 'EMA_10', 'bb_upper', 'bb_lower', 'bb_width', 'RSI', 'AMO', 'Close']
 
 
 YAHOO_DATA_DIR = 'yahoo_data'
@@ -50,6 +50,7 @@ SELL_THRESHOLD = -BUY_THRESHOLD
 LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL = 1
 
 LONG_TERM_PERIOD = 10
+LOOK_BACK_PERIOD = 5
 BUY = 1
 SELL = -1
 HOLD = 0
