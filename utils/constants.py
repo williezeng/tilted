@@ -2,7 +2,7 @@ import os
 
 ETHEREUM_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', 'ETH-USD')]
 STOCK_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', '{string_name}')]
-BANNED_TICKERS = ['SW', 'CEG', 'AMCR', 'HWM']  # These companies did not exist on the starting date, therefore their data is shorter
+BANNED_TICKERS = ['SW', 'CEG', 'AMCR', 'HWM', 'GEV', 'SOLV']  # These companies have a very short time frame
 
 TECHNICAL_INDICATORS = ['VWMA_10', 'VWAP', 'SMA_10', 'EMA_10', 'bb_upper', 'bb_lower', 'bb_width', 'RSI', 'AMO', 'Close']
 

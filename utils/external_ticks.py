@@ -59,18 +59,24 @@ def get_all_tickers():
 def convert_ticker(ticker):
     return ticker.replace('.', '-')
 
+
+def gather_all_fortune500():
+    fortune_df = get_fortune_500_tickers()
+    fortune_df.to_csv(os.path.join(DATA_DIR, '00_fortune_500_tickers.csv'), index=False, header=False)
+    converted_tickers = [convert_ticker(ticker) for ticker in get_all_tickers()]
+    params_list = [(ticker, args.start, args.end) for ticker in converted_tickers if
+                   ticker not in constants.BANNED_TICKERS]
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
+        pool.map(write_to_file, params_list)
+
+
 if __name__ == "__main__":
     args = build_args()
     if args.top500:
         fortune_500_df = get_fortune_500_tickers()
         fortune_500_df.to_csv(os.path.join(DATA_DIR, '00_fortune_500_tickers.csv'), index=False, header=False)
     elif args.all:
-        fortune_500_df = get_fortune_500_tickers()
-        fortune_500_df.to_csv(os.path.join(DATA_DIR, '00_fortune_500_tickers.csv'), index=False, header=False)
-        converted_tickers = [convert_ticker(ticker) for ticker in get_all_tickers()]
-        params_list = [(ticker, args.start, args.end) for ticker in converted_tickers if ticker not in constants.BANNED_TICKERS]
-        with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:
-            pool.map(write_to_file, params_list)
+        gather_all_fortune500()
     elif args.name:
         params = (args.name, args.start, args.end)
         write_to_file(params)

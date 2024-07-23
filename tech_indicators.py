@@ -159,16 +159,19 @@ def get_indicators(df, options, length, y_test_lookahead):
 
 def normalize_indicators(name, dfs):
     normalized_df = []
+    index = 0
     for dataf in dfs:
         df = dfs[dataf].astype(float)
         if set(dfs[dataf].values) == {0, 1, -1}:
             normalized_df.append(df)
         else:
-            if df.iloc[0] == 0:
-                print(f"Warning: The first value in the DataFrame {name} is zero, normalization skipped.")
-                normalized_df.append(df)
-                continue
-            normalized_df.append(df / df.iloc[0])
+            while index < 20:
+                if df.iloc[index] != 0:
+                    break
+                index += 1
+            if index >= 20:
+                print(f"Warning: All values before index {index} in the DataFrame {name} is zero, normalization skipped.")
+            normalized_df.append(df / df.iloc[index])
     return pd.concat(normalized_df, axis=1)
 
 

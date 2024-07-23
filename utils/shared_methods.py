@@ -3,7 +3,7 @@ import pandas as pd
 import multiprocessing
 import joblib
 from tqdm import tqdm
-from utils import constants
+from utils import constants, exceptions
 from sklearn.metrics import accuracy_score
 import backtrader as bt
 from strategy import AlphaStrategy
@@ -34,7 +34,11 @@ def parallel_get_technical_indicators_and_buy_sell_dfs(list_of_data_files):
     return results
 
 
-def report_generator(final_portfolio_value, strat_result, total_trades, stock_name):
+def report_generator(portfolio_result_instance, stock_name):
+
+    total_trades = portfolio_result_instance.analyzers.trade_analysis.get_analysis().get('total')
+    final_portfolio_value = portfolio_result_instance.broker.getvalue()
+
     backtesting_report = [f"The following transactions show the backtesting results of {stock_name}'s stock:",
                           f'Starting Portfolio Value: {constants.INITIAL_CAP:,.2f}',
                           f'Final Portfolio Value: {final_portfolio_value:,.2f}',
@@ -42,16 +46,16 @@ def report_generator(final_portfolio_value, strat_result, total_trades, stock_na
                           f'Total number of closed trades: {total_trades.get("closed")}',
                           f'Total number of opening trades: {total_trades.get("open")}']
 
-    won = strat_result.analyzers.trade_analysis.get_analysis().get('won')
+    won = portfolio_result_instance.analyzers.trade_analysis.get_analysis().get('won')
     if not won:
         return backtesting_report
     backtesting_report.append(
         "Total winning trades: %s (Amount: USD %s)" % (won.get('total'), won.get('pnl').get('total')))
-    lost = strat_result.analyzers.trade_analysis.get_analysis().get('lost')
+    lost = portfolio_result_instance.analyzers.trade_analysis.get_analysis().get('lost')
     backtesting_report.append(
         "Total losing trades: %s (Amount: USD %s)" % (lost.get('total'), lost.get('pnl').get('total')))
 
-    pnl = strat_result.analyzers.trade_analysis.get_analysis().get('pnl')
+    pnl = portfolio_result_instance.analyzers.trade_analysis.get_analysis().get('pnl')
     if not pnl:
         return backtesting_report
     backtesting_report.append(f'Gross profit/loss: USD {pnl.get("gross").get("total"):,.2f}')
@@ -59,7 +63,7 @@ def report_generator(final_portfolio_value, strat_result, total_trades, stock_na
     backtesting_report.append(f'Unrealized gain/loss: USD {final_portfolio_value - constants.INITIAL_CAP - pnl.get("net").get("total"):,.2f}')
     backtesting_report.append(f'Total gain/loss: USD {final_portfolio_value - constants.INITIAL_CAP:,.2f}')
     backtesting_report.append('')
-    backtesting_report.append('Sharpe Ratio: %s' % strat_result.analyzers.mysharpe.get_analysis().get('sharperatio', ''))
+    backtesting_report.append('Sharpe Ratio: %s' % portfolio_result_instance.analyzers.mysharpe.get_analysis().get('sharperatio', ''))
 
 
     # backtesting_report.append(pf.show_perf_stats(returns, positions=positions, transactions=transactions, return_df=True))
@@ -125,19 +129,20 @@ def market_sim(predictions, dir_name):
     stock_name_to_portfolio_information = {}
     backtesting_results = []
     for ticker_name, stock_data_map in predictions.items():
-        simulation_summary, report_list = simulator(dir_name, stock_data_map['stock_df_with_predictions'], stock_data_map['stock_close_prices'], ticker_name)
-        stock_name_to_portfolio_information[ticker_name] = {'summary': simulation_summary,
-                                                            'stock_strat_results': stock_strat_results,
-                                                            'stock_close_price': stock_data_map['stock_close_prices'],
-                                                            'ticker_name': ticker_name
+        try:
+            simulation_summary_structure = simulator(dir_name, stock_data_map['stock_df_with_predictions'], stock_data_map['stock_close_prices'], ticker_name)
+        except exceptions.TradeSimulationException as ex:
+            print(ex)
+            continue
+        backtesting_results.extend(report_generator(simulation_summary_structure['portfolio_result_instance'], ticker_name))
+        stock_name_to_portfolio_information[ticker_name] = {'final_portfolio_value': simulation_summary_structure['final_portfolio_value'],
+                                                            'Portfolio cumulative percent gain': simulation_summary_structure['Portfolio cumulative percent gain'],
+                                                            'Stock percent gain': simulation_summary_structure['Stock percent gain'],
+                                                            'total_trades': simulation_summary_structure['total_trades']
                                                             }
-        backtesting_results.extend(report_list)
-
     with open(os.path.join(dir_name, constants.BACKTESTING_RESULT_FILE_NAME), 'w') as file:
         file.write('\n'.join(backtesting_results))
-
     generate_summary_report(stock_name_to_portfolio_information, dir_name)
-    return stock_name_to_portfolio_information
 
 
 def visualize_stock_in_simulation(stock_name_to_portfolio_information, dir_name):
@@ -164,9 +169,7 @@ def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
     alpha_strat_results = results[0]
     total = alpha_strat_results.analyzers.trade_analysis.get_analysis().get('total')
     if total.get('total') == 0:
-        print(f'No trades done for {ticker_name}')
-        return simulation_summary_data
-    alpha_final_portfolio_value = alpha_strat_results.broker.getvalue()
+        raise exceptions.TradeSimulationException(f'No trades done for {ticker_name}')
 
     pyfoliozer = alpha_strat_results.analyzers.getbyname('pyfolio')
     returns, positions, transactions, gross_lev = pyfoliozer.get_pf_items()
@@ -177,61 +180,26 @@ def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
     # # Convert the scalar value to a DataFrame
     portfolio_value_df = pd.DataFrame({'final_portfolio_value': [alpha_final_portfolio_value]})
     # # Save the DataFrame to an HDF5 file
+    stock_close_prices.to_hdf(os.path.join(simulator_path, 'stock_close_prices.h5'), 'close', mode='w')
     portfolio_value_df.to_hdf(os.path.join(simulator_path, 'alpha_final_portfolio_value.h5'), 'portfolio_value', mode='w')
-    returns.to_hdf(os.path.join(simulator_path,'returns.h5'), 'returns', mode='w')
-    positions.to_hdf(os.path.join(simulator_path,'positions.h5'), 'positions', mode='w')
-    transactions.to_hdf(os.path.join(simulator_path,'transactions.h5'), 'transactions', mode='w')
+    returns.to_hdf(os.path.join(simulator_path, 'returns.h5'), 'returns', mode='w')
+    positions.to_hdf(os.path.join(simulator_path, 'positions.h5'), 'positions', mode='w')
+    transactions.to_hdf(os.path.join(simulator_path, 'transactions.h5'), 'transactions', mode='w')
     gross_lev.to_hdf(os.path.join(simulator_path, 'gross_lev.h5'), 'gross_lev', mode='w')
-
     simulation_summary_data = {
         'final_portfolio_value': alpha_final_portfolio_value,
         'Portfolio cumulative percent gain': 100 * (
                     alpha_final_portfolio_value - constants.INITIAL_CAP) / constants.INITIAL_CAP,
         'Stock percent gain': 100 * (stock_close_prices[-1] - stock_close_prices[0]) / stock_close_prices[0],
-        'total_trades': total.get('total')
+        'total_trades': total.get('total'),
+        'portfolio_result_instance': alpha_strat_results,
     }
-    return simulation_summary_data, report_generator(alpha_final_portfolio_value, alpha_strat_results, total, ticker_name)
-
-
-def create_benchmark_graphs(strat_results, stock_close_prices, ticker_name, dir_name):
-    # compare with benchmark
-    benchmark = yf.download('^GSPC', start=stock_close_prices.index[0], end=stock_close_prices.index[-1])['Close']
-    benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
-
-    stock_close_prices = stock_close_prices.pct_change().dropna().tz_localize('UTC')
-
-    df = a_returns.to_frame('Strategy').join(benchmark.to_frame('Benchmark (S&P 500)')).join(stock_close_prices.to_frame('Buy and Hold')).dropna()
-    fig = plt.figure(figsize=(15, 5))
-    df['Strategy'] = (1 + df['Strategy']).cumprod() - 1
-    df['Benchmark (S&P 500)'] = (1 + df['Benchmark (S&P 500)']).cumprod() - 1
-    df['Buy and Hold'] = (1 + df['Buy and Hold']).cumprod() - 1
-    plt.plot(df.index, df['Strategy'], label='Strategy')
-    plt.plot(df.index, df['Benchmark (S&P 500)'], label='Benchmark (S&P 500)')
-    plt.plot(df.index, df['Buy and Hold'], label='Buy and Hold')
-    plt.xlabel('Date')
-    plt.ylabel('Cumulative Returns')
-    plt.legend()
-    plt.grid(True)
-    plt.title(f'{ticker_name} Cumulative Returns: Strategy vs. Benchmark vs Buy and Hold')
-    fig.savefig(os.path.join(dir_name, f'{ticker_name}_cumulative_returns.png'))
-
-    fig = plt.figure(figsize=(15, 5))
-    pf.plot_annual_returns(a_returns)
-    plt.title('Annual Returns of Fund')
-    fig.savefig(os.path.join(dir_name, f'{ticker_name}_annual_returns.png'))
-
-    fig = plt.figure(figsize=(15, 5))
-    pf.plot_monthly_returns_heatmap(a_returns)
-    plt.title('Monthly Returns of Fund (%)')
-    fig.savefig(os.path.join(dir_name, f'{ticker_name}_monthly_returns.png'))
-
-    plt.close('all')
+    return simulation_summary_data
 
 
 def generate_summary_report(stock_portfolio_information, dir_name):
-    summary = {k: v['summary'] for k, v in stock_portfolio_information.items()}
-    sorted_by_portfolio_value = sorted(summary.items(), key=lambda item: item[1]['final_portfolio_value'], reverse=True)
-    sorted_by_portfolio_vs_stock = sorted(summary.items(), key=lambda item: item[1]['Portfolio cumulative percent gain']-item[1]['Stock percent gain'], reverse=True)
+    sorted_by_portfolio_value = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['final_portfolio_value'], reverse=True)
+    sorted_by_portfolio_vs_stock = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['Portfolio cumulative percent gain']-item[1]['Stock percent gain'], reverse=True)
     report_list = [
         f"Buy/Sell Threshold {constants.BUY_THRESHOLD} within a look ahead day count: {constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL}",
         f"Technical Indicators: {constants.TECHNICAL_INDICATORS}",
@@ -252,3 +220,38 @@ def generate_summary_report(stock_portfolio_information, dir_name):
     report_list.extend([f"{name}: {info}" for name, info in sorted_by_portfolio_value])
     with open(os.path.join(dir_name, constants.SUMMARY_REPORT_FILE_NAME), 'w') as file:
         file.write('\n'.join(report_list))
+
+
+# def create_benchmark_graphs(strat_results, stock_close_prices, ticker_name, dir_name):
+#     # compare with benchmark
+#     benchmark = yf.download('^GSPC', start=stock_close_prices.index[0], end=stock_close_prices.index[-1])['Close']
+#     benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
+#
+#     stock_close_prices = stock_close_prices.pct_change().dropna().tz_localize('UTC')
+#
+#     df = a_returns.to_frame('Strategy').join(benchmark.to_frame('Benchmark (S&P 500)')).join(stock_close_prices.to_frame('Buy and Hold')).dropna()
+#     fig = plt.figure(figsize=(15, 5))
+#     df['Strategy'] = (1 + df['Strategy']).cumprod() - 1
+#     df['Benchmark (S&P 500)'] = (1 + df['Benchmark (S&P 500)']).cumprod() - 1
+#     df['Buy and Hold'] = (1 + df['Buy and Hold']).cumprod() - 1
+#     plt.plot(df.index, df['Strategy'], label='Strategy')
+#     plt.plot(df.index, df['Benchmark (S&P 500)'], label='Benchmark (S&P 500)')
+#     plt.plot(df.index, df['Buy and Hold'], label='Buy and Hold')
+#     plt.xlabel('Date')
+#     plt.ylabel('Cumulative Returns')
+#     plt.legend()
+#     plt.grid(True)
+#     plt.title(f'{ticker_name} Cumulative Returns: Strategy vs. Benchmark vs Buy and Hold')
+#     fig.savefig(os.path.join(dir_name, f'{ticker_name}_cumulative_returns.png'))
+#
+#     fig = plt.figure(figsize=(15, 5))
+#     pf.plot_annual_returns(a_returns)
+#     plt.title('Annual Returns of Fund')
+#     fig.savefig(os.path.join(dir_name, f'{ticker_name}_annual_returns.png'))
+#
+#     fig = plt.figure(figsize=(15, 5))
+#     pf.plot_monthly_returns_heatmap(a_returns)
+#     plt.title('Monthly Returns of Fund (%)')
+#     fig.savefig(os.path.join(dir_name, f'{ticker_name}_monthly_returns.png'))
+#
+#     plt.close('all')

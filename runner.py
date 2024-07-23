@@ -14,7 +14,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.utils import shuffle
 from tech_indicators import setup_data
-from utils import constants, trading_logger, shared_methods
+from utils import constants, trading_logger, shared_methods, external_ticks
 from rf import RandomForest
 from datetime import datetime
 import json
@@ -225,6 +225,7 @@ def build_args():
     parser.add_argument('--check_model', type=bool, required=False, default=False,
                         help="specify to see plots of the ytrain ytest ypred generated data")
 
+    parser.add_argument('--gather', action='store_true', default=False, help='gather s&p 500 data from yahoo')
     parser.add_argument('--model_name', action='store_true', default=False, help="define the machine learning model")
     parser.add_argument('--tag', required=False, type=str, help='tag this run with a string')
     parser.add_argument('--all', action='store_true', default=False, help='DO ALL STAGES')
@@ -258,6 +259,8 @@ if __name__ == "__main__":
     now = datetime.now()
     args["indicators"] = constants.TECHNICAL_INDICATORS
     print(args["indicators"])
+    if args['gather']:
+        external_ticks.gather_all_fortune500()
     if args['all']:
         args['preprocess_all'] = True
         args['combine_all'] = True
