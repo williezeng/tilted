@@ -14,10 +14,10 @@ import yfinance as yf
 from io import BytesIO
 
 
-def get_absolute_file_paths(data_dir):
+def get_absolute_file_paths(data_dir, suffix_file_type='.csv'):
     file_paths = []
     for filename in os.listdir(data_dir):
-        if os.path.isfile(os.path.join(data_dir, filename)) and filename.endswith('.csv') and not filename.startswith('00_'):
+        if os.path.isfile(os.path.join(data_dir, filename)) and filename.endswith(suffix_file_type) and not filename.startswith('00_'):
             file_paths.append(os.path.join(data_dir, filename))
     return file_paths
 
@@ -145,7 +145,7 @@ def market_sim(predictions, dir_name):
     generate_summary_report(stock_name_to_portfolio_information, dir_name)
 
 
-def visualize_stock_in_simulation(stock_name_to_portfolio_information, dir_name):
+def visualize_stock_in_simulation(ticker_name, dir_name):
     for ticker_name, stock_simulation_map in stock_name_to_portfolio_information.items():
         create_benchmark_graphs(stock_simulation_map['stock_strat_results'], stock_simulation_map['stock_close_prices'], stock_simulation_map['ticker_name'], dir_name)
 
@@ -222,36 +222,36 @@ def generate_summary_report(stock_portfolio_information, dir_name):
         file.write('\n'.join(report_list))
 
 
-# def create_benchmark_graphs(strat_results, stock_close_prices, ticker_name, dir_name):
-#     # compare with benchmark
-#     benchmark = yf.download('^GSPC', start=stock_close_prices.index[0], end=stock_close_prices.index[-1])['Close']
-#     benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
-#
-#     stock_close_prices = stock_close_prices.pct_change().dropna().tz_localize('UTC')
-#
-#     df = a_returns.to_frame('Strategy').join(benchmark.to_frame('Benchmark (S&P 500)')).join(stock_close_prices.to_frame('Buy and Hold')).dropna()
-#     fig = plt.figure(figsize=(15, 5))
-#     df['Strategy'] = (1 + df['Strategy']).cumprod() - 1
-#     df['Benchmark (S&P 500)'] = (1 + df['Benchmark (S&P 500)']).cumprod() - 1
-#     df['Buy and Hold'] = (1 + df['Buy and Hold']).cumprod() - 1
-#     plt.plot(df.index, df['Strategy'], label='Strategy')
-#     plt.plot(df.index, df['Benchmark (S&P 500)'], label='Benchmark (S&P 500)')
-#     plt.plot(df.index, df['Buy and Hold'], label='Buy and Hold')
-#     plt.xlabel('Date')
-#     plt.ylabel('Cumulative Returns')
-#     plt.legend()
-#     plt.grid(True)
-#     plt.title(f'{ticker_name} Cumulative Returns: Strategy vs. Benchmark vs Buy and Hold')
-#     fig.savefig(os.path.join(dir_name, f'{ticker_name}_cumulative_returns.png'))
-#
-#     fig = plt.figure(figsize=(15, 5))
-#     pf.plot_annual_returns(a_returns)
-#     plt.title('Annual Returns of Fund')
-#     fig.savefig(os.path.join(dir_name, f'{ticker_name}_annual_returns.png'))
-#
-#     fig = plt.figure(figsize=(15, 5))
-#     pf.plot_monthly_returns_heatmap(a_returns)
-#     plt.title('Monthly Returns of Fund (%)')
-#     fig.savefig(os.path.join(dir_name, f'{ticker_name}_monthly_returns.png'))
-#
-#     plt.close('all')
+def create_benchmark_graphs(portfolio_returns, stock_close_prices, ticker_name, dir_name):
+    # compare with benchmark
+    benchmark = yf.download('^GSPC', start=stock_close_prices.index[0], end=stock_close_prices.index[-1])['Close']
+    benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
+
+    stock_close_prices = stock_close_prices.pct_change().dropna().tz_localize('UTC')
+
+    df = portfolio_returns.to_frame('Strategy').join(benchmark.to_frame('Benchmark (S&P 500)')).join(stock_close_prices.to_frame('Buy and Hold')).dropna()
+    fig = plt.figure(figsize=(15, 5))
+    df['Strategy'] = (1 + df['Strategy']).cumprod() - 1
+    df['Benchmark (S&P 500)'] = (1 + df['Benchmark (S&P 500)']).cumprod() - 1
+    df['Buy and Hold'] = (1 + df['Buy and Hold']).cumprod() - 1
+    plt.plot(df.index, df['Strategy'], label='Strategy')
+    plt.plot(df.index, df['Benchmark (S&P 500)'], label='Benchmark (S&P 500)')
+    plt.plot(df.index, df['Buy and Hold'], label='Buy and Hold')
+    plt.xlabel('Date')
+    plt.ylabel('Cumulative Returns')
+    plt.legend()
+    plt.grid(True)
+    plt.title(f'{ticker_name} Cumulative Returns: Strategy vs. Benchmark vs Buy and Hold')
+    fig.savefig(os.path.join(dir_name, f'{ticker_name}_cumulative_returns.png'))
+
+    fig = plt.figure(figsize=(15, 5))
+    pf.plot_annual_returns(portfolio_returns)
+    plt.title('Annual Returns of Fund')
+    fig.savefig(os.path.join(dir_name, f'{ticker_name}_annual_returns.png'))
+
+    fig = plt.figure(figsize=(15, 5))
+    pf.plot_monthly_returns_heatmap(portfolio_returns)
+    plt.title('Monthly Returns of Fund (%)')
+    fig.savefig(os.path.join(dir_name, f'{ticker_name}_monthly_returns.png'))
+
+    plt.close('all')

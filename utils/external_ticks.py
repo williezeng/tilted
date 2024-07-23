@@ -7,7 +7,7 @@ from pandas_datareader import data as pdr
 import multiprocessing
 import yfinance as yf
 import argparse
-import constants
+from utils import constants
 yf.pdr_override()
 
 DATA_DIR = os.path.join(os.path.curdir, 'yahoo_data')

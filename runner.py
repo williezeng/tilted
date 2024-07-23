@@ -227,6 +227,9 @@ def build_args():
 
     parser.add_argument('--gather', action='store_true', default=False, help='gather s&p 500 data from yahoo')
     parser.add_argument('--model_name', action='store_true', default=False, help="define the machine learning model")
+
+    parser.add_argument('--ticker_name', required=False, type=str, help='specialize a ticker_name for visualization data')
+    parser.add_argument('--data_path', required=False, type=str, help='data_path dir for visualization data')
     parser.add_argument('--tag', required=False, type=str, help='tag this run with a string')
     parser.add_argument('--all', action='store_true', default=False, help='DO ALL STAGES')
     parser.add_argument('--preprocess_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
@@ -235,6 +238,8 @@ def build_args():
     parser.add_argument('--predict_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
 
     parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--visualize_single', action='store_true', default=False, help='Visualize a single ticker')
+
     parser.add_argument('--simulation_ticker_name', type=str, required=False, help='create the simulation graphs for the specified ticker')
 
     parser.add_argument('--skip_training_graphs', help='skip training graphs', action='store_true', default=False)
@@ -322,10 +327,26 @@ if __name__ == "__main__":
                 'predictions_technical_indicator_files': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)
             }
             graphs.visualize_data(data_map)
-        # if args['simulation_ticker_name']:
-        #     short_date_time = now.strftime('%y%m%d_%H%M')
-        #     directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
-        #     # TODO: WRITE MARKET SIM TO STORAGE
-        #     # TODO: READ MARKET SIM DATA AND GENERATE GRAPHS
-            shared_methods.visualize_stock_in_simulation(stock_name_to_portfolio_information, directory_name)
+        # if not args['skip_simulation_graphs']:
+        #     visualize_stock_in_simulation
+    if args['visualize_single']:
+        if not args['data_path'] or not args['ticker_name']:
+            raise Exception("args --data_path and --ticker_name are required for visualization")
+
+        target_report_path = os.path.join(constants.PARENT_REPORT_DIRECTORY_NAME, args['data_path'])
+        if not os.path.exists(target_report_path):
+            raise Exception("Path does not exist %s. Specify a valid --data_path" % target_report_path)
+        ticker_report_path = os.path.join(target_report_path, args['ticker_name'])
+        if not os.path.exists(ticker_report_path):
+            raise Exception("Ticker %s does not exist. Specify a valid --ticker_name" % ticker_report_path)
+
+        stock_close_prices = pd.read_hdf(os.path.join(ticker_report_path, 'stock_close_prices.h5'), 'close')
+        portfolio_value_df = pd.read_hdf(os.path.join(ticker_report_path, 'alpha_final_portfolio_value.h5'),
+                                         'portfolio_value')
+        returns = pd.read_hdf(os.path.join(ticker_report_path, 'returns.h5'), 'returns')
+        positions = pd.read_hdf(os.path.join(ticker_report_path, 'positions.h5'), 'positions')
+        transactions = pd.read_hdf(os.path.join(ticker_report_path, 'transactions.h5'), 'transactions')
+        gross_lev = pd.read_hdf(os.path.join(ticker_report_path, 'gross_lev.h5'), 'gross_lev')
+        shared_methods.create_benchmark_graphs(returns, stock_close_prices, args['ticker_name'], ticker_report_path)
         print("Visualizing Data Done")
+
