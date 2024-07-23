@@ -145,9 +145,9 @@ def market_sim(predictions, dir_name):
     generate_summary_report(stock_name_to_portfolio_information, dir_name)
 
 
-def visualize_stock_in_simulation(ticker_name, dir_name):
-    for ticker_name, stock_simulation_map in stock_name_to_portfolio_information.items():
-        create_benchmark_graphs(stock_simulation_map['stock_strat_results'], stock_simulation_map['stock_close_prices'], stock_simulation_map['ticker_name'], dir_name)
+# def visualize_stock_in_simulation(ticker_name, dir_name):
+#     for ticker_name, stock_simulation_map in stock_name_to_portfolio_information.items():
+#         create_benchmark_graphs(stock_simulation_map['stock_strat_results'], stock_simulation_map['stock_close_prices'], stock_simulation_map['ticker_name'], dir_name)
 
 
 def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
