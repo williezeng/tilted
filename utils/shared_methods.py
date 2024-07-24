@@ -7,10 +7,8 @@ from utils import constants, exceptions
 from sklearn.metrics import accuracy_score
 import backtrader as bt
 from strategy import AlphaStrategy
-import pyfolio as pf
 import matplotlib.pyplot as plt
 from collections import defaultdict
-import yfinance as yf
 from io import BytesIO
 
 
@@ -145,15 +143,7 @@ def market_sim(predictions, dir_name):
     generate_summary_report(stock_name_to_portfolio_information, dir_name)
 
 
-# def visualize_stock_in_simulation(ticker_name, dir_name):
-#     for ticker_name, stock_simulation_map in stock_name_to_portfolio_information.items():
-#         create_benchmark_graphs(stock_simulation_map['stock_strat_results'], stock_simulation_map['stock_close_prices'], stock_simulation_map['ticker_name'], dir_name)
-
-
 def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
-    simulator_path = os.path.join(dir_name, ticker_name)
-    os.makedirs(simulator_path, exist_ok=True)
-    simulation_summary_data = {}
     alpha_strategy = bt.Cerebro()
     clean_target_df.pop('Adj Close')
     data = bt.feeds.PandasDirectData(dataname=clean_target_df)
@@ -170,7 +160,6 @@ def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
     total = alpha_strat_results.analyzers.trade_analysis.get_analysis().get('total')
     if total.get('total') == 0:
         raise exceptions.TradeSimulationException(f'No trades done for {ticker_name}')
-
     pyfoliozer = alpha_strat_results.analyzers.getbyname('pyfolio')
     returns, positions, transactions, gross_lev = pyfoliozer.get_pf_items()
     returns.index = returns.index.tz_convert('UTC')
@@ -180,6 +169,8 @@ def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
     # # Convert the scalar value to a DataFrame
     portfolio_value_df = pd.DataFrame({'final_portfolio_value': [alpha_final_portfolio_value]})
     # # Save the DataFrame to an HDF5 file
+    simulator_path = os.path.join(dir_name, ticker_name)
+    os.makedirs(simulator_path, exist_ok=True)
     stock_close_prices.to_hdf(os.path.join(simulator_path, 'stock_close_prices.h5'), 'close', mode='w')
     portfolio_value_df.to_hdf(os.path.join(simulator_path, 'alpha_final_portfolio_value.h5'), 'portfolio_value', mode='w')
     returns.to_hdf(os.path.join(simulator_path, 'returns.h5'), 'returns', mode='w')
@@ -220,38 +211,3 @@ def generate_summary_report(stock_portfolio_information, dir_name):
     report_list.extend([f"{name}: {info}" for name, info in sorted_by_portfolio_value])
     with open(os.path.join(dir_name, constants.SUMMARY_REPORT_FILE_NAME), 'w') as file:
         file.write('\n'.join(report_list))
-
-
-def create_benchmark_graphs(portfolio_returns, stock_close_prices, ticker_name, dir_name):
-    # compare with benchmark
-    benchmark = yf.download('^GSPC', start=stock_close_prices.index[0], end=stock_close_prices.index[-1])['Close']
-    benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
-
-    stock_close_prices = stock_close_prices.pct_change().dropna().tz_localize('UTC')
-
-    df = portfolio_returns.to_frame('Strategy').join(benchmark.to_frame('Benchmark (S&P 500)')).join(stock_close_prices.to_frame('Buy and Hold')).dropna()
-    fig = plt.figure(figsize=(15, 5))
-    df['Strategy'] = (1 + df['Strategy']).cumprod() - 1
-    df['Benchmark (S&P 500)'] = (1 + df['Benchmark (S&P 500)']).cumprod() - 1
-    df['Buy and Hold'] = (1 + df['Buy and Hold']).cumprod() - 1
-    plt.plot(df.index, df['Strategy'], label='Strategy')
-    plt.plot(df.index, df['Benchmark (S&P 500)'], label='Benchmark (S&P 500)')
-    plt.plot(df.index, df['Buy and Hold'], label='Buy and Hold')
-    plt.xlabel('Date')
-    plt.ylabel('Cumulative Returns')
-    plt.legend()
-    plt.grid(True)
-    plt.title(f'{ticker_name} Cumulative Returns: Strategy vs. Benchmark vs Buy and Hold')
-    fig.savefig(os.path.join(dir_name, f'{ticker_name}_cumulative_returns.png'))
-
-    fig = plt.figure(figsize=(15, 5))
-    pf.plot_annual_returns(portfolio_returns)
-    plt.title('Annual Returns of Fund')
-    fig.savefig(os.path.join(dir_name, f'{ticker_name}_annual_returns.png'))
-
-    fig = plt.figure(figsize=(15, 5))
-    pf.plot_monthly_returns_heatmap(portfolio_returns)
-    plt.title('Monthly Returns of Fund (%)')
-    fig.savefig(os.path.join(dir_name, f'{ticker_name}_monthly_returns.png'))
-
-    plt.close('all')

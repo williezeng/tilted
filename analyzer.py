@@ -8,7 +8,6 @@ matplotlib.use('TkAgg')
 import matplotlib.dates as mdates
 from utils import trading_logger
 import matplotlib.pyplot as plt
-from tech_indicators import add_long_short_shares, add_buy_sell_shares
 from utils.constants import BUY, SELL, HOLD
 
 RECENT_RUN_DIR = os.path.join(os.path.curdir, 'recent_run')

@@ -1,6 +1,5 @@
 import numpy as np
 from datetime import datetime
-
 import pandas as pd
 import pandas_ta as ta
 import matplotlib
@@ -13,39 +12,6 @@ matplotlib.use('TkAgg')
 # TODO:  correlation, relative strength index (RSI), the difference between the open price of yesterday and today, difference close price of yesterday
 
 # TODO: CREATE STRATEGY: SMA + BOELI + MACD:
-
-
-def get_obv_vol(data_frame):
-    dataframe_copy = data_frame.copy()
-    obv = dataframe_copy.ta.obv().dropna()
-    return obv
-
-
-def get_cmf_vol(data_frame, length):
-    dataframe_copy = data_frame.copy()
-    cmf = dataframe_copy.ta.cmf(length=length).dropna()
-    return cmf
-
-
-def get_rsi(data_frame, length):
-    # It oscillates between 0 and 100,
-    # readings above 70 indicating overbought conditions
-    # readings below 30 indicating oversold conditions
-    dataframe_copy = data_frame.copy()
-    rsi = dataframe_copy.ta.rsi(length=length).dropna()
-    return rsi
-
-
-def bbands_calculation(data_frame, moving_average, length):
-    # imported pandasta bbands calculations are broken, lingering na's in their sma implementation
-    # input should be some sort of moving average, df
-    # standard_deviation = data_frame.ta.stdev(length=length).dropna()
-    # bbstd = 2
-    # deviations = bbstd * standard_deviation
-    # lower_bb = moving_average - deviations
-    # upper_bb = moving_average + deviations
-    dataframe_copy = data_frame.copy()
-    return
 
 
 def index_len_resolver(df1, df2):
@@ -126,12 +92,9 @@ def get_indicators(df, options, length, y_test_lookahead):
     df_copy['RSI'] = df_copy.ta.rsi(length=constants.LONG_TERM_PERIOD)
     df_copy['AMO'] = calculate_amo(df_copy)
     df_copy = df_copy.dropna()
-    if df_copy['RSI'].isna().any():
-        print('THIS ticker has NaN RSI values')
     list_of_dfs = []
     # averages are calculated given n previous days of information, drop the NAs
     y_label_df = create_ylabels(df[['Close']].astype(float))
-
     options_map = {'SMA_10': df_copy['SMA_10'],
                    'EMA_10': df_copy['EMA_10'],
                    'bb_upper': df_copy['bb_upper'],
@@ -200,58 +163,6 @@ def create_ylabels(df):
     df_copy = df_copy[:-constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL]
     df_copy['bs_signal'] = trainY
     return df_copy[['bs_signal']]
-
-
-def add_long_short_shares(bs_df, amount_of_shares):
-    """
-    long 200 to fill our shorts and hold 100
-    short 200 to sell our 100 and hold 100 shares that we don't have
-    the shares that we borrow will be filled by the long 200
-    """
-    holdings = 0
-    amount_to_switch_to_buy_or_sell = 2 * amount_of_shares
-    entire_book_order = pd.DataFrame(index=bs_df.index, columns=['share_amount'])
-    for index in range(len(bs_df)):
-        if bs_df[index] == BUY and holdings < amount_of_shares:
-            if holdings == 0:
-                entire_book_order['share_amount'][index] = amount_of_shares
-                holdings += amount_of_shares
-            else:  # needed to switch from sell to buy
-                entire_book_order['share_amount'][index] = amount_to_switch_to_buy_or_sell
-                holdings += amount_to_switch_to_buy_or_sell
-        # sell
-        elif bs_df[index] == SELL and holdings > -amount_of_shares:
-            if holdings == 0:
-                entire_book_order['share_amount'][index] = amount_of_shares
-                holdings = holdings - amount_of_shares
-            else:  # needed to switch from buy to sell
-                entire_book_order['share_amount'][index] = amount_to_switch_to_buy_or_sell
-                holdings = holdings - amount_to_switch_to_buy_or_sell
-    entire_book_order['bs_signal'] = bs_df
-    checker = [(entire_book_order['share_amount'][x], entire_book_order.index[x]) for x in range(len(entire_book_order))
-               if not np.isnan(entire_book_order['share_amount'][x])]
-    entire_book_order = entire_book_order.dropna()
-    return entire_book_order
-
-
-def add_buy_sell_shares(bs_df, close_price, starting_value, offset=0.008, impact=0.005):
-    holdings = 0
-    entire_book_order = pd.DataFrame(index=bs_df.index, columns=['share_amount'])
-    gains_holder = starting_value
-    for index in bs_df.index:
-        if bs_df[index] == BUY and holdings == 0:
-            # 0.90 for risk management
-            number_of_buyable_shares = (gains_holder * 0.95) / close_price.loc[index][0]
-            gains_holder -= (close_price.loc[index][0] * number_of_buyable_shares)
-            entire_book_order['share_amount'][index] = number_of_buyable_shares
-            holdings += number_of_buyable_shares
-        elif bs_df[index] == SELL and holdings > 0:
-            entire_book_order['share_amount'][index] = holdings
-            gains_holder = (close_price.loc[index][0] * holdings)
-            holdings -= holdings
-    entire_book_order['bs_signal'] = bs_df
-    entire_book_order = entire_book_order.dropna()
-    return entire_book_order
 
 
 def setup_data(index, df_from_ticker, indicators, length, lookahead_days):

@@ -1,12 +1,17 @@
 import matplotlib
 import os
+import argparse
 matplotlib.use('TkAgg')
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import multiprocessing
+import pandas as pd
+import yfinance as yf
+import pyfolio as pf
 from utils.constants import BUY, SELL, HOLD
 from utils import constants, shared_methods
-import pandas as pd
+from datetime import datetime
+from tqdm import tqdm
 
 
 def create_stock_graph(close_data, bs_series, show=False):
@@ -103,3 +108,111 @@ def visualize_data(data_files_map):
         return
     with multiprocessing.Pool(processes=constants.MULTIPROCESS_CPU_NUMBER) as pool:
         results = pool.map(visualize, params)
+
+
+def read_simulation_df(ticker_report_path):
+    stock_close_prices = pd.read_hdf(os.path.join(ticker_report_path, 'stock_close_prices.h5'), 'close')
+    portfolio_value_df = pd.read_hdf(os.path.join(ticker_report_path, 'alpha_final_portfolio_value.h5'), 'portfolio_value')
+    portfolio_returns = pd.read_hdf(os.path.join(ticker_report_path, 'returns.h5'), 'returns')
+    positions = pd.read_hdf(os.path.join(ticker_report_path, 'positions.h5'), 'positions')
+    transactions = pd.read_hdf(os.path.join(ticker_report_path, 'transactions.h5'), 'transactions')
+    gross_lev = pd.read_hdf(os.path.join(ticker_report_path, 'gross_lev.h5'), 'gross_lev')
+    return stock_close_prices, portfolio_value_df, portfolio_returns, positions, transactions, gross_lev
+
+
+def create_simulation_graphs(portfolio_returns, stock_close_prices, ticker_name, dir_name):
+    # compare with benchmark
+    benchmark = yf.download('^GSPC', start=stock_close_prices.index[0], end=stock_close_prices.index[-1])['Close']
+    benchmark = benchmark.pct_change().dropna().tz_localize('UTC')
+    close_prices = stock_close_prices.pct_change().dropna().tz_localize('UTC')
+    df = portfolio_returns.to_frame('Strategy').join(benchmark.to_frame('Benchmark (S&P 500)')).join(close_prices.to_frame('Buy and Hold')).dropna()
+    fig = plt.figure(figsize=(15, 5))
+    df['Strategy'] = (1 + df['Strategy']).cumprod() - 1
+    df['Benchmark (S&P 500)'] = (1 + df['Benchmark (S&P 500)']).cumprod() - 1
+    df['Buy and Hold'] = (1 + df['Buy and Hold']).cumprod() - 1
+    plt.plot(df.index, df['Strategy'], label='Strategy')
+    plt.plot(df.index, df['Benchmark (S&P 500)'], label='Benchmark (S&P 500)')
+    plt.plot(df.index, df['Buy and Hold'], label='Buy and Hold')
+    plt.xlabel('Date')
+    plt.ylabel('Cumulative Returns')
+    plt.legend()
+    plt.grid(True)
+    plt.title(f'{ticker_name} Cumulative Returns: Strategy vs. Benchmark vs Buy and Hold')
+    fig.savefig(os.path.join(dir_name, f'{ticker_name}_cumulative_returns.png'))
+
+    fig = plt.figure(figsize=(15, 5))
+    pf.plot_annual_returns(portfolio_returns)
+    plt.title('Annual Returns of Fund')
+    fig.savefig(os.path.join(dir_name, f'{ticker_name}_annual_returns.png'))
+
+    fig = plt.figure(figsize=(15, 5))
+    pf.plot_monthly_returns_heatmap(portfolio_returns)
+    plt.title('Monthly Returns of Fund (%)')
+    fig.savefig(os.path.join(dir_name, f'{ticker_name}_monthly_returns.png'))
+    plt.close('all')
+
+
+def visualize_single_simulation(ticker_report_path, ticker_name):
+    stock_close_prices, portfolio_value_df, portfolio_returns, positions, transactions, gross_lev = read_simulation_df(ticker_report_path)
+    create_simulation_graphs(portfolio_returns, stock_close_prices, ticker_name, ticker_report_path)
+
+
+def visualize_all_simulations(capture_path):
+    entries = os.listdir(capture_path)
+    dirs_in_capture_path = [entry for entry in entries if os.path.isdir(os.path.join(capture_path, entry))]
+    for ticker_directory_name in tqdm(dirs_in_capture_path, desc='Creating Graphs'):
+        full_path = os.path.join(capture_path, ticker_directory_name)
+        stock_close_prices, portfolio_value_df, portfolio_returns, positions, transactions, gross_lev = read_simulation_df(full_path)
+        create_simulation_graphs(portfolio_returns, stock_close_prices, ticker_directory_name, full_path)
+
+
+def build_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_path', required=False, type=str, help='data_path dir for visualization data')
+    parser.add_argument('--ticker_name', required=False, type=str, help='specify a ticker_name for visualization data')
+
+    parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--visualize_single', action='store_true', default=False, help='Visualize a single ticker')
+
+    parser.add_argument('--skip_training_graphs', help='skip training graphs', action='store_true', default=False)
+    parser.add_argument('--skip_testing_graphs', help='skip testing graphs', action='store_true', default=False)
+    parser.add_argument('--skip_prediction_graphs', help='skip prediction graphs', action='store_true', default=False)
+    parser.add_argument('--skip_simulation_graphs', help='skip prediction graphs', action='store_true', default=False)
+    return vars(parser.parse_args())
+
+
+if __name__ == "__main__":
+    args = build_args()
+    now = datetime.now()
+    if not args['data_path']:
+        raise Exception("args --data_path is required for visualization")
+    capture_report_path = os.path.join(constants.PARENT_REPORT_DIRECTORY_NAME, args['data_path'])
+    if not os.path.exists(capture_report_path):
+        raise Exception("Path does not exist %s. Specify a valid --data_path" % capture_report_path)
+
+    if args['visualize_all']:
+        print("Visualizing Data")
+        if not args['skip_training_graphs']:
+            data_map = {'training': shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH)}
+            visualize_data(data_map)
+        if not args['skip_testing_graphs']:
+            data_map = {'testing': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)}
+            visualize_data(data_map)
+        # Todo: guarantee that the file names are equivalently in the same order in the two below data sets
+        # Todo: then we can do one index for loop instead of O(n^2)
+        if not args['skip_prediction_graphs']:
+            data_map = {
+                'predictions_buy_sell_files': shared_methods.get_absolute_file_paths(constants.TESTING_PREDICTION_DATA_DIR_PATH),
+                'predictions_technical_indicator_files': shared_methods.get_absolute_file_paths(constants.TESTING_DATA_DIR_PATH)
+            }
+            visualize_data(data_map)
+        if not args['skip_simulation_graphs']:
+            visualize_all_simulations(capture_report_path)
+    if args['visualize_single']:
+        if not args['ticker_name']:
+            raise Exception("args --ticker_name are required for a single visualization")
+        ticker_report_path = os.path.join(capture_report_path, args['ticker_name'])
+        if not os.path.exists(ticker_report_path):
+            raise Exception("Ticker %s does not exist. Specify a valid --ticker_name" % ticker_report_path)
+        visualize_single_simulation(ticker_report_path, args['ticker_name'])
+        print("Visualizing Data Done")
