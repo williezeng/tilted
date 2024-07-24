@@ -238,7 +238,7 @@ if __name__ == "__main__":
         directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
         create_directory_with_tag(directory_name)
         predictions_structure = shared_methods.save_predictions()
-        print('writing predictions')
+        print('Running simulation and writing predictions')
         shared_methods.write_predictions_to_file(predictions_structure)
         predictions_data_structure = shared_methods.market_sim(predictions_structure, directory_name)
         print("Stage 3: Testing Model Done")

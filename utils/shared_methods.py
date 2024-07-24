@@ -33,6 +33,7 @@ def parallel_get_technical_indicators_and_buy_sell_dfs(list_of_data_files):
 
 
 def report_generator(portfolio_result_instance, stock_name):
+    report_struct = {}
 
     total_trades = portfolio_result_instance.analyzers.trade_analysis.get_analysis().get('total')
     final_portfolio_value = portfolio_result_instance.broker.getvalue()
@@ -50,26 +51,28 @@ def report_generator(portfolio_result_instance, stock_name):
     backtesting_report.append(
         "Total winning trades: %s (Amount: USD %s)" % (won.get('total'), won.get('pnl').get('total')))
     lost = portfolio_result_instance.analyzers.trade_analysis.get_analysis().get('lost')
+
     backtesting_report.append(
         "Total losing trades: %s (Amount: USD %s)" % (lost.get('total'), lost.get('pnl').get('total')))
 
     pnl = portfolio_result_instance.analyzers.trade_analysis.get_analysis().get('pnl')
     if not pnl:
         return backtesting_report
+    sharpe_ratio = portfolio_result_instance.analyzers.mysharpe.get_analysis().get('sharperatio', 0)
+
     backtesting_report.append(f'Gross profit/loss: USD {pnl.get("gross").get("total"):,.2f}')
     backtesting_report.append(f'Net profit/loss: USD {pnl.get("net").get("total"):,.2f}')
     backtesting_report.append(f'Unrealized gain/loss: USD {final_portfolio_value - constants.INITIAL_CAP - pnl.get("net").get("total"):,.2f}')
     backtesting_report.append(f'Total gain/loss: USD {final_portfolio_value - constants.INITIAL_CAP:,.2f}')
     backtesting_report.append('')
-    backtesting_report.append('Sharpe Ratio: %s' % portfolio_result_instance.analyzers.mysharpe.get_analysis().get('sharperatio', ''))
+    backtesting_report.append('Sharpe Ratio: %s' % sharpe_ratio)
 
-
-    # backtesting_report.append(pf.show_perf_stats(returns, positions=positions, transactions=transactions, return_df=True))
-    # pf.create_position_tear_sheet(returns, positions)
-    # plt.savefig('position_tear_sheet.png')
-    # plt.close()
     backtesting_report.append('\n' + '-' * 50 + '\n')
-    return backtesting_report
+    report_struct['winning_trades'] = won.get('total')
+    report_struct['losing_trades'] = lost.get('total')
+    report_struct['sharpe_ratio'] = sharpe_ratio if sharpe_ratio else 0
+    report_struct['report'] = backtesting_report
+    return report_struct
 
 
 def save_predictions():
@@ -132,11 +135,15 @@ def market_sim(predictions, dir_name):
         except exceptions.TradeSimulationException as ex:
             print(ex)
             continue
-        backtesting_results.extend(report_generator(simulation_summary_structure['portfolio_result_instance'], ticker_name))
+        generated_report_structure = report_generator(simulation_summary_structure['portfolio_result_instance'], ticker_name)
+        backtesting_results.extend(generated_report_structure['report'])
         stock_name_to_portfolio_information[ticker_name] = {'final_portfolio_value': simulation_summary_structure['final_portfolio_value'],
                                                             'Portfolio cumulative percent gain': simulation_summary_structure['Portfolio cumulative percent gain'],
                                                             'Stock percent gain': simulation_summary_structure['Stock percent gain'],
-                                                            'total_trades': simulation_summary_structure['total_trades']
+                                                            'total_trades': simulation_summary_structure['total_trades'],
+                                                            'winning_trades': generated_report_structure['winning_trades'],
+                                                            'losing_trades': generated_report_structure['losing_trades'],
+                                                            'sharpe_ratio': generated_report_structure['sharpe_ratio'],
                                                             }
     with open(os.path.join(dir_name, constants.BACKTESTING_RESULT_FILE_NAME), 'w') as file:
         file.write('\n'.join(backtesting_results))
@@ -191,6 +198,11 @@ def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
 def generate_summary_report(stock_portfolio_information, dir_name):
     sorted_by_portfolio_value = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['final_portfolio_value'], reverse=True)
     sorted_by_portfolio_vs_stock = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['Portfolio cumulative percent gain']-item[1]['Stock percent gain'], reverse=True)
+    sorted_by_sharpe_ratio = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['sharpe_ratio'], reverse=True)
+    sorted_by_winning_trades = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['winning_trades'], reverse=True)
+
+    winning_trades = sum(info['winning_trades'] for name, info in sorted_by_portfolio_value[0:100])
+    losing_trades = sum(info['losing_trades'] for name, info in sorted_by_portfolio_value[-100:])
     report_list = [
         f"Buy/Sell Threshold {constants.BUY_THRESHOLD} within a look ahead day count: {constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL}",
         f"Technical Indicators: {constants.TECHNICAL_INDICATORS}",
@@ -200,13 +212,16 @@ def generate_summary_report(stock_portfolio_information, dir_name):
         f"Lowest % gain: {sorted_by_portfolio_value[-1]}",
         f"Number of stocks with a positive gain {sum(1 for name, info in sorted_by_portfolio_value if info['final_portfolio_value'] > constants.INITIAL_CAP)}",
         f"Number of stocks with a negative gain {sum(1 for name, info in sorted_by_portfolio_value if info['final_portfolio_value'] < constants.INITIAL_CAP)}",
-        f"Sum of the Top 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_by_portfolio_value[0:100]):,.2f}",
-        f"Sum of the Bottom 100 portfolios: {sum(info['final_portfolio_value'] for name, info in sorted_by_portfolio_value[-100:]):,.2f}",
+        f"Win/Loss Ratio: {winning_trades/losing_trades:,.2f}",
         f"{'-' * 50}",
     ]
     print("\n".join(report_list))
     report_list.extend([f"Top 100 Portfolios that perform better than their stock"])
     report_list.extend([f"{name}: {info}" for name, info in sorted_by_portfolio_vs_stock[:100]])
+    report_list.extend([f"Top 100 Highest Sharpe Ratio Portfolios"])
+    report_list.extend([f"{name}: {info}" for name, info in sorted_by_sharpe_ratio[:100]])
+    report_list.extend([f"Top 100 Highest Winning Trades Portfolios"])
+    report_list.extend([f"{name}: {info}" for name, info in sorted_by_winning_trades[:100]])
     report_list.extend([f"{'-' * 50}", f"All 500 portfolios sorted from Highest portfolio value to least", f"{'-' * 50}"])
     report_list.extend([f"{name}: {info}" for name, info in sorted_by_portfolio_value])
     with open(os.path.join(dir_name, constants.SUMMARY_REPORT_FILE_NAME), 'w') as file:
