@@ -102,7 +102,7 @@ def get_indicators(df, options, length, y_test_lookahead):
                    'bb_width': df_copy['bb_width'],
                    'VWMA_10': df_copy['VWMA_10'],
                    'VWAP': df_copy['VWAP'],
-                   'RSI': df_copy['RSI'],
+                   # 'RSI': df_copy['RSI'],
                    'AMO': df_copy['AMO'],
                    'Close': df_copy['Close'],
                    }

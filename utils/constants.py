@@ -41,7 +41,7 @@ MULTIPROCESS_CPU_NUMBER = 4
 SHUFFLE_RANDOM_STATE = 63
 
 RANDOM_FOREST_RANDOM_STATE = 63
-RANDOM_FOREST_CLASS_WEIGHT = {0: 1.1, -1: 1.1, 1: 1}
+RANDOM_FOREST_CLASS_WEIGHT = {0: 1.1, -1: 1.2, 1: 1}
 
 # Threshold needs to be higher than trade impact + commission
 # threshold to days = 0.01:2

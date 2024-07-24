@@ -47,7 +47,7 @@ def report_generator(portfolio_result_instance, stock_name):
 
     won = portfolio_result_instance.analyzers.trade_analysis.get_analysis().get('won')
     if not won:
-        return backtesting_report
+        return report_struct
     backtesting_report.append(
         "Total winning trades: %s (Amount: USD %s)" % (won.get('total'), won.get('pnl').get('total')))
     lost = portfolio_result_instance.analyzers.trade_analysis.get_analysis().get('lost')
@@ -57,7 +57,7 @@ def report_generator(portfolio_result_instance, stock_name):
 
     pnl = portfolio_result_instance.analyzers.trade_analysis.get_analysis().get('pnl')
     if not pnl:
-        return backtesting_report
+        return report_struct
     sharpe_ratio = portfolio_result_instance.analyzers.mysharpe.get_analysis().get('sharperatio', 0)
 
     backtesting_report.append(f'Gross profit/loss: USD {pnl.get("gross").get("total"):,.2f}')
@@ -165,8 +165,8 @@ def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
     results = alpha_strategy.run()
     alpha_strat_results = results[0]
     total = alpha_strat_results.analyzers.trade_analysis.get_analysis().get('total')
-    if total.get('total') == 0:
-        raise exceptions.TradeSimulationException(f'No trades done for {ticker_name}')
+    if total.get('total') <= 2:
+        raise exceptions.TradeSimulationException(f'Not enough trades done for {ticker_name}')
     pyfoliozer = alpha_strat_results.analyzers.getbyname('pyfolio')
     returns, positions, transactions, gross_lev = pyfoliozer.get_pf_items()
     returns.index = returns.index.tz_convert('UTC')
