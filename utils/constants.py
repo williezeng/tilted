@@ -1,4 +1,5 @@
 import os
+from sklearn.ensemble import RandomForestClassifier
 
 ETHEREUM_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', 'ETH-USD')]
 STOCK_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', '{string_name}')]
@@ -38,10 +39,7 @@ GENERATED_REPORTS = [BACKTESTING_RESULT_FILE_NAME, SUMMARY_REPORT_FILE_NAME]
 
 MULTIPROCESS_CPU_NUMBER = 4
 
-SHUFFLE_RANDOM_STATE = 63
 
-RANDOM_FOREST_RANDOM_STATE = 63
-RANDOM_FOREST_CLASS_WEIGHT = {0: 1.1, -1: 1.2, 1: 1}
 
 # Threshold needs to be higher than trade impact + commission
 # threshold to days = 0.01:2
@@ -56,3 +54,23 @@ SELL = -1
 HOLD = 0
 
 INITIAL_CAP = 10000
+
+SHUFFLE_RANDOM_STATE = 63
+
+RANDOM_FOREST_RANDOM_STATE = 63
+RANDOM_FOREST_CLASS_WEIGHT = {0: 1.1, -1: 1.3, 1: 1}
+
+MODEL_MAP = {
+    'random_forest': RandomForestClassifier,
+}
+
+
+MODEL_ARGS = {
+    'random_forest': {
+        'n_estimators': 15,
+        'max_depth': 25,
+        'n_jobs': -1,
+        'class_weight': RANDOM_FOREST_CLASS_WEIGHT,
+        'random_state': RANDOM_FOREST_RANDOM_STATE
+    }
+}

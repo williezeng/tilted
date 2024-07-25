@@ -76,7 +76,7 @@ def calculate_amo(df,lookback=constants.LOOK_BACK_PERIOD):
     return amo
 
 
-def get_indicators(df, options, length, y_test_lookahead):
+def get_indicators(df, options):
     df_copy = df.copy()
     df_copy['SMA_10'] = (df_copy['Close'] - df_copy.ta.sma(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['Close']
     df_copy['EMA_10'] = (df_copy['Close'] - df_copy.ta.ema(length=constants.LONG_TERM_PERIOD).dropna())/df_copy['Close']
@@ -102,7 +102,7 @@ def get_indicators(df, options, length, y_test_lookahead):
                    'bb_width': df_copy['bb_width'],
                    'VWMA_10': df_copy['VWMA_10'],
                    'VWAP': df_copy['VWAP'],
-                   # 'RSI': df_copy['RSI'],
+                   'RSI': df_copy['RSI'],
                    'AMO': df_copy['AMO'],
                    'Close': df_copy['Close'],
                    }
@@ -165,14 +165,20 @@ def create_ylabels(df):
     return df_copy[['bs_signal']]
 
 
-def setup_data(index, df_from_ticker, indicators, length, lookahead_days):
-    indicator_df, buy_sell_hold_df = get_indicators(df_from_ticker, indicators, length, lookahead_days)
+def setup_data(index, df_from_ticker, indicators):
+    indicator_df, buy_sell_hold_df = get_indicators(df_from_ticker, indicators)
     refined_indicators_df, refined_bs_df = index_len_resolver(indicator_df, buy_sell_hold_df)
     normalized_indicators_df = normalize_indicators(df_from_ticker.name, refined_indicators_df)
     # the buy_sell_hold_df will always END earlier than the indicator_df because of the lookahead days
     # the indicator_df will always START later than the buy_sell_hold_df because of the average_day length
     # bsh       =      [ , , , ]
     # indicator =         [ , , , , ]
-    future_prediction_days = list(set(indicator_df.index) - set(buy_sell_hold_df.index))
-    future_prediction_days.sort()
-    return normalized_indicators_df, refined_bs_df, indicator_df.loc[future_prediction_days]
+    # future_prediction_days = list(set(indicator_df.index) - set(buy_sell_hold_df.index))
+    # future_prediction_days.sort()
+
+    na_values = normalized_indicators_df.isna().any()
+    if na_values.any():
+        print(f'{index}{df_from_ticker.name} has NA values in indicators')
+    # if refined_bs_df.isna().any():
+    #     print(f'{index}{df_from_ticker.name} has NA values in bs df')
+    return normalized_indicators_df, refined_bs_df

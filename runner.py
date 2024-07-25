@@ -4,16 +4,13 @@ import argparse
 import pandas as pd
 import multiprocessing
 import joblib
+import shutil
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
 from tech_indicators import setup_data
 from utils import constants, trading_logger, shared_methods, external_ticks
-from rf import RandomForest
 from datetime import datetime
 
-NAME_TO_MODEL = {
-    'random_forest': RandomForest,
-}
+
 LOGGER_LEVELS = {
     'info': logging.INFO,
     'debug': logging.DEBUG,
@@ -125,7 +122,7 @@ def parallel_data_splitter(tuple_arg):
         raise Exception(f'{index}{path_to_file} does not have any data')
     stock_df.name = file_name
     try:
-        normalized_indicators_df, bs_df, df_for_predictions = setup_data(index, stock_df, option_args['indicators'], option_args['length'], option_args['lookahead_days'])
+        normalized_indicators_df, bs_df = setup_data(index, stock_df, option_args['indicators'])
         x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.15, shuffle=False)
         pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(constants.TRAINING_DATA_DIR_PATH, f'{file_name}'))
         pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(constants.TESTING_DATA_DIR_PATH, f'{file_name}'))
@@ -148,30 +145,12 @@ def combine_data(data_files_map):
 
 def build_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--length', help='the length for moving averages', type=int, default=10)
-    parser.add_argument('--file_name', help='the name of the file', type=str)
-    parser.add_argument('--optimize_params', help='find best model parameters', type=bool, required=False,
-                        default=False)
-    parser.add_argument('--share_amount', help='the amount of share you want to buy/sell', type=int, required=False,
-                        default=5)
-    parser.add_argument('--starting_value', help='the starting value', type=int, required=False, default=1000)
-    parser.add_argument('--save_recent', help='save the long/short and buy/sell portfolios', type=bool, required=False,
-                        default=False)
-    parser.add_argument('--inspect', help='inspect the yearly gains', type=bool, required=False, default=False)
-    parser.add_argument('--sequential', help='run in sequential', type=bool, required=False, default=False)
-    parser.add_argument('--spy', help='only get spy', type=bool, required=False, default=False)
-    parser.add_argument('--lookahead_days', help='set the lookahead days for ytest', type=int, required=False,
-                        default=10)
+    parser.add_argument('--start', help='the start date of the stock', type=str, default="2008-01-01")
     parser.add_argument('--logger', choices=LOGGER_LEVELS.keys(), default='debug', type=str,
                         help='provide a logging level within {}'.format(LOGGER_LEVELS.keys()))
-    parser.add_argument('--runs', default=1, type=int, help='specify amount of runs')
-    parser.add_argument('--find_best_combination', default=False, type=bool, help='find the best combo of indicators',
-                        required=False)
-    parser.add_argument('--check_model', type=bool, required=False, default=False,
-                        help="specify to see plots of the ytrain ytest ypred generated data")
 
     parser.add_argument('--gather', action='store_true', default=False, help='gather s&p 500 data from yahoo')
-    parser.add_argument('--model_name', action='store_true', default=False, help="define the machine learning model")
+    parser.add_argument('--model_name', type=str, required=False, help="define the machine learning model")
 
     parser.add_argument('--tag', required=False, type=str, help='tag this run with a string')
     parser.add_argument('--all', action='store_true', default=False, help='DO ALL STAGES')
@@ -179,7 +158,11 @@ def build_args():
     parser.add_argument('--combine_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--train_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--predict_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
-    return vars(parser.parse_args())
+    # Additional check to enforce the conditional requirement
+    args = parser.parse_args()
+    if not args.gather and not args.model_name:
+        parser.error("--model_name is required if --gather is not specified")
+    return vars(args)
 
 
 def create_directory_with_tag(name_of_directory):
@@ -192,25 +175,35 @@ def create_directory_with_tag(name_of_directory):
         raise e
 
 
+def create_tree(stage):
+    creation_map = {'training': [constants.TRAINING_BASE_DIRECTORY_NAME, constants.TRAINING_DATA_DIR_PATH, constants.TRAINING_COMBINED_DATA_DIR_PATH],
+                    'testing': [constants.TESTING_BASE_DIRECTORY_NAME, constants.TESTING_DATA_DIR_PATH, constants.TESTING_GRAPHS_DIR_PATH],
+                    'predictions': [constants.TESTING_PREDICTION_DIR_PATH, constants.TESTING_PREDICTION_DATA_DIR_PATH, constants.TESTING_PREDICTION_GRAPHS_DIR_PATH]
+                    }
+    for f_path in creation_map[stage]:
+        if os.path.exists(f_path):
+            shutil.rmtree(f_path)
+        os.makedirs(f_path)
+
+
 if __name__ == "__main__":
     args = build_args()
     now = datetime.now()
     args["indicators"] = constants.TECHNICAL_INDICATORS
     print(args["indicators"])
     if args['gather']:
-        external_ticks.gather_all_fortune500()
+        external_ticks.gather_all_fortune500(args['start'], now.strftime("%Y-%m-%d"))
     if args['all']:
         args['preprocess_all'] = True
         args['train_all'] = True
         args['predict_all'] = True
     if args['preprocess_all']:
         print("stage 1: Preprocessing Data")
-        for file_path in [constants.TRAINING_BASE_DIRECTORY_NAME, constants.TRAINING_DATA_DIR_PATH, constants.TRAINING_COMBINED_DATA_DIR_PATH,
-                          constants.TESTING_BASE_DIRECTORY_NAME, constants.TESTING_DATA_DIR_PATH, constants.TESTING_GRAPHS_DIR_PATH,
-                          constants.TESTING_PREDICTION_DIR_PATH, constants.TESTING_PREDICTION_DATA_DIR_PATH, constants.TESTING_PREDICTION_GRAPHS_DIR_PATH]:
-            if not os.path.exists(file_path):
-                os.mkdir(file_path)
+        # split the training and testing data
+        create_tree('training')
+        create_tree('testing')
         list_of_files_in_yahoo_dir = [(index, file_path, args) for index, file_path in enumerate(shared_methods.get_absolute_file_paths(constants.YAHOO_DATA_DIR))]
+        # parallel_data_splitter(list_of_files_in_yahoo_dir[0])
         with multiprocessing.Pool(processes=constants.MULTIPROCESS_CPU_NUMBER) as pool:
             pool.map(parallel_data_splitter, list_of_files_in_yahoo_dir)
         combine_data(shared_methods.get_absolute_file_paths(constants.TRAINING_DATA_DIR_PATH))
@@ -222,7 +215,7 @@ if __name__ == "__main__":
         print("Stage 2: Training Model")
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
-        rf = RandomForestClassifier(n_estimators=15, max_depth=25, n_jobs=-1, class_weight=constants.RANDOM_FOREST_CLASS_WEIGHT, random_state=constants.RANDOM_FOREST_RANDOM_STATE)
+        rf = constants.MODEL_MAP[args['model_name']](**constants.MODEL_ARGS[args['model_name']])
         # x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         combined_indicators.pop('Close')
         rf.fit(combined_indicators, combined_buy_sell_signals['bs_signal'])
@@ -230,6 +223,7 @@ if __name__ == "__main__":
         print(f'Training accuracy: {rf.score(combined_indicators, combined_buy_sell_signals)}')
         print("Stage 2: Training Model Done")
     if args['predict_all']:
+        create_tree('predictions')
         # Load and Predict on each Test technical indicator DF
         # Save predictions and compare with correct test buy_sell df
         print("Stage 3: Testing Model")
