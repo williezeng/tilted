@@ -74,42 +74,6 @@ MIN_REQUIRED_TRADING_INDICATORS = 5
 #         print('*********************')
 
 
-# def run_models(arguments, df_ticker):
-#     live_predictions_average_df = pd.DataFrame()
-#     result_buy_sell_total_percent_gain_runs = []
-#     # result_long_short_total_percent_gain_runs = []
-#     result_test_accuracies_runs = []
-#     result_train_accuracies_runs = []
-#     list_of_results = simulation_mode(arguments, df_ticker, disable_progress_bar=False)
-#     for buy_sell_percent_gain, test_score, train_score, live_predictions in list_of_results:
-#         result_buy_sell_total_percent_gain_runs.append(buy_sell_percent_gain)
-#         # result_long_short_total_percent_gain_runs.append(long_short_percent_gain)
-#         result_test_accuracies_runs.append(test_score)
-#         result_train_accuracies_runs.append(train_score)
-#         live_predictions_average_df = pd.concat([live_predictions_average_df, live_predictions], axis=1)
-#
-#     # define a function to count the occurrences of -1, 0, and 1 in a row
-#     def count_occurrences(row):
-#         return row.value_counts()
-#
-#     # apply the function to each row of the dataframe
-#     counts_df = live_predictions_average_df.apply(count_occurrences, axis=1)
-#
-#     #      the average percent gain for long shorts is : {sum(result_long_short_total_percent_gain_runs)/len(result_long_short_total_percent_gain_runs)}
-#     #      the std dev for long shorts is: {statistics.stdev(result_long_short_total_percent_gain_runs)}
-#
-#     output = f"""
-#     {df_ticker.name}
-#     after {arguments["runs"]} runs of the {arguments["model_name"]} with {arguments["length"]} day averages, start value of {arguments["starting_value"]}, share amount of {arguments["share_amount"]}, lookahead days at {arguments['lookahead_days']}, indicators: {sorted(arguments["indicators"])}
-#     the average percent gain for buy sell is : {sum(result_buy_sell_total_percent_gain_runs) / len(result_buy_sell_total_percent_gain_runs)}
-#     the std dev total percent gain for buy sell is: {statistics.stdev(result_buy_sell_total_percent_gain_runs) if len(result_buy_sell_total_percent_gain_runs) > 1 else None}
-#     the min total percent gain for buy sell is: {min(result_buy_sell_total_percent_gain_runs)}
-#     the max total percent gain for buy sell is: {max(result_buy_sell_total_percent_gain_runs)}
-#     the average test accuracy is : {sum(result_test_accuracies_runs) / len(result_test_accuracies_runs)}
-#     the average train accuracy is : {sum(result_train_accuracies_runs) / len(result_train_accuracies_runs)}
-#     """
-#     print(output)
-#     print(counts_df)
 
 
 def parallel_data_splitter(tuple_arg):
@@ -150,7 +114,7 @@ def build_args():
                         help='provide a logging level within {}'.format(LOGGER_LEVELS.keys()))
 
     parser.add_argument('--gather', action='store_true', default=False, help='gather s&p 500 data from yahoo')
-    parser.add_argument('--model_name', type=str, required=False, help="define the machine learning model")
+    parser.add_argument('--model_name', type=str, required=True, choices=constants.MODEL_MAP.keys(), help="define the machine learning model")
 
     parser.add_argument('--tag', required=False, type=str, help='tag this run with a string')
     parser.add_argument('--all', action='store_true', default=False, help='DO ALL STAGES')
@@ -215,12 +179,12 @@ if __name__ == "__main__":
         print("Stage 2: Training Model")
         combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
         combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
-        rf = constants.MODEL_MAP[args['model_name']](**constants.MODEL_ARGS[args['model_name']])
+        ml_model = constants.MODEL_MAP[args['model_name']](**constants.MODEL_ARGS[args['model_name']])
         # x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         combined_indicators.pop('Close')
-        rf.fit(combined_indicators, combined_buy_sell_signals['bs_signal'])
-        joblib.dump(rf, constants.SAVED_MODEL_FILE_PATH)
-        print(f'Training accuracy: {rf.score(combined_indicators, combined_buy_sell_signals)}')
+        ml_model.fit(combined_indicators, combined_buy_sell_signals['bs_signal'])
+        joblib.dump(ml_model, constants.SAVED_MODEL_FILE_PATH)
+        print(f'Training accuracy: {ml_model.score(combined_indicators, combined_buy_sell_signals)}')
         print("Stage 2: Training Model Done")
     if args['predict_all']:
         create_tree('predictions')
@@ -234,5 +198,5 @@ if __name__ == "__main__":
         predictions_structure = shared_methods.save_predictions()
         print('Running simulation and writing predictions')
         shared_methods.write_predictions_to_file(predictions_structure)
-        predictions_data_structure = shared_methods.market_sim(predictions_structure, directory_name)
+        predictions_data_structure = shared_methods.market_sim(predictions_structure, directory_name, args['model_name'])
         print("Stage 3: Testing Model Done")

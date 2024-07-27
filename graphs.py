@@ -178,7 +178,17 @@ def build_args():
     parser.add_argument('--skip_testing_graphs', help='skip testing graphs', action='store_true', default=False)
     parser.add_argument('--skip_prediction_graphs', help='skip prediction graphs', action='store_true', default=False)
     parser.add_argument('--skip_simulation_graphs', help='skip prediction graphs', action='store_true', default=False)
-    return vars(parser.parse_args())
+
+    args = parser.parse_args()
+    if not args.gather and not args.model_name:
+        parser.error("--model_name is required if --gather is not specified")
+    if args.ticker_name and args.visualize_all:
+        parser.error("--ticker_name cannot be used with --visualize_all")
+    if args.visualize_all and args.visualize_single:
+        parser.error("--visualize_all cannot be used with --visualize_single")
+    if args.skip_training_graphs and args.skip_testing_graphs and args.skip_prediction_graphs and args.skip_simulation_graphs:
+        parser.error("cannot skip all graphs")
+    return vars(args)
 
 
 if __name__ == "__main__":
@@ -208,7 +218,7 @@ if __name__ == "__main__":
             visualize_data(data_map)
         if not args['skip_simulation_graphs']:
             visualize_all_simulations(capture_report_path)
-    if args['visualize_single']:
+    elif args['visualize_single']:
         if not args['ticker_name']:
             raise Exception("args --ticker_name are required for a single visualization")
         ticker_report_path = os.path.join(capture_report_path, args['ticker_name'])

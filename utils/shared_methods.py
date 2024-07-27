@@ -126,7 +126,7 @@ def split_dict(data, num_chunks=5):
     return [{k: data[k] for k in keys[i:i + chunk_size]} for i in range(0, len(keys), chunk_size)]
 
 
-def market_sim(predictions, dir_name):
+def market_sim(predictions, dir_name, model_name):
     stock_name_to_portfolio_information = {}
     backtesting_results = []
     for ticker_name, stock_data_map in predictions.items():
@@ -145,9 +145,11 @@ def market_sim(predictions, dir_name):
                                                             'losing_trades': generated_report_structure['losing_trades'],
                                                             'sharpe_ratio': generated_report_structure['sharpe_ratio'],
                                                             }
-    with open(os.path.join(dir_name, constants.BACKTESTING_RESULT_FILE_NAME), 'w') as file:
+    summary_dir = os.path.join(dir_name, '00_summary')
+    os.makedirs(summary_dir)
+    with open(os.path.join(summary_dir, constants.BACKTESTING_RESULT_FILE_NAME), 'w') as file:
         file.write('\n'.join(backtesting_results))
-    generate_summary_report(stock_name_to_portfolio_information, dir_name)
+    generate_summary_report(stock_name_to_portfolio_information, summary_dir, model_name)
 
 
 def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
@@ -195,7 +197,7 @@ def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
     return simulation_summary_data
 
 
-def generate_summary_report(stock_portfolio_information, dir_name):
+def generate_summary_report(stock_portfolio_information, dir_name, model_name):
     sorted_by_portfolio_value = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['final_portfolio_value'], reverse=True)
     sorted_by_portfolio_vs_stock = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['Portfolio cumulative percent gain']-item[1]['Stock percent gain'], reverse=True)
     sorted_by_sharpe_ratio = sorted(stock_portfolio_information.items(), key=lambda item: item[1]['sharpe_ratio'], reverse=True)
@@ -206,7 +208,7 @@ def generate_summary_report(stock_portfolio_information, dir_name):
     report_list = [
         f"Buy/Sell Threshold {constants.BUY_THRESHOLD} within a look ahead day count: {constants.LOOK_AHEAD_DAYS_TO_GENERATE_BUY_SELL}",
         f"Technical Indicators: {constants.TECHNICAL_INDICATORS}",
-        f"Model Class Weight: {constants.RANDOM_FOREST_CLASS_WEIGHT}",
+        f"Model Parameters: {constants.MODEL_ARGS[model_name]}",
         f"{'-' * 50}",
         f"Highest % gain: {sorted_by_portfolio_value[0]}",
         f"Lowest % gain: {sorted_by_portfolio_value[-1]}",
