@@ -5,6 +5,7 @@ from backtrader.feeds import PandasData
 class AlphaStrategy(bt.Strategy):
     params = (
         ('equity_pct', 0.9),
+        ('stop_loss_pct', 0.05),
         ('printlog', False),
     )
 
@@ -17,6 +18,7 @@ class AlphaStrategy(bt.Strategy):
         self.order = None
         self.buyprice = None
         self.buycomm = None
+        self.highest_price = None
 
     def log(self, txt, dt=None):
         """ Logging function for this strategy"""
@@ -32,8 +34,13 @@ class AlphaStrategy(bt.Strategy):
         if order.status in [order.Completed]:
             if order.isbuy():
                 self.log('BUY EXECUTED, %.2f' % order.executed.price)
+                self.buyprice = order.executed.price
+                self.buycomm = order.executed.comm
+                self.highest_price = self.buyprice  # Initialize highest price to the buy price
             elif order.issell():
                 self.log('SELL EXECUTED, %.2f' % order.executed.price)
+                self.buyprice = None
+                self.highest_price = None  # Reset highest price after selling
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             self.log('Order Canceled/Margin/Rejected')
 
@@ -50,12 +57,24 @@ class AlphaStrategy(bt.Strategy):
         if self.order:
             return
         available_cash = self.broker.get_cash()
-        # buy
-        if self.bs_signal[0] == 1:
-            position_size = available_cash * self.params.equity_pct
-            if not self.position:  # buy if we are not in the market
-                self.order = self.buy(size=position_size / self.data.close[0])
-        # sell
-        elif self.bs_signal[0] == -1:
-            if self.position:  # sell if we are in the market
+
+        # Update highest price if we have a position
+        if self.position and self.dataclose[0] > self.highest_price:
+            self.highest_price = self.dataclose[0]
+
+        # if we're n the market check for stop-loss condition
+        if self.position:
+            stop_loss_price = self.highest_price * (1.0 - self.params.stop_loss_pct)
+            if self.dataclose[0] <= stop_loss_price:
+                self.log('STOP-LOSS TRIGGERED, SELLING AT %.2f' % self.dataclose[0])
                 self.order = self.sell(size=self.position.size)
+            # sell if we have signal
+            elif self.bs_signal[0] == -1:
+                self.order = self.sell(size=self.position.size)
+
+        # buy if we are not in the market
+        else:
+            if self.bs_signal[0] == 1:
+                position_size = available_cash * self.params.equity_pct
+                self.order = self.buy(size=position_size / self.data.close[0])
+

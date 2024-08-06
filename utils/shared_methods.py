@@ -158,7 +158,7 @@ def simulator(dir_name, clean_target_df, stock_close_prices, ticker_name):
     data = bt.feeds.PandasDirectData(dataname=clean_target_df)
     alpha_strategy.adddata(data)
     alpha_strategy.broker.setcash(constants.INITIAL_CAP)
-    alpha_strategy.addstrategy(AlphaStrategy, printlog=False, equity_pct=0.9)
+    alpha_strategy.addstrategy(AlphaStrategy, printlog=False, equity_pct=0.9, stop_loss_pct=0.05)
     alpha_strategy.broker.setcommission(commission=0.00)
     alpha_strategy.addanalyzer(bt.analyzers.SharpeRatio, _name='mysharpe')
     alpha_strategy.addanalyzer(bt.analyzers.DrawDown, _name='draw_down')
