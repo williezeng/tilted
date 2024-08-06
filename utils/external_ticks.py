@@ -9,7 +9,6 @@ import multiprocessing
 import yfinance as yf
 import argparse
 from utils import constants
-yf.pdr_override()
 
 DATA_DIR = os.path.join(os.path.curdir, 'yahoo_data')
 
@@ -31,7 +30,7 @@ def fetch_data(name, start, end):
             raise ValueError("Incorrect data format, should be YYYY-MM-DD")
     validate(start)
     validate(end)
-    dataframe = pdr.get_data_yahoo(name, start=start, end=end)
+    dataframe = yf.download(name, start=start, end=end)
     return dataframe
 
 
@@ -50,14 +49,7 @@ def build_args():
 def write_to_file(params):
     name, start_date, end_date = params
     df = fetch_data(name, start_date, end_date)
-    df.to_csv(os.path.join(DATA_DIR, '{}.csv'.format(name)))
-
-
-def get_all_tickers():
-    tickers_df = pd.read_csv(os.path.join(DATA_DIR, '00_fortune_500_tickers.csv'), header=None)
-    # Convert the DataFrame to a list
-    tickers_list = tickers_df[0].tolist()
-    return tickers_list
+    df.to_parquet(os.path.join(DATA_DIR, '{}.parquet'.format(name)))
 
 
 def convert_ticker(ticker):
@@ -69,8 +61,8 @@ def gather_all_fortune500(start, end):
         shutil.rmtree(DATA_DIR)
     os.makedirs(DATA_DIR, exist_ok=True)
     fortune_df = get_fortune_500_tickers()
-    fortune_df.to_csv(os.path.join(DATA_DIR, '00_fortune_500_tickers.csv'), index=False, header=False)
-    converted_tickers = [convert_ticker(ticker) for ticker in get_all_tickers()]
+    tickers_list = fortune_df.tolist()
+    converted_tickers = [convert_ticker(ticker) for ticker in tickers_list]
     params_list = [(ticker, start, end) for ticker in converted_tickers if
                    ticker not in constants.BANNED_TICKERS]
     with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as pool:

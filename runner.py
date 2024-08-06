@@ -81,15 +81,15 @@ def parallel_data_splitter(tuple_arg):
     # The data is shuffled right before training
     index, path_to_file, option_args = tuple_arg
     file_name = path_to_file.split("/")[-1]
-    stock_df = pd.read_csv(path_to_file, index_col=[0], header=[0], skipinitialspace=True)
+    stock_df = pd.read_parquet(path_to_file)
     if len(stock_df.index) == 0:
         raise Exception(f'{index}{path_to_file} does not have any data')
     stock_df.name = file_name
     try:
         normalized_indicators_df, bs_df = setup_data(index, stock_df, option_args['indicators'])
         x_train, x_test, y_train, y_test = train_test_split(normalized_indicators_df, bs_df, test_size=0.15, shuffle=False)
-        pd.merge(x_train, y_train, left_index=True, right_index=True).to_csv(os.path.join(constants.TRAINING_DATA_DIR_PATH, f'{file_name}'))
-        pd.merge(x_test, y_test, left_index=True, right_index=True).to_csv(os.path.join(constants.TESTING_DATA_DIR_PATH, f'{file_name}'))
+        pd.merge(x_train, y_train, left_index=True, right_index=True).to_parquet(os.path.join(constants.TRAINING_DATA_DIR_PATH, f'{file_name}'))
+        pd.merge(x_test, y_test, left_index=True, right_index=True).to_parquet(os.path.join(constants.TESTING_DATA_DIR_PATH, f'{file_name}'))
     except Exception as e:
         print(f"Failed to process {index}_{file_name}: {e}")
 
@@ -102,9 +102,9 @@ def combine_data(data_files_map):
     technical_indicators_and_buy_sell_signals = shared_methods.parallel_get_technical_indicators_and_buy_sell_dfs(data_files_map)
     # TODO: ignore_index=True is this necessary?
     all_technical_indicators = pd.concat([technical_indicators_df[0] for technical_indicators_df in technical_indicators_and_buy_sell_signals])
-    all_buy_sell_signals = pd.concat([buy_sell_signal_df[1] for buy_sell_signal_df in technical_indicators_and_buy_sell_signals])
-    all_technical_indicators.to_csv(technical_indicator_file_path)
-    all_buy_sell_signals.to_csv(buy_sell_file_path)
+    all_buy_sell_signals = pd.concat([buy_sell_signal_df[1] for buy_sell_signal_df in technical_indicators_and_buy_sell_signals]).to_frame()
+    all_technical_indicators.to_parquet(technical_indicator_file_path)
+    all_buy_sell_signals.to_parquet(buy_sell_file_path)
 
 
 def build_args():

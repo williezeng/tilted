@@ -12,7 +12,7 @@ from collections import defaultdict
 from io import BytesIO
 
 
-def get_absolute_file_paths(data_dir, suffix_file_type='.csv'):
+def get_absolute_file_paths(data_dir, suffix_file_type='.parquet'):
     file_paths = []
     for filename in os.listdir(data_dir):
         if os.path.isfile(os.path.join(data_dir, filename)) and filename.endswith(suffix_file_type) and not filename.startswith('00_'):
@@ -21,7 +21,7 @@ def get_absolute_file_paths(data_dir, suffix_file_type='.csv'):
 
 
 def get_technical_indicators_and_buy_sell_dfs(file_path):
-    technical_indicators_df = pd.read_csv(file_path, index_col='Date', parse_dates=['Date'])
+    technical_indicators_df = pd.read_parquet(file_path)
     buy_sell_signal_df = technical_indicators_df.pop('bs_signal')
     return technical_indicators_df, buy_sell_signal_df, file_path
 
