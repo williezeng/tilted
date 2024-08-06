@@ -10,6 +10,8 @@ BANNED_TICKERS = ['SW', 'CEG', 'AMCR', 'HWM', 'GEV', 'SOLV']  # These companies 
 TECHNICAL_INDICATORS = ['VWMA_10', 'VWAP', 'SMA_10', 'EMA_10', 'bb_upper', 'bb_lower', 'bb_width', 'RSI', 'AMO',
                         'Close']
 
+default_file_type = '.parquet'
+
 YAHOO_DATA_DIR = 'yahoo_data'
 STOCK_DATA_DIR = 'data'
 
@@ -110,6 +112,7 @@ MODEL_ARGS = {
         'n_estimators': 200,
         'learning_rate': 1.0,
         'algorithm': 'SAMME.R',
+        'n_jobs': '-1',
         'random_state': MODELS_RANDOM_STATE
     },
     'hist_gradient_boosting': {

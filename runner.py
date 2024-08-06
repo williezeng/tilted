@@ -119,7 +119,6 @@ def build_args():
     parser.add_argument('--tag', required=False, type=str, help='tag this run with a string')
     parser.add_argument('--all', action='store_true', default=False, help='DO ALL STAGES')
     parser.add_argument('--preprocess_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
-    parser.add_argument('--combine_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--train_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--predict_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     # Additional check to enforce the conditional requirement
@@ -177,8 +176,8 @@ if __name__ == "__main__":
         # Drop 'close' price before training
         # save model
         print("Stage 2: Training Model")
-        combined_indicators = pd.read_csv(constants.TRAINING_CONCATENATED_INDICATORS_FILE, index_col='Date', parse_dates=['Date'])
-        combined_buy_sell_signals = pd.read_csv(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE, index_col='Date', parse_dates=['Date'])
+        combined_indicators = pd.read_parquet(constants.TRAINING_CONCATENATED_INDICATORS_FILE)
+        combined_buy_sell_signals = pd.read_parquet(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE)
         ml_model = constants.MODEL_MAP[args['model_name']](**constants.MODEL_ARGS[args['model_name']])
         # x_train, y_train = shuffle(combined_indicators, combined_buy_sell_signals, random_state=constants.SHUFFLE_RANDOM_STATE)
         combined_indicators.pop('Close')

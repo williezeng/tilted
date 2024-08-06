@@ -12,7 +12,7 @@ from collections import defaultdict
 from io import BytesIO
 
 
-def get_absolute_file_paths(data_dir, suffix_file_type='.parquet'):
+def get_absolute_file_paths(data_dir, suffix_file_type=constants.default_file_type):
     file_paths = []
     for filename in os.listdir(data_dir):
         if os.path.isfile(os.path.join(data_dir, filename)) and filename.endswith(suffix_file_type) and not filename.startswith('00_'):
@@ -84,12 +84,12 @@ def save_predictions():
     predictions_structure = {}
     ticker_name_to_yahoo_data = defaultdict()
     for file_path in get_absolute_file_paths(constants.YAHOO_DATA_DIR):
-        ticker_name_to_yahoo_data[file_path.split('/')[-1].split('.csv')[0]] = pd.read_csv(file_path, index_col=[0], header=[0], skipinitialspace=True, parse_dates=True)
+        ticker_name_to_yahoo_data[file_path.split('/')[-1].split(constants.default_file_type)[0]] = pd.read_parquet(file_path)
     for result in tqdm(results, desc="Predicting and Running Simulation"):
         model = joblib.load(constants.SAVED_MODEL_FILE_PATH)
         reference_technical_indicator_df, reference_buy_sell_df, test_data_file_path = result
         file_name = test_data_file_path.split("/")[-1]
-        ticker_name = file_name.split('.csv')[0]
+        ticker_name = file_name.split(constants.default_file_type)[0]
         stock_close_prices = reference_technical_indicator_df.pop('Close')
         model_predictions = pd.DataFrame(model.predict(reference_technical_indicator_df), index=reference_technical_indicator_df.index, columns=['bs_signal'])
         if ticker_name in ticker_name_to_yahoo_data:
