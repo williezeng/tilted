@@ -96,7 +96,7 @@ def visualize_data(data_files_map):
         print('creating prediction graphs')
         for prediction_file in data_files_map.get('predictions_buy_sell_files', []):
             dir_path = constants.TESTING_PREDICTION_GRAPHS_DIR_PATH
-            bs_signal_df = pd.read_csv(prediction_file, index_col='Date', parse_dates=['Date'])['bs_signal']
+            bs_signal_df = pd.read_parquet(prediction_file)['bs_signal']
             title = prediction_file.split("/")[-1].split(".")[0]
             for testing_file in data_files_map.get('predictions_technical_indicator_files', []):
                 if title == testing_file.split("/")[-1].split(".")[0]:
@@ -171,34 +171,29 @@ def build_args():
     parser.add_argument('--data_path', required=False, type=str, help='data_path dir for visualization data')
     parser.add_argument('--ticker_name', required=False, type=str, help='specify a ticker_name for visualization data')
 
-    parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--visualize_all', action='store_true', default=False, help='train a model with the parquet files in training_data/')
     parser.add_argument('--visualize_single', action='store_true', default=False, help='Visualize a single ticker')
 
     parser.add_argument('--skip_training_graphs', help='skip training graphs', action='store_true', default=False)
     parser.add_argument('--skip_testing_graphs', help='skip testing graphs', action='store_true', default=False)
     parser.add_argument('--skip_prediction_graphs', help='skip prediction graphs', action='store_true', default=False)
-    parser.add_argument('--skip_simulation_graphs', help='skip prediction graphs', action='store_true', default=False)
+    parser.add_argument('--skip_simulation_graphs', help='skip simulation graphs', action='store_true', default=False)
 
     args = parser.parse_args()
-    if not args.gather and not args.model_name:
-        parser.error("--model_name is required if --gather is not specified")
     if args.ticker_name and args.visualize_all:
         parser.error("--ticker_name cannot be used with --visualize_all")
     if args.visualize_all and args.visualize_single:
         parser.error("--visualize_all cannot be used with --visualize_single")
     if args.skip_training_graphs and args.skip_testing_graphs and args.skip_prediction_graphs and args.skip_simulation_graphs:
         parser.error("cannot skip all graphs")
+    if not args.skip_simulation_graphs and not args.data_path:
+        raise Exception("args --data_path is required for visualization")
     return vars(args)
 
 
 if __name__ == "__main__":
     args = build_args()
     now = datetime.now()
-    if not args['data_path']:
-        raise Exception("args --data_path is required for visualization")
-    capture_report_path = os.path.join(constants.PARENT_REPORT_DIRECTORY_NAME, args['data_path'])
-    if not os.path.exists(capture_report_path):
-        raise Exception("Path does not exist %s. Specify a valid --data_path" % capture_report_path)
 
     if args['visualize_all']:
         print("Visualizing Data")
@@ -217,10 +212,16 @@ if __name__ == "__main__":
             }
             visualize_data(data_map)
         if not args['skip_simulation_graphs']:
+            capture_report_path = os.path.join(constants.PARENT_REPORT_DIRECTORY_NAME, args['data_path'])
+            if not os.path.exists(capture_report_path):
+                raise Exception("Path does not exist %s. Specify a valid --data_path" % capture_report_path)
             visualize_all_simulations(capture_report_path)
     elif args['visualize_single']:
         if not args['ticker_name']:
             raise Exception("args --ticker_name are required for a single visualization")
+        capture_report_path = os.path.join(constants.PARENT_REPORT_DIRECTORY_NAME, args['data_path'])
+        if not os.path.exists(capture_report_path):
+            raise Exception("Path does not exist %s. Specify a valid --data_path" % capture_report_path)
         ticker_report_path = os.path.join(capture_report_path, args['ticker_name'])
         if not os.path.exists(ticker_report_path):
             raise Exception("Ticker %s does not exist. Specify a valid --ticker_name" % ticker_report_path)

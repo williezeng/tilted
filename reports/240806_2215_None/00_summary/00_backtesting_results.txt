@@ -1,0 +1,50 @@
+The following transactions show the backtesting results of CCI's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,853.19
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 535.8862053222955)
+Total losing trades: 6 (Amount: USD -682.6967902203297)
+Gross profit/loss: USD -146.81
+Net profit/loss: USD -146.81
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -146.81
+
+Sharpe Ratio: -2.5629438993381775
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of HSY's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,166.06
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 299.6012275483763)
+Total losing trades: 1 (Amount: USD -133.53682425803294)
+Gross profit/loss: USD 166.06
+Net profit/loss: USD 166.06
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 166.06
+
+Sharpe Ratio: -0.7224229979884184
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of RJF's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,360.57
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 40.72895913440229)
+Total losing trades: 2 (Amount: USD -680.158787212)
+Gross profit/loss: USD -639.43
+Net profit/loss: USD -639.43
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -639.43
+
+Sharpe Ratio: -1.1134012288003665
+
+--------------------------------------------------

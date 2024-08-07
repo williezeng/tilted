@@ -1,0 +1,3059 @@
+The following transactions show the backtesting results of CRWD's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,667.15
+Total number of trades: 3
+Total number of closed trades: 2
+Total number of opening trades: 1
+Total winning trades: 2 (Amount: USD 72.5997674150214)
+Total losing trades: 0 (Amount: USD 0.0)
+Gross profit/loss: USD 72.60
+Net profit/loss: USD 72.60
+Unrealized gain/loss: USD -405.45
+Total gain/loss: USD -332.85
+
+Sharpe Ratio: -1.6008756096291266
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of TECH's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,547.03
+Total number of trades: 17
+Total number of closed trades: 17
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 1770.3259754656729)
+Total losing trades: 8 (Amount: USD -1223.2992311367125)
+Gross profit/loss: USD 547.03
+Net profit/loss: USD 547.03
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 547.03
+
+Sharpe Ratio: 0.17533113764770114
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AME's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,357.58
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 740.29335014204)
+Total losing trades: 3 (Amount: USD -382.7102916855586)
+Gross profit/loss: USD 357.58
+Net profit/loss: USD 357.58
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 357.58
+
+Sharpe Ratio: 0.11197250793201209
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CTVA's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,899.87
+Total number of trades: 18
+Total number of closed trades: 18
+Total number of opening trades: 0
+Total winning trades: 11 (Amount: USD 1083.4058853077963)
+Total losing trades: 7 (Amount: USD -1183.5369842021264)
+Gross profit/loss: USD -100.13
+Net profit/loss: USD -100.13
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -100.13
+
+Sharpe Ratio: -2.136294540075138
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CNC's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,978.89
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 549.0123492616353)
+Total losing trades: 5 (Amount: USD -570.11951278551)
+Gross profit/loss: USD -21.11
+Net profit/loss: USD -21.11
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -21.11
+
+Sharpe Ratio: -0.535089709005302
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ADI's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,867.97
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 276.8617053102785)
+Total losing trades: 2 (Amount: USD -408.8925136551659)
+Gross profit/loss: USD -132.03
+Net profit/loss: USD -132.03
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -132.03
+
+Sharpe Ratio: -0.48946224516091186
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of BLK's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,962.60
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 6 (Amount: USD 686.9641699763218)
+Total losing trades: 4 (Amount: USD -724.3628032942664)
+Gross profit/loss: USD -37.40
+Net profit/loss: USD -37.40
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -37.40
+
+Sharpe Ratio: -0.320510514240741
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ADSK's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 8,692.09
+Total number of trades: 37
+Total number of closed trades: 37
+Total number of opening trades: 0
+Total winning trades: 17 (Amount: USD 3001.3495342758906)
+Total losing trades: 20 (Amount: USD -4309.2579471677)
+Gross profit/loss: USD -1,307.91
+Net profit/loss: USD -1,307.91
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -1,307.91
+
+Sharpe Ratio: -0.43386962273661595
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of COR's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,349.04
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 7 (Amount: USD 512.8483700812235)
+Total losing trades: 1 (Amount: USD -163.81287060195595)
+Gross profit/loss: USD 349.04
+Net profit/loss: USD 349.04
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 349.04
+
+Sharpe Ratio: 0.08553098491948637
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CE's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 7,696.35
+Total number of trades: 59
+Total number of closed trades: 58
+Total number of opening trades: 1
+Total winning trades: 30 (Amount: USD 6458.762176267546)
+Total losing trades: 28 (Amount: USD -8610.458259830433)
+Gross profit/loss: USD -2,151.70
+Net profit/loss: USD -2,151.70
+Unrealized gain/loss: USD -151.96
+Total gain/loss: USD -2,303.65
+
+Sharpe Ratio: -4.420740191787538
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of DTE's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,582.33
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 108.69750056338847)
+Total losing trades: 6 (Amount: USD -526.3691642965638)
+Gross profit/loss: USD -417.67
+Net profit/loss: USD -417.67
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -417.67
+
+Sharpe Ratio: -2.1051203380691974
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AJG's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,864.98
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 360.8009466310667)
+Total losing trades: 3 (Amount: USD -495.8200216049338)
+Gross profit/loss: USD -135.02
+Net profit/loss: USD -135.02
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -135.02
+
+Sharpe Ratio: -0.9448301830710392
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of T's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,036.43
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 208.88705884610584)
+Total losing trades: 2 (Amount: USD -172.45474582389022)
+Gross profit/loss: USD 36.43
+Net profit/loss: USD 36.43
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 36.43
+
+Sharpe Ratio: -0.7807951430080435
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CBRE's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,347.88
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 36.3774919125365)
+Total losing trades: 4 (Amount: USD -688.4946047931215)
+Gross profit/loss: USD -652.12
+Net profit/loss: USD -652.12
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -652.12
+
+Sharpe Ratio: -1.2457779085321974
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CINF's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,315.94
+Total number of trades: 16
+Total number of closed trades: 16
+Total number of opening trades: 0
+Total winning trades: 10 (Amount: USD 2723.0123627880666)
+Total losing trades: 6 (Amount: USD -1407.0682816980361)
+Gross profit/loss: USD 1,315.94
+Net profit/loss: USD 1,315.94
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,315.94
+
+Sharpe Ratio: 0.31491858754207225
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AON's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,224.69
+Total number of trades: 9
+Total number of closed trades: 9
+Total number of opening trades: 0
+Total winning trades: 6 (Amount: USD 577.4431161162547)
+Total losing trades: 3 (Amount: USD -352.752197823006)
+Gross profit/loss: USD 224.69
+Net profit/loss: USD 224.69
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 224.69
+
+Sharpe Ratio: -0.15890607952405297
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CB's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,840.66
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 438.42807011333014)
+Total losing trades: 5 (Amount: USD -597.7697078152592)
+Gross profit/loss: USD -159.34
+Net profit/loss: USD -159.34
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -159.34
+
+Sharpe Ratio: -1.3965588189811355
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CMI's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,735.25
+Total number of trades: 13
+Total number of closed trades: 13
+Total number of opening trades: 0
+Total winning trades: 7 (Amount: USD 1564.2655302662847)
+Total losing trades: 6 (Amount: USD -829.0135557230146)
+Gross profit/loss: USD 735.25
+Net profit/loss: USD 735.25
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 735.25
+
+Sharpe Ratio: 0.4281341019675042
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CPT's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,788.02
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 172.61775030523012)
+Total losing trades: 2 (Amount: USD -384.59992046766075)
+Gross profit/loss: USD -211.98
+Net profit/loss: USD -211.98
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -211.98
+
+Sharpe Ratio: -1.0784760617156126
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CTAS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,075.61
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 462.96623738311996)
+Total losing trades: 2 (Amount: USD -387.3589402313198)
+Gross profit/loss: USD 75.61
+Net profit/loss: USD 75.61
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 75.61
+
+Sharpe Ratio: -0.2949934822340055
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AMP's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,567.17
+Total number of trades: 17
+Total number of closed trades: 17
+Total number of opening trades: 0
+Total winning trades: 10 (Amount: USD 2804.6308186972037)
+Total losing trades: 7 (Amount: USD -1237.4635416603633)
+Gross profit/loss: USD 1,567.17
+Net profit/loss: USD 1,567.17
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,567.17
+
+Sharpe Ratio: 1.1252946140529094
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ED's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,200.39
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 453.0960007017942)
+Total losing trades: 3 (Amount: USD -252.70444839635007)
+Gross profit/loss: USD 200.39
+Net profit/loss: USD 200.39
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 200.39
+
+Sharpe Ratio: -0.19533455822697046
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CAH's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,666.41
+Total number of trades: 34
+Total number of closed trades: 34
+Total number of opening trades: 0
+Total winning trades: 19 (Amount: USD 2606.753603130385)
+Total losing trades: 15 (Amount: USD -2940.3446109562647)
+Gross profit/loss: USD -333.59
+Net profit/loss: USD -333.59
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -333.59
+
+Sharpe Ratio: -0.19481508028573583
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CME's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,986.78
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 93.59263783485328)
+Total losing trades: 2 (Amount: USD -106.81647972262422)
+Gross profit/loss: USD -13.22
+Net profit/loss: USD -13.22
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -13.22
+
+Sharpe Ratio: -11.021343175915527
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of BIIB's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,967.42
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 52.308666909507664)
+Total losing trades: 1 (Amount: USD -84.88487439942891)
+Gross profit/loss: USD -32.58
+Net profit/loss: USD -32.58
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -32.58
+
+Sharpe Ratio: -1.965055264830631
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of DRI's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,034.20
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 92.9448170839937)
+Total losing trades: 1 (Amount: USD -58.74709683894409)
+Gross profit/loss: USD 34.20
+Net profit/loss: USD 34.20
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 34.20
+
+Sharpe Ratio: -2.74627156964744
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CMS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,622.44
+Total number of trades: 12
+Total number of closed trades: 12
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 451.71674557582463)
+Total losing trades: 7 (Amount: USD -829.2777002946467)
+Gross profit/loss: USD -377.56
+Net profit/loss: USD -377.56
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -377.56
+
+Sharpe Ratio: -1.2059734587426092
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CAT's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,549.05
+Total number of trades: 7
+Total number of closed trades: 7
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 695.6575092164868)
+Total losing trades: 2 (Amount: USD -146.61062587740483)
+Gross profit/loss: USD 549.05
+Net profit/loss: USD 549.05
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 549.05
+
+Sharpe Ratio: 0.5864599526323996
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AAPL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 12,177.00
+Total number of trades: 22
+Total number of closed trades: 22
+Total number of opening trades: 0
+Total winning trades: 16 (Amount: USD 2915.9920291681574)
+Total losing trades: 6 (Amount: USD -738.991982131481)
+Gross profit/loss: USD 2,177.00
+Net profit/loss: USD 2,177.00
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 2,177.00
+
+Sharpe Ratio: 1.036442008530878
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AEP's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,118.12
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 416.027191790658)
+Total losing trades: 4 (Amount: USD -297.90891822844094)
+Gross profit/loss: USD 118.12
+Net profit/loss: USD 118.12
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 118.12
+
+Sharpe Ratio: -0.44096805965136965
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AZO's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,915.49
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 149.55228551830072)
+Total losing trades: 2 (Amount: USD -234.05730731019403)
+Gross profit/loss: USD -84.51
+Net profit/loss: USD -84.51
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -84.51
+
+Sharpe Ratio: -6.008573335293792
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of BALL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,436.19
+Total number of trades: 18
+Total number of closed trades: 18
+Total number of opening trades: 0
+Total winning trades: 10 (Amount: USD 1582.123111731389)
+Total losing trades: 8 (Amount: USD -2145.935831199149)
+Gross profit/loss: USD -563.81
+Net profit/loss: USD -563.81
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -563.81
+
+Sharpe Ratio: -0.5218981339312447
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of BMY's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,189.46
+Total number of trades: 12
+Total number of closed trades: 12
+Total number of opening trades: 0
+Total winning trades: 6 (Amount: USD 865.1607377629051)
+Total losing trades: 6 (Amount: USD -675.6984191961145)
+Gross profit/loss: USD 189.46
+Net profit/loss: USD 189.46
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 189.46
+
+Sharpe Ratio: -0.5285861319541402
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CTRA's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,464.23
+Total number of trades: 15
+Total number of closed trades: 15
+Total number of opening trades: 0
+Total winning trades: 6 (Amount: USD 602.2547277759521)
+Total losing trades: 9 (Amount: USD -1138.0282832274836)
+Gross profit/loss: USD -535.77
+Net profit/loss: USD -535.77
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -535.77
+
+Sharpe Ratio: -1.160727356195449
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of A's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,360.33
+Total number of trades: 9
+Total number of closed trades: 9
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 469.68460750543755)
+Total losing trades: 6 (Amount: USD -1109.3582462115598)
+Gross profit/loss: USD -639.67
+Net profit/loss: USD -639.67
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -639.67
+
+Sharpe Ratio: -1.0387321937720164
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ACGL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,487.97
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 564.2346583815993)
+Total losing trades: 1 (Amount: USD -76.26935803942378)
+Gross profit/loss: USD 487.97
+Net profit/loss: USD 487.97
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 487.97
+
+Sharpe Ratio: 0.5575546753190653
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ACN's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,808.19
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 114.2718113161236)
+Total losing trades: 2 (Amount: USD -306.0784670470629)
+Gross profit/loss: USD -191.81
+Net profit/loss: USD -191.81
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -191.81
+
+Sharpe Ratio: -1.2875611470838486
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AOS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,594.21
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 624.6699085662175)
+Total losing trades: 1 (Amount: USD -30.46434236481048)
+Gross profit/loss: USD 594.21
+Net profit/loss: USD 594.21
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 594.21
+
+Sharpe Ratio: 0.520236223050831
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ATO's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,856.50
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 380.0427308650928)
+Total losing trades: 5 (Amount: USD -523.5461533315305)
+Gross profit/loss: USD -143.50
+Net profit/loss: USD -143.50
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -143.50
+
+Sharpe Ratio: -1.9519049259618413
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CCI's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,035.31
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 330.3192738397612)
+Total losing trades: 2 (Amount: USD -295.0111041276688)
+Gross profit/loss: USD 35.31
+Net profit/loss: USD 35.31
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 35.31
+
+Sharpe Ratio: -5.300908816498707
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CAG's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,390.25
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 528.7632214604446)
+Total losing trades: 3 (Amount: USD -138.51283988399936)
+Gross profit/loss: USD 390.25
+Net profit/loss: USD 390.25
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 390.25
+
+Sharpe Ratio: 0.20004695577386933
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of EVRG's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,881.43
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 161.79619751186752)
+Total losing trades: 2 (Amount: USD -280.3686703309763)
+Gross profit/loss: USD -118.57
+Net profit/loss: USD -118.57
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -118.57
+
+Sharpe Ratio: -3.7428205955229634
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ECL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,385.29
+Total number of trades: 21
+Total number of closed trades: 21
+Total number of opening trades: 0
+Total winning trades: 10 (Amount: USD 1148.9068504381362)
+Total losing trades: 11 (Amount: USD -763.6212586203098)
+Gross profit/loss: USD 385.29
+Net profit/loss: USD 385.29
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 385.29
+
+Sharpe Ratio: 0.19788824504242633
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AES's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 8,845.31
+Total number of trades: 29
+Total number of closed trades: 29
+Total number of opening trades: 0
+Total winning trades: 12 (Amount: USD 2156.1621493995085)
+Total losing trades: 17 (Amount: USD -3310.8522680023057)
+Gross profit/loss: USD -1,154.69
+Net profit/loss: USD -1,154.69
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -1,154.69
+
+Sharpe Ratio: -0.3391853958655523
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of LNT's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,898.58
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 155.67497080775615)
+Total losing trades: 3 (Amount: USD -257.0902457301899)
+Gross profit/loss: USD -101.42
+Net profit/loss: USD -101.42
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -101.42
+
+Sharpe Ratio: -3.1668079740354917
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CDW's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,815.64
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 43.65668873078509)
+Total losing trades: 2 (Amount: USD -228.0175647224853)
+Gross profit/loss: USD -184.36
+Net profit/loss: USD -184.36
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -184.36
+
+Sharpe Ratio: -3.311581159573201
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of BX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 12,202.08
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 2233.237164986)
+Total losing trades: 1 (Amount: USD -31.157900798246015)
+Gross profit/loss: USD 2,202.08
+Net profit/loss: USD 2,202.08
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 2,202.08
+
+Sharpe Ratio: 1.5277208202499521
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CF's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,146.77
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 37.73298173755704)
+Total losing trades: 2 (Amount: USD -890.9624606122177)
+Gross profit/loss: USD -853.23
+Net profit/loss: USD -853.23
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -853.23
+
+Sharpe Ratio: -1.6311423636424995
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CNP's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,594.17
+Total number of trades: 13
+Total number of closed trades: 12
+Total number of opening trades: 1
+Total winning trades: 6 (Amount: USD 913.3918806677979)
+Total losing trades: 6 (Amount: USD -417.9358273936328)
+Gross profit/loss: USD 495.46
+Net profit/loss: USD 495.46
+Unrealized gain/loss: USD 98.71
+Total gain/loss: USD 594.17
+
+Sharpe Ratio: 0.4175937493856231
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of DLTR's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,442.90
+Total number of trades: 7
+Total number of closed trades: 7
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 248.5868244120914)
+Total losing trades: 2 (Amount: USD -805.6870253453257)
+Gross profit/loss: USD -557.10
+Net profit/loss: USD -557.10
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -557.10
+
+Sharpe Ratio: -0.6365336177635862
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,108.16
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 362.2163631702869)
+Total losing trades: 3 (Amount: USD -254.0541989002525)
+Gross profit/loss: USD 108.16
+Net profit/loss: USD 108.16
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 108.16
+
+Sharpe Ratio: -1.125231516324654
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of GD's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,471.02
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 16.87894491182513)
+Total losing trades: 3 (Amount: USD -545.8578970584547)
+Gross profit/loss: USD -528.98
+Net profit/loss: USD -528.98
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -528.98
+
+Sharpe Ratio: -2.296594641092515
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of LYV's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,976.33
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 190.3816907194383)
+Total losing trades: 3 (Amount: USD -214.05563506769545)
+Gross profit/loss: USD -23.67
+Net profit/loss: USD -23.67
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -23.67
+
+Sharpe Ratio: -1.0540621237246368
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of FIS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,641.03
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 1139.8503918077718)
+Total losing trades: 2 (Amount: USD -498.82028015178196)
+Gross profit/loss: USD 641.03
+Net profit/loss: USD 641.03
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 641.03
+
+Sharpe Ratio: 0.24626583974602245
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of DOV's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,984.49
+Total number of trades: 30
+Total number of closed trades: 30
+Total number of opening trades: 0
+Total winning trades: 14 (Amount: USD 2050.3850685799225)
+Total losing trades: 16 (Amount: USD -2065.8947424916587)
+Gross profit/loss: USD -15.51
+Net profit/loss: USD -15.51
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -15.51
+
+Sharpe Ratio: -0.31589501136192544
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ELV's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,645.41
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 892.4423501410909)
+Total losing trades: 4 (Amount: USD -247.03246153016252)
+Gross profit/loss: USD 645.41
+Net profit/loss: USD 645.41
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 645.41
+
+Sharpe Ratio: 0.48563718343258144
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ISRG's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 13,610.25
+Total number of trades: 55
+Total number of closed trades: 55
+Total number of opening trades: 0
+Total winning trades: 36 (Amount: USD 10116.577494338053)
+Total losing trades: 19 (Amount: USD -6506.325278904245)
+Gross profit/loss: USD 3,610.25
+Net profit/loss: USD 3,610.25
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 3,610.25
+
+Sharpe Ratio: 1.5430655042250605
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CTLT's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,951.03
+Total number of trades: 15
+Total number of closed trades: 15
+Total number of opening trades: 0
+Total winning trades: 7 (Amount: USD 1917.9728624498082)
+Total losing trades: 8 (Amount: USD -1966.9418072456717)
+Gross profit/loss: USD -48.97
+Net profit/loss: USD -48.97
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -48.97
+
+Sharpe Ratio: -1.2149551198354689
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of KLAC's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,980.26
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 1125.9820593100685)
+Total losing trades: 1 (Amount: USD -145.72219452139805)
+Gross profit/loss: USD 980.26
+Net profit/loss: USD 980.26
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 980.26
+
+Sharpe Ratio: 0.5362501449640672
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of BF-B's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,175.08
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 498.1174882614493)
+Total losing trades: 5 (Amount: USD -323.0358904308373)
+Gross profit/loss: USD 175.08
+Net profit/loss: USD 175.08
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 175.08
+
+Sharpe Ratio: -0.30351694982415284
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of DFS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,691.61
+Total number of trades: 9
+Total number of closed trades: 9
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 464.4485001136818)
+Total losing trades: 5 (Amount: USD -772.8382611213739)
+Gross profit/loss: USD -308.39
+Net profit/loss: USD -308.39
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -308.39
+
+Sharpe Ratio: -0.6960925535679009
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AMT's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,274.15
+Total number of trades: 12
+Total number of closed trades: 12
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 439.33081293248927)
+Total losing trades: 9 (Amount: USD -1165.1773949319822)
+Gross profit/loss: USD -725.85
+Net profit/loss: USD -725.85
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -725.85
+
+Sharpe Ratio: -2.117582907600374
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of EL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,404.42
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 1439.6217363840979)
+Total losing trades: 2 (Amount: USD -35.20041480340952)
+Gross profit/loss: USD 1,404.42
+Net profit/loss: USD 1,404.42
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,404.42
+
+Sharpe Ratio: 0.5422651441669344
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of GNRC's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 12,649.09
+Total number of trades: 7
+Total number of closed trades: 7
+Total number of opening trades: 0
+Total winning trades: 6 (Amount: USD 3224.8880645541526)
+Total losing trades: 1 (Amount: USD -575.8009284036601)
+Gross profit/loss: USD 2,649.09
+Net profit/loss: USD 2,649.09
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 2,649.09
+
+Sharpe Ratio: 1.2113824012713614
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of FDX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,694.47
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 694.4664873951232)
+Total losing trades: 0 (Amount: USD 0.0)
+Gross profit/loss: USD 694.47
+Net profit/loss: USD 694.47
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 694.47
+
+Sharpe Ratio: 0.6467206090235301
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of EPAM's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,766.98
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 303.51705617208796)
+Total losing trades: 2 (Amount: USD -536.5366325633596)
+Gross profit/loss: USD -233.02
+Net profit/loss: USD -233.02
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -233.02
+
+Sharpe Ratio: -1.908179056977469
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of JCI's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,897.98
+Total number of trades: 49
+Total number of closed trades: 49
+Total number of opening trades: 0
+Total winning trades: 29 (Amount: USD 5472.7409317748825)
+Total losing trades: 20 (Amount: USD -3574.759464060766)
+Gross profit/loss: USD 1,897.98
+Net profit/loss: USD 1,897.98
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,897.98
+
+Sharpe Ratio: 2.1787121088970927
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of HRL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,526.92
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 0 (Amount: USD 0.0)
+Total losing trades: 5 (Amount: USD -473.08377986392463)
+Gross profit/loss: USD -473.08
+Net profit/loss: USD -473.08
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -473.08
+
+Sharpe Ratio: -1.9362842923186028
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of HPE's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,048.64
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 239.8026590396076)
+Total losing trades: 1 (Amount: USD -191.1600194326196)
+Gross profit/loss: USD 48.64
+Net profit/loss: USD 48.64
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 48.64
+
+Sharpe Ratio: -3.1116189749551912
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of GL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 6,084.11
+Total number of trades: 9
+Total number of closed trades: 9
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 539.7918345835649)
+Total losing trades: 7 (Amount: USD -4455.679686359206)
+Gross profit/loss: USD -3,915.89
+Net profit/loss: USD -3,915.89
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -3,915.89
+
+Sharpe Ratio: -0.9814775339617865
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of BSX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 19,215.58
+Total number of trades: 67
+Total number of closed trades: 66
+Total number of opening trades: 1
+Total winning trades: 51 (Amount: USD 12891.025255279576)
+Total losing trades: 15 (Amount: USD -3661.590096361607)
+Gross profit/loss: USD 9,229.44
+Net profit/loss: USD 9,229.44
+Unrealized gain/loss: USD -13.86
+Total gain/loss: USD 9,215.58
+
+Sharpe Ratio: 6.016841020711909
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CMCSA's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,669.85
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 1855.1555437492764)
+Total losing trades: 5 (Amount: USD -185.3070011574749)
+Gross profit/loss: USD 1,669.85
+Net profit/loss: USD 1,669.85
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,669.85
+
+Sharpe Ratio: 1.1830444771374493
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of FTV's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,254.00
+Total number of trades: 22
+Total number of closed trades: 22
+Total number of opening trades: 0
+Total winning trades: 10 (Amount: USD 1126.9003992580288)
+Total losing trades: 12 (Amount: USD -1872.9004145063104)
+Gross profit/loss: USD -746.00
+Net profit/loss: USD -746.00
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -746.00
+
+Sharpe Ratio: -2.2835818553331144
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ES's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,360.50
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 0 (Amount: USD 0.0)
+Total losing trades: 3 (Amount: USD -639.4958612273183)
+Gross profit/loss: USD -639.50
+Net profit/loss: USD -639.50
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -639.50
+
+Sharpe Ratio: -1.4080208457952241
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ESS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,936.74
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 320.6474911694735)
+Total losing trades: 3 (Amount: USD -383.91002811479404)
+Gross profit/loss: USD -63.26
+Net profit/loss: USD -63.26
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -63.26
+
+Sharpe Ratio: -5.328768032736271
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of FMC's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 8,719.42
+Total number of trades: 27
+Total number of closed trades: 27
+Total number of opening trades: 0
+Total winning trades: 12 (Amount: USD 1332.3629222682569)
+Total losing trades: 15 (Amount: USD -2612.9477874293193)
+Gross profit/loss: USD -1,280.58
+Net profit/loss: USD -1,280.58
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -1,280.58
+
+Sharpe Ratio: -1.392966379840028
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of JBL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 8,959.47
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 0 (Amount: USD 0.0)
+Total losing trades: 5 (Amount: USD -1040.5313807339462)
+Gross profit/loss: USD -1,040.53
+Net profit/loss: USD -1,040.53
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -1,040.53
+
+Sharpe Ratio: -1.8682579477065397
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of CLX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,510.98
+Total number of trades: 11
+Total number of closed trades: 11
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 223.0687003404649)
+Total losing trades: 8 (Amount: USD -712.0935840393315)
+Gross profit/loss: USD -489.02
+Net profit/loss: USD -489.02
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -489.02
+
+Sharpe Ratio: -1.6109505878632697
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of COO's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,467.46
+Total number of trades: 16
+Total number of closed trades: 16
+Total number of opening trades: 0
+Total winning trades: 7 (Amount: USD 450.38183930167156)
+Total losing trades: 9 (Amount: USD -982.9194975375892)
+Gross profit/loss: USD -532.54
+Net profit/loss: USD -532.54
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -532.54
+
+Sharpe Ratio: -4.117941854695953
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of KEYS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 8,582.76
+Total number of trades: 40
+Total number of closed trades: 40
+Total number of opening trades: 0
+Total winning trades: 26 (Amount: USD 2652.882261644554)
+Total losing trades: 14 (Amount: USD -4070.1222554885285)
+Gross profit/loss: USD -1,417.24
+Net profit/loss: USD -1,417.24
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -1,417.24
+
+Sharpe Ratio: -1.027721516428924
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of AXON's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,111.86
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 355.6502934665813)
+Total losing trades: 4 (Amount: USD -243.78623284189237)
+Gross profit/loss: USD 111.86
+Net profit/loss: USD 111.86
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 111.86
+
+Sharpe Ratio: -1.1892309091435114
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of MMC's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,252.29
+Total number of trades: 11
+Total number of closed trades: 11
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 562.3656325390598)
+Total losing trades: 6 (Amount: USD -310.0736589017092)
+Gross profit/loss: USD 252.29
+Net profit/loss: USD 252.29
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 252.29
+
+Sharpe Ratio: -0.310391111136151
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of EFX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,097.32
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 156.7621379041949)
+Total losing trades: 1 (Amount: USD -59.44096749449081)
+Gross profit/loss: USD 97.32
+Net profit/loss: USD 97.32
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 97.32
+
+Sharpe Ratio: -2.424842020397745
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of MCD's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,774.59
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 26.979085125303286)
+Total losing trades: 7 (Amount: USD -252.38648593192326)
+Gross profit/loss: USD -225.41
+Net profit/loss: USD -225.41
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -225.41
+
+Sharpe Ratio: -3.086216978229069
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of HAS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,013.94
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 534.1606933896032)
+Total losing trades: 2 (Amount: USD -520.2215804330834)
+Gross profit/loss: USD 13.94
+Net profit/loss: USD 13.94
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 13.94
+
+Sharpe Ratio: -1.147407560839063
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of LKQ's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,196.12
+Total number of trades: 9
+Total number of closed trades: 9
+Total number of opening trades: 0
+Total winning trades: 6 (Amount: USD 597.7968464912221)
+Total losing trades: 3 (Amount: USD -401.6719001925984)
+Gross profit/loss: USD 196.12
+Net profit/loss: USD 196.12
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 196.12
+
+Sharpe Ratio: -0.28608945529210966
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of IVZ's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,765.33
+Total number of trades: 15
+Total number of closed trades: 15
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 2616.445832943046)
+Total losing trades: 6 (Amount: USD -851.115843608191)
+Gross profit/loss: USD 1,765.33
+Net profit/loss: USD 1,765.33
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,765.33
+
+Sharpe Ratio: 1.2471729453906653
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PODD's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,557.42
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 747.2055329831776)
+Total losing trades: 2 (Amount: USD -189.78662018707456)
+Gross profit/loss: USD 557.42
+Net profit/loss: USD 557.42
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 557.42
+
+Sharpe Ratio: 0.32654553813170595
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of GIS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,380.83
+Total number of trades: 34
+Total number of closed trades: 34
+Total number of opening trades: 0
+Total winning trades: 17 (Amount: USD 2182.4589658780405)
+Total losing trades: 17 (Amount: USD -1801.6295330498863)
+Gross profit/loss: USD 380.83
+Net profit/loss: USD 380.83
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 380.83
+
+Sharpe Ratio: 0.15820765129505987
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ETN's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,756.33
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 799.303901864683)
+Total losing trades: 1 (Amount: USD -42.9709604252936)
+Gross profit/loss: USD 756.33
+Net profit/loss: USD 756.33
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 756.33
+
+Sharpe Ratio: 0.7230040071840911
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of GDDY's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,309.10
+Total number of trades: 19
+Total number of closed trades: 19
+Total number of opening trades: 0
+Total winning trades: 13 (Amount: USD 1881.7085903498469)
+Total losing trades: 6 (Amount: USD -572.604574962997)
+Gross profit/loss: USD 1,309.10
+Net profit/loss: USD 1,309.10
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,309.10
+
+Sharpe Ratio: 0.6573551080057894
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of JBHT's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,240.40
+Total number of trades: 38
+Total number of closed trades: 38
+Total number of opening trades: 0
+Total winning trades: 24 (Amount: USD 2480.0433079705163)
+Total losing trades: 14 (Amount: USD -2239.6463497440486)
+Gross profit/loss: USD 240.40
+Net profit/loss: USD 240.40
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 240.40
+
+Sharpe Ratio: -0.07747947432732934
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of IPG's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,930.37
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 307.16011238188)
+Total losing trades: 2 (Amount: USD -376.7866876383928)
+Gross profit/loss: USD -69.63
+Net profit/loss: USD -69.63
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -69.63
+
+Sharpe Ratio: -0.6806370988193505
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of GEN's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 8,861.53
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 0 (Amount: USD 0.0)
+Total losing trades: 3 (Amount: USD -1138.4723556833035)
+Gross profit/loss: USD -1,138.47
+Net profit/loss: USD -1,138.47
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -1,138.47
+
+Sharpe Ratio: -0.8934372030865539
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of GPC's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,096.77
+Total number of trades: 13
+Total number of closed trades: 13
+Total number of opening trades: 0
+Total winning trades: 6 (Amount: USD 907.6990378512605)
+Total losing trades: 7 (Amount: USD -810.9302354116387)
+Gross profit/loss: USD 96.77
+Net profit/loss: USD 96.77
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 96.77
+
+Sharpe Ratio: -0.2053502712741924
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of EOG's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,633.39
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 0 (Amount: USD 0.0)
+Total losing trades: 3 (Amount: USD -366.61076158796413)
+Gross profit/loss: USD -366.61
+Net profit/loss: USD -366.61
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -366.61
+
+Sharpe Ratio: -2.5446589757554268
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of FDS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,221.44
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 252.48285594701218)
+Total losing trades: 2 (Amount: USD -31.040825337669165)
+Gross profit/loss: USD 221.44
+Net profit/loss: USD 221.44
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 221.44
+
+Sharpe Ratio: -0.20404713698626809
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of IDXX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,514.66
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 66.68490794401285)
+Total losing trades: 3 (Amount: USD -552.0229492368903)
+Gross profit/loss: USD -485.34
+Net profit/loss: USD -485.34
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -485.34
+
+Sharpe Ratio: -1.0375511489095037
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of GILD's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,356.98
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 443.4718657371668)
+Total losing trades: 1 (Amount: USD -86.49078064622947)
+Gross profit/loss: USD 356.98
+Net profit/loss: USD 356.98
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 356.98
+
+Sharpe Ratio: 0.1286160131957566
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of FI's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,718.20
+Total number of trades: 27
+Total number of closed trades: 27
+Total number of opening trades: 0
+Total winning trades: 16 (Amount: USD 2295.9606543342984)
+Total losing trades: 11 (Amount: USD -2577.7632506784025)
+Gross profit/loss: USD -281.80
+Net profit/loss: USD -281.80
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -281.80
+
+Sharpe Ratio: -0.524245911128263
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of NEE's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,405.36
+Total number of trades: 19
+Total number of closed trades: 19
+Total number of opening trades: 0
+Total winning trades: 10 (Amount: USD 2677.3326779225076)
+Total losing trades: 9 (Amount: USD -1271.970636276104)
+Gross profit/loss: USD 1,405.36
+Net profit/loss: USD 1,405.36
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 1,405.36
+
+Sharpe Ratio: 0.5042467378675088
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of MU's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,954.77
+Total number of trades: 18
+Total number of closed trades: 18
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 2543.0986301449243)
+Total losing trades: 9 (Amount: USD -2588.331863986453)
+Gross profit/loss: USD -45.23
+Net profit/loss: USD -45.23
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -45.23
+
+Sharpe Ratio: -0.06059812260482479
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of MAR's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,391.59
+Total number of trades: 10
+Total number of closed trades: 9
+Total number of opening trades: 1
+Total winning trades: 4 (Amount: USD 391.27822519200566)
+Total losing trades: 5 (Amount: USD -717.3857427070349)
+Gross profit/loss: USD -326.11
+Net profit/loss: USD -326.11
+Unrealized gain/loss: USD -282.30
+Total gain/loss: USD -608.41
+
+Sharpe Ratio: -2.097594166908284
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of MA's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,556.79
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 81.59830762723367)
+Total losing trades: 3 (Amount: USD -524.8041075479312)
+Gross profit/loss: USD -443.21
+Net profit/loss: USD -443.21
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -443.21
+
+Sharpe Ratio: -0.9594856460274924
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of LIN's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,806.43
+Total number of trades: 9
+Total number of closed trades: 9
+Total number of opening trades: 0
+Total winning trades: 7 (Amount: USD 1236.6553036170721)
+Total losing trades: 2 (Amount: USD -430.225441789554)
+Gross profit/loss: USD 806.43
+Net profit/loss: USD 806.43
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 806.43
+
+Sharpe Ratio: 1.4052915648347626
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of HSY's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,847.77
+Total number of trades: 15
+Total number of closed trades: 15
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 1040.842674102478)
+Total losing trades: 6 (Amount: USD -193.07160170278874)
+Gross profit/loss: USD 847.77
+Net profit/loss: USD 847.77
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 847.77
+
+Sharpe Ratio: 0.6309376146095417
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PGR's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,570.62
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 570.6201037850843)
+Total losing trades: 0 (Amount: USD 0.0)
+Gross profit/loss: USD 570.62
+Net profit/loss: USD 570.62
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 570.62
+
+Sharpe Ratio: 0.7061000410275506
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of HUBB's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,735.41
+Total number of trades: 14
+Total number of closed trades: 14
+Total number of opening trades: 0
+Total winning trades: 10 (Amount: USD 1143.8348887427765)
+Total losing trades: 4 (Amount: USD -408.4222694505213)
+Gross profit/loss: USD 735.41
+Net profit/loss: USD 735.41
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 735.41
+
+Sharpe Ratio: 0.7418621509897296
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of LOW's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,216.32
+Total number of trades: 7
+Total number of closed trades: 7
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 698.5639391604344)
+Total losing trades: 3 (Amount: USD -482.2481384686412)
+Gross profit/loss: USD 216.32
+Net profit/loss: USD 216.32
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 216.32
+
+Sharpe Ratio: -0.06030211275268933
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PAYX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,953.33
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 7.925629313253169)
+Total losing trades: 1 (Amount: USD -54.5935742990785)
+Gross profit/loss: USD -46.67
+Net profit/loss: USD -46.67
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -46.67
+
+Sharpe Ratio: -5.252668717123539
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of RSG's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,080.40
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 528.760949825594)
+Total losing trades: 6 (Amount: USD -448.3564663004549)
+Gross profit/loss: USD 80.40
+Net profit/loss: USD 80.40
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 80.40
+
+Sharpe Ratio: -0.18664621437641815
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of MKTX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,354.63
+Total number of trades: 7
+Total number of closed trades: 7
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 431.1281733606923)
+Total losing trades: 4 (Amount: USD -1076.4934102523798)
+Gross profit/loss: USD -645.37
+Net profit/loss: USD -645.37
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -645.37
+
+Sharpe Ratio: -1.1258789530054585
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ODFL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,159.27
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 705.6554633880228)
+Total losing trades: 2 (Amount: USD -546.3812982236316)
+Gross profit/loss: USD 159.27
+Net profit/loss: USD 159.27
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 159.27
+
+Sharpe Ratio: -0.20533660654708225
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of JKHY's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,183.90
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 375.03302290666375)
+Total losing trades: 1 (Amount: USD -191.1283919239043)
+Gross profit/loss: USD 183.90
+Net profit/loss: USD 183.90
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 183.90
+
+Sharpe Ratio: -0.534562618147702
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of SRE's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,291.88
+Total number of trades: 16
+Total number of closed trades: 16
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 794.513427475395)
+Total losing trades: 7 (Amount: USD -502.6383539877754)
+Gross profit/loss: USD 291.88
+Net profit/loss: USD 291.88
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 291.88
+
+Sharpe Ratio: -0.010377831214519526
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of RJF's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,109.85
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 235.5025810653363)
+Total losing trades: 5 (Amount: USD -1125.656012635168)
+Gross profit/loss: USD -890.15
+Net profit/loss: USD -890.15
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -890.15
+
+Sharpe Ratio: -2.17784281817336
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of LMT's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,046.61
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 269.1008493400368)
+Total losing trades: 1 (Amount: USD -222.49299924279532)
+Gross profit/loss: USD 46.61
+Net profit/loss: USD 46.61
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 46.61
+
+Sharpe Ratio: -0.481621105238346
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of SNA's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,225.05
+Total number of trades: 15
+Total number of closed trades: 15
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 1401.3805774760842)
+Total losing trades: 6 (Amount: USD -1176.3301867957546)
+Gross profit/loss: USD 225.05
+Net profit/loss: USD 225.05
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 225.05
+
+Sharpe Ratio: -0.11634567907913225
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of KKR's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,147.26
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 443.8800924125783)
+Total losing trades: 1 (Amount: USD -296.6176157132446)
+Gross profit/loss: USD 147.26
+Net profit/loss: USD 147.26
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 147.26
+
+Sharpe Ratio: -0.2001595196879666
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ROST's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,133.78
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 271.44174364389914)
+Total losing trades: 2 (Amount: USD -137.66369681978057)
+Gross profit/loss: USD 133.78
+Net profit/loss: USD 133.78
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 133.78
+
+Sharpe Ratio: -1.2628882848648526
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of KMB's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,195.63
+Total number of trades: 13
+Total number of closed trades: 13
+Total number of opening trades: 0
+Total winning trades: 6 (Amount: USD 523.2577761169688)
+Total losing trades: 7 (Amount: USD -327.6278155859512)
+Gross profit/loss: USD 195.63
+Net profit/loss: USD 195.63
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 195.63
+
+Sharpe Ratio: -0.2313055434344036
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PPG's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,237.04
+Total number of trades: 24
+Total number of closed trades: 24
+Total number of opening trades: 0
+Total winning trades: 17 (Amount: USD 1855.5568500272702)
+Total losing trades: 7 (Amount: USD -618.5176293455719)
+Gross profit/loss: USD 1,237.04
+Net profit/loss: USD 1,237.04
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,237.04
+
+Sharpe Ratio: 1.9370154543149207
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of KR's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,371.54
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 419.94938418476266)
+Total losing trades: 1 (Amount: USD -48.4047395673848)
+Gross profit/loss: USD 371.54
+Net profit/loss: USD 371.54
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 371.54
+
+Sharpe Ratio: 0.11678497283319121
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of LHX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,865.80
+Total number of trades: 33
+Total number of closed trades: 33
+Total number of opening trades: 0
+Total winning trades: 21 (Amount: USD 2784.0936271107075)
+Total losing trades: 12 (Amount: USD -1918.2981615190852)
+Gross profit/loss: USD 865.80
+Net profit/loss: USD 865.80
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 865.80
+
+Sharpe Ratio: 0.5221226360944575
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of MPC's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,374.39
+Total number of trades: 50
+Total number of closed trades: 50
+Total number of opening trades: 0
+Total winning trades: 29 (Amount: USD 5125.290323103008)
+Total losing trades: 21 (Amount: USD -5750.90223939217)
+Gross profit/loss: USD -625.61
+Net profit/loss: USD -625.61
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -625.61
+
+Sharpe Ratio: -0.5472385485088931
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of MAA's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,585.62
+Total number of trades: 41
+Total number of closed trades: 41
+Total number of opening trades: 0
+Total winning trades: 24 (Amount: USD 2579.0753691657005)
+Total losing trades: 17 (Amount: USD -1993.4533623219045)
+Gross profit/loss: USD 585.62
+Net profit/loss: USD 585.62
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 585.62
+
+Sharpe Ratio: 0.4471409273025534
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of NTAP's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,034.97
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 909.3694050507307)
+Total losing trades: 5 (Amount: USD -874.3949069745061)
+Gross profit/loss: USD 34.97
+Net profit/loss: USD 34.97
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 34.97
+
+Sharpe Ratio: -0.49809180346861415
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of POOL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,533.27
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 960.0706855288132)
+Total losing trades: 1 (Amount: USD -426.80307435014674)
+Gross profit/loss: USD 533.27
+Net profit/loss: USD 533.27
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 533.27
+
+Sharpe Ratio: 0.7779843411932155
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PARA's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,868.20
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 420.374042087515)
+Total losing trades: 4 (Amount: USD -552.1780455249268)
+Gross profit/loss: USD -131.80
+Net profit/loss: USD -131.80
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -131.80
+
+Sharpe Ratio: -0.8476011941195546
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of RVTY's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,172.46
+Total number of trades: 24
+Total number of closed trades: 24
+Total number of opening trades: 0
+Total winning trades: 13 (Amount: USD 2235.5063383300853)
+Total losing trades: 11 (Amount: USD -2063.044946217104)
+Gross profit/loss: USD 172.46
+Net profit/loss: USD 172.46
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 172.46
+
+Sharpe Ratio: -0.47405071129418486
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of SJM's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,671.28
+Total number of trades: 31
+Total number of closed trades: 31
+Total number of opening trades: 0
+Total winning trades: 19 (Amount: USD 2879.7364798222625)
+Total losing trades: 12 (Amount: USD -2208.451510080427)
+Gross profit/loss: USD 671.28
+Net profit/loss: USD 671.28
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 671.28
+
+Sharpe Ratio: 0.278808659139208
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PWR's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,736.06
+Total number of trades: 19
+Total number of closed trades: 19
+Total number of opening trades: 0
+Total winning trades: 12 (Amount: USD 3248.268799157525)
+Total losing trades: 7 (Amount: USD -1512.212434482791)
+Gross profit/loss: USD 1,736.06
+Net profit/loss: USD 1,736.06
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,736.06
+
+Sharpe Ratio: 1.6135237634860065
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of STX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,189.69
+Total number of trades: 15
+Total number of closed trades: 15
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 436.8398669381353)
+Total losing trades: 10 (Amount: USD -1247.1523571177127)
+Gross profit/loss: USD -810.31
+Net profit/loss: USD -810.31
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -810.31
+
+Sharpe Ratio: -1.9132566796292356
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ITW's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,153.52
+Total number of trades: 7
+Total number of closed trades: 7
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 329.2049869798076)
+Total losing trades: 3 (Amount: USD -175.68713579960664)
+Gross profit/loss: USD 153.52
+Net profit/loss: USD 153.52
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 153.52
+
+Sharpe Ratio: -0.6220168164100787
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of TSLA's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,558.79
+Total number of trades: 73
+Total number of closed trades: 73
+Total number of opening trades: 0
+Total winning trades: 43 (Amount: USD 16231.225029916068)
+Total losing trades: 30 (Amount: USD -14672.436159706222)
+Gross profit/loss: USD 1,558.79
+Net profit/loss: USD 1,558.79
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,558.79
+
+Sharpe Ratio: 0.3232746414815515
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PH's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,444.81
+Total number of trades: 11
+Total number of closed trades: 11
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 1525.7228554410203)
+Total losing trades: 2 (Amount: USD -80.91671940166772)
+Gross profit/loss: USD 1,444.81
+Net profit/loss: USD 1,444.81
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,444.81
+
+Sharpe Ratio: 1.4239963086994831
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of IQV's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,028.09
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 224.11515333787534)
+Total losing trades: 1 (Amount: USD -196.02471440566072)
+Gross profit/loss: USD 28.09
+Net profit/loss: USD 28.09
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 28.09
+
+Sharpe Ratio: -13.566667686376878
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of NVR's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,437.58
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 770.8589050642375)
+Total losing trades: 3 (Amount: USD -333.27873509700936)
+Gross profit/loss: USD 437.58
+Net profit/loss: USD 437.58
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 437.58
+
+Sharpe Ratio: 0.39803539574293684
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of JNJ's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,890.67
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 131.2142719165775)
+Total losing trades: 3 (Amount: USD -240.543912015078)
+Gross profit/loss: USD -109.33
+Net profit/loss: USD -109.33
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -109.33
+
+Sharpe Ratio: -6.989848660782189
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of HUM's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,001.16
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 1199.9810517978954)
+Total losing trades: 3 (Amount: USD -198.81743821575114)
+Gross profit/loss: USD 1,001.16
+Net profit/loss: USD 1,001.16
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,001.16
+
+Sharpe Ratio: 0.800904629139505
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of MET's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,886.21
+Total number of trades: 8
+Total number of closed trades: 8
+Total number of opening trades: 0
+Total winning trades: 7 (Amount: USD 934.0062360422197)
+Total losing trades: 1 (Amount: USD -1047.799346488806)
+Gross profit/loss: USD -113.79
+Net profit/loss: USD -113.79
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -113.79
+
+Sharpe Ratio: -0.3461860967183505
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of SYY's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,417.36
+Total number of trades: 30
+Total number of closed trades: 30
+Total number of opening trades: 0
+Total winning trades: 17 (Amount: USD 1485.7935639994978)
+Total losing trades: 13 (Amount: USD -1068.4360135700838)
+Gross profit/loss: USD 417.36
+Net profit/loss: USD 417.36
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 417.36
+
+Sharpe Ratio: 0.3220434700406195
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of RMD's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,010.47
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 150.98911844466653)
+Total losing trades: 2 (Amount: USD -140.51816910111046)
+Gross profit/loss: USD 10.47
+Net profit/loss: USD 10.47
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 10.47
+
+Sharpe Ratio: -4.944291950324629
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of VICI's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,104.86
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 139.48291909475637)
+Total losing trades: 2 (Amount: USD -34.62567516235765)
+Gross profit/loss: USD 104.86
+Net profit/loss: USD 104.86
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 104.86
+
+Sharpe Ratio: -1.1734470125151848
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PNR's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,635.17
+Total number of trades: 18
+Total number of closed trades: 18
+Total number of opening trades: 0
+Total winning trades: 14 (Amount: USD 1277.06728214621)
+Total losing trades: 4 (Amount: USD -641.8975075807364)
+Gross profit/loss: USD 635.17
+Net profit/loss: USD 635.17
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 635.17
+
+Sharpe Ratio: 0.5434363316298667
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of WAT's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,315.30
+Total number of trades: 14
+Total number of closed trades: 14
+Total number of opening trades: 0
+Total winning trades: 8 (Amount: USD 1261.9085400728968)
+Total losing trades: 6 (Amount: USD -946.6051719438592)
+Gross profit/loss: USD 315.30
+Net profit/loss: USD 315.30
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 315.30
+
+Sharpe Ratio: 0.028768655575979397
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of WTW's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,787.75
+Total number of trades: 7
+Total number of closed trades: 7
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 1061.3675928248033)
+Total losing trades: 2 (Amount: USD -273.61398134798446)
+Gross profit/loss: USD 787.75
+Net profit/loss: USD 787.75
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 787.75
+
+Sharpe Ratio: 0.5686198722136697
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of TMO's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,345.34
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 400.70315954105786)
+Total losing trades: 1 (Amount: USD -55.36723713054381)
+Gross profit/loss: USD 345.34
+Net profit/loss: USD 345.34
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 345.34
+
+Sharpe Ratio: 0.14039710401228453
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of TEL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,622.58
+Total number of trades: 22
+Total number of closed trades: 22
+Total number of opening trades: 0
+Total winning trades: 12 (Amount: USD 1294.5897276695173)
+Total losing trades: 10 (Amount: USD -1672.0121948503518)
+Gross profit/loss: USD -377.42
+Net profit/loss: USD -377.42
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -377.42
+
+Sharpe Ratio: -0.936974036795421
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of TSN's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,357.78
+Total number of trades: 15
+Total number of closed trades: 15
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 1273.2105602197653)
+Total losing trades: 6 (Amount: USD -915.4261771431067)
+Gross profit/loss: USD 357.78
+Net profit/loss: USD 357.78
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 357.78
+
+Sharpe Ratio: 0.07756080927670199
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of DGX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,063.80
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 388.4205535727784)
+Total losing trades: 3 (Amount: USD -324.62396192669496)
+Gross profit/loss: USD 63.80
+Net profit/loss: USD 63.80
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 63.80
+
+Sharpe Ratio: -0.46244808595689535
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of UNH's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,270.98
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 190.78545051599463)
+Total losing trades: 7 (Amount: USD -919.8096210158491)
+Gross profit/loss: USD -729.02
+Net profit/loss: USD -729.02
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -729.02
+
+Sharpe Ratio: -2.3138563360079023
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of TXT's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,028.49
+Total number of trades: 14
+Total number of closed trades: 14
+Total number of opening trades: 0
+Total winning trades: 10 (Amount: USD 1437.489440767142)
+Total losing trades: 4 (Amount: USD -409.00052515563823)
+Gross profit/loss: USD 1,028.49
+Net profit/loss: USD 1,028.49
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 1,028.49
+
+Sharpe Ratio: 4.022566555620509
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of LUV's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,179.20
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 660.2019962917448)
+Total losing trades: 1 (Amount: USD -481.00447146146445)
+Gross profit/loss: USD 179.20
+Net profit/loss: USD 179.20
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 179.20
+
+Sharpe Ratio: -0.47668208284422287
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ZBH's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,157.54
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 162.69095082290545)
+Total losing trades: 3 (Amount: USD -1005.1555246866656)
+Gross profit/loss: USD -842.46
+Net profit/loss: USD -842.46
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -842.46
+
+Sharpe Ratio: -0.7393560858876564
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of WBA's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,045.15
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 110.18938495689483)
+Total losing trades: 3 (Amount: USD -1065.0351848093771)
+Gross profit/loss: USD -954.85
+Net profit/loss: USD -954.85
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -954.85
+
+Sharpe Ratio: -1.7799844032768308
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ROL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,187.22
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 231.00927871988574)
+Total losing trades: 6 (Amount: USD -1043.7872547568734)
+Gross profit/loss: USD -812.78
+Net profit/loss: USD -812.78
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -812.78
+
+Sharpe Ratio: -1.5553546587003282
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of VRSN's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,066.36
+Total number of trades: 10
+Total number of closed trades: 10
+Total number of opening trades: 0
+Total winning trades: 6 (Amount: USD 581.8341280829542)
+Total losing trades: 4 (Amount: USD -515.4702637887274)
+Gross profit/loss: USD 66.36
+Net profit/loss: USD 66.36
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 66.36
+
+Sharpe Ratio: -0.6752910387692254
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ZTS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,950.95
+Total number of trades: 36
+Total number of closed trades: 36
+Total number of opening trades: 0
+Total winning trades: 24 (Amount: USD 4978.733649074828)
+Total losing trades: 12 (Amount: USD -4027.7806821690865)
+Gross profit/loss: USD 950.95
+Net profit/loss: USD 950.95
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 950.95
+
+Sharpe Ratio: 0.3373798876433364
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of SYK's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,989.75
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 56.906387035140035)
+Total losing trades: 1 (Amount: USD -67.15639463531078)
+Gross profit/loss: USD -10.25
+Net profit/loss: USD -10.25
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -10.25
+
+Sharpe Ratio: -16.48011156266863
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of WRB's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,606.85
+Total number of trades: 11
+Total number of closed trades: 11
+Total number of opening trades: 0
+Total winning trades: 6 (Amount: USD 912.7133200910786)
+Total losing trades: 5 (Amount: USD -305.86823642704564)
+Gross profit/loss: USD 606.85
+Net profit/loss: USD 606.85
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 606.85
+
+Sharpe Ratio: 0.3389490185154886
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of TRV's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,381.64
+Total number of trades: 18
+Total number of closed trades: 18
+Total number of opening trades: 0
+Total winning trades: 12 (Amount: USD 922.8193737842239)
+Total losing trades: 6 (Amount: USD -1541.174999514223)
+Gross profit/loss: USD -618.36
+Net profit/loss: USD -618.36
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD -618.36
+
+Sharpe Ratio: -1.7661775519352347
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of TXN's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,562.95
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 4 (Amount: USD 1067.5682231244837)
+Total losing trades: 2 (Amount: USD -504.6206805911349)
+Gross profit/loss: USD 562.95
+Net profit/loss: USD 562.95
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 562.95
+
+Sharpe Ratio: 0.19126538298170054
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of ON's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,452.47
+Total number of trades: 15
+Total number of closed trades: 15
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 1715.061357441497)
+Total losing trades: 6 (Amount: USD -1262.596296775623)
+Gross profit/loss: USD 452.47
+Net profit/loss: USD 452.47
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 452.47
+
+Sharpe Ratio: 0.10522770585941608
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of XEL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,901.63
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 222.18723392998498)
+Total losing trades: 2 (Amount: USD -320.55404892234316)
+Gross profit/loss: USD -98.37
+Net profit/loss: USD -98.37
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -98.37
+
+Sharpe Ratio: -0.7635724650918722
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PKG's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,340.52
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 3 (Amount: USD 340.5170147564174)
+Total losing trades: 0 (Amount: USD 0.0)
+Gross profit/loss: USD 340.52
+Net profit/loss: USD 340.52
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 340.52
+
+Sharpe Ratio: 0.13226723500969312
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of YUM's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,895.06
+Total number of trades: 11
+Total number of closed trades: 11
+Total number of opening trades: 0
+Total winning trades: 9 (Amount: USD 1005.3313106231656)
+Total losing trades: 2 (Amount: USD -110.27458644987351)
+Gross profit/loss: USD 895.06
+Net profit/loss: USD 895.06
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 895.06
+
+Sharpe Ratio: 1.0742728876490044
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of SO's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,570.07
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 42.74574060139463)
+Total losing trades: 3 (Amount: USD -472.674869896946)
+Gross profit/loss: USD -429.93
+Net profit/loss: USD -429.93
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -429.93
+
+Sharpe Ratio: -1.3867348297524629
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of WEC's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,851.52
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 71.44887397121092)
+Total losing trades: 3 (Amount: USD -219.92477156852405)
+Gross profit/loss: USD -148.48
+Net profit/loss: USD -148.48
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -148.48
+
+Sharpe Ratio: -3.059950720393178
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of VTRS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,850.49
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 80.59715004162321)
+Total losing trades: 2 (Amount: USD -230.10443774911457)
+Gross profit/loss: USD -149.51
+Net profit/loss: USD -149.51
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -149.51
+
+Sharpe Ratio: -1.4720735866647772
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of O's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,821.75
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 1 (Amount: USD 128.21772755627092)
+Total losing trades: 2 (Amount: USD -306.4671008307111)
+Gross profit/loss: USD -178.25
+Net profit/loss: USD -178.25
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -178.25
+
+Sharpe Ratio: -2.1347293138750607
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of XYL's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,990.92
+Total number of trades: 4
+Total number of closed trades: 4
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 231.27868554801012)
+Total losing trades: 2 (Amount: USD -240.36239705591692)
+Gross profit/loss: USD -9.08
+Net profit/loss: USD -9.08
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -9.08
+
+Sharpe Ratio: -1.1196882356566311
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of TFC's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 9,943.48
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 462.910446601258)
+Total losing trades: 1 (Amount: USD -519.4284264582084)
+Gross profit/loss: USD -56.52
+Net profit/loss: USD -56.52
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -56.52
+
+Sharpe Ratio: -1.7784685797569735
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PSX's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,774.26
+Total number of trades: 6
+Total number of closed trades: 6
+Total number of opening trades: 0
+Total winning trades: 5 (Amount: USD 872.5740613707425)
+Total losing trades: 1 (Amount: USD -98.31297229228461)
+Gross profit/loss: USD 774.26
+Net profit/loss: USD 774.26
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 774.26
+
+Sharpe Ratio: 0.6386324444676191
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of TDG's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 8,516.94
+Total number of trades: 67
+Total number of closed trades: 67
+Total number of opening trades: 0
+Total winning trades: 41 (Amount: USD 5094.366743034422)
+Total losing trades: 26 (Amount: USD -6577.429557909061)
+Gross profit/loss: USD -1,483.06
+Net profit/loss: USD -1,483.06
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD -1,483.06
+
+Sharpe Ratio: -0.31861689341063665
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of UHS's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,675.42
+Total number of trades: 71
+Total number of closed trades: 71
+Total number of opening trades: 0
+Total winning trades: 45 (Amount: USD 8775.876901500938)
+Total losing trades: 26 (Amount: USD -8100.4577634268735)
+Gross profit/loss: USD 675.42
+Net profit/loss: USD 675.42
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 675.42
+
+Sharpe Ratio: 0.15641870009534237
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of V's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 11,138.38
+Total number of trades: 43
+Total number of closed trades: 43
+Total number of opening trades: 0
+Total winning trades: 28 (Amount: USD 3199.7393139114533)
+Total losing trades: 15 (Amount: USD -2061.3627598638604)
+Gross profit/loss: USD 1,138.38
+Net profit/loss: USD 1,138.38
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 1,138.38
+
+Sharpe Ratio: 1.9865680327256363
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of PSA's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,424.63
+Total number of trades: 5
+Total number of closed trades: 5
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 497.0339441996144)
+Total losing trades: 3 (Amount: USD -72.40074228351614)
+Gross profit/loss: USD 424.63
+Net profit/loss: USD 424.63
+Unrealized gain/loss: USD 0.00
+Total gain/loss: USD 424.63
+
+Sharpe Ratio: 0.24664788098906396
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of WMT's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 12,024.46
+Total number of trades: 19
+Total number of closed trades: 19
+Total number of opening trades: 0
+Total winning trades: 15 (Amount: USD 2272.1994226942056)
+Total losing trades: 4 (Amount: USD -247.73652338358482)
+Gross profit/loss: USD 2,024.46
+Net profit/loss: USD 2,024.46
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 2,024.46
+
+Sharpe Ratio: 0.8506086478321987
+
+--------------------------------------------------
+
+The following transactions show the backtesting results of UDR's stock:
+Starting Portfolio Value: 10,000.00
+Final Portfolio Value: 10,026.53
+Total number of trades: 3
+Total number of closed trades: 3
+Total number of opening trades: 0
+Total winning trades: 2 (Amount: USD 164.2982378995194)
+Total losing trades: 1 (Amount: USD -137.76536803510905)
+Gross profit/loss: USD 26.53
+Net profit/loss: USD 26.53
+Unrealized gain/loss: USD -0.00
+Total gain/loss: USD 26.53
+
+Sharpe Ratio: -0.7263822135672766
+
+--------------------------------------------------

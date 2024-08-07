@@ -75,7 +75,7 @@ def report_generator(portfolio_result_instance, stock_name):
     return report_struct
 
 
-def save_predictions():
+def get_predictions():
     # get all test data csv data frames
     # sort based on ticker name
     # remove 'close' price and predict and calculate accuracy
@@ -114,7 +114,7 @@ def write_predictions_to_file(predictions_structure):
 def process_chunk(chunk):
     # make assertions for predictions_structure
     for ticker_name, prediction_struct in chunk.items():
-        prediction_struct['bs_signal_df'].to_csv(os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, ticker_name))
+        prediction_struct['bs_signal_df'].to_parquet(os.path.join(constants.TESTING_PREDICTION_DATA_DIR_PATH, f"{ticker_name}.parquet"))
 
 
 def split_dict(data, num_chunks=5):

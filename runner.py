@@ -5,11 +5,10 @@ import pandas as pd
 import multiprocessing
 import joblib
 import shutil
-from sklearn.model_selection import train_test_split
 from tech_indicators import setup_data
 from utils import constants, trading_logger, shared_methods, external_ticks
 from datetime import datetime
-
+from sklearn.model_selection import train_test_split, GridSearchCV
 
 LOGGER_LEVELS = {
     'info': logging.INFO,
@@ -74,8 +73,6 @@ MIN_REQUIRED_TRADING_INDICATORS = 5
 #         print('*********************')
 
 
-
-
 def parallel_data_splitter(tuple_arg):
     # The data concatenated and saved is not shuffled for bookkeeping purposes
     # The data is shuffled right before training
@@ -121,6 +118,8 @@ def build_args():
     parser.add_argument('--preprocess_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--train_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
     parser.add_argument('--predict_all', action='store_true', default=False, help='train a model with the csv files in training_data/')
+    parser.add_argument('--optimize_parameters', action='store_true', default=False, help='optimize a models parameters')
+
     # Additional check to enforce the conditional requirement
     args = parser.parse_args()
     if not args.gather and not args.model_name:
@@ -194,8 +193,28 @@ if __name__ == "__main__":
         short_date_time = now.strftime('%y%m%d_%H%M')
         directory_name = constants.FULL_REPORT_DIR.format(short_date_time, args['tag'])
         create_directory_with_tag(directory_name)
-        predictions_structure = shared_methods.save_predictions()
+        predictions_structure = shared_methods.get_predictions()
         print('Running simulation and writing predictions')
         shared_methods.write_predictions_to_file(predictions_structure)
         predictions_data_structure = shared_methods.market_sim(predictions_structure, directory_name, args['model_name'])
         print("Stage 3: Testing Model Done")
+    if args['optimize_parameters']:
+        combined_indicators = pd.read_parquet(constants.TRAINING_CONCATENATED_INDICATORS_FILE)
+        combined_buy_sell_signals = pd.read_parquet(constants.TRAINING_CONCATENATED_BUY_SELL_SIGNALS_FILE)
+        model = constants.MODEL_MAP[args['model_name']]
+        parameter_selection = constants.optimize_parameter_map[args['model_map']]
+        grid_search = GridSearchCV(estimator=model, param_grid=parameter_selection, cv=5, n_jobs=-1, scoring='accuracy')
+
+        # Fit GridSearchCV
+        grid_search.fit(combined_indicators, combined_buy_sell_signals)
+
+        # Get the best parameters
+        best_params = grid_search.best_params_
+        print("Best parameters found: ", best_params)
+        # Evaluate the best model
+        best_model = grid_search.best_estimator_
+        predictions_structure = shared_methods.get_predictions()
+
+        # accuracy = best_model.score(X_test, y_test)
+        # print("Test set accuracy: ", accuracy)
+

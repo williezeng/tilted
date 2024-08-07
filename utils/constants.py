@@ -2,6 +2,7 @@ import os
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, HistGradientBoostingClassifier
 from catboost import CatBoostClassifier
+from scipy.stats import uniform, randint
 
 ETHEREUM_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', 'ETH-USD')]
 STOCK_HEADER = [('Close'), ('High'), ('Low'), ('Open'), ('Volume', '{string_name}')]
@@ -82,7 +83,7 @@ base_estimator = DecisionTreeClassifier(criterion='gini',
                                         random_state=MODELS_RANDOM_STATE,
                                         max_leaf_nodes=None,
                                         min_impurity_decrease=0.0,
-                                        class_weight=RANDOM_FOREST_CLASS_WEIGHT)
+                                        class_weight=None)
 
 MODEL_ARGS = {
     'random_forest': {
@@ -109,10 +110,9 @@ MODEL_ARGS = {
     },
     'adaboost': {
         'estimator': base_estimator,
-        'n_estimators': 200,
-        'learning_rate': 1.0,
+        'n_estimators': 400,
+        'learning_rate': 0.8,
         'algorithm': 'SAMME.R',
-        'n_jobs': '-1',
         'random_state': MODELS_RANDOM_STATE
     },
     'hist_gradient_boosting': {
@@ -128,3 +128,13 @@ MODEL_ARGS = {
     }
 }
 
+# optimize class weights
+optimize_parameter_map = {
+    'adaboost': {'n_estimators': [50, 150, 250],
+                 'learning_rate': [0.1, 0.5, 1.0],
+                 'base_estimator__max_depth': [1, 2, 3],
+                 'base_estimator__min_samples_split': [2, 5, 10],
+                 'base_estimator__min_samples_leaf': [1, 2, 4],
+                 'base_estimator__max_features': ['auto', 'sqrt', 'log2']
+                 }
+}
